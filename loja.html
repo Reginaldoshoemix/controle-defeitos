@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Registro de Defeitos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root{
+    --bg:#fff5f5; --surface:#ffffff; --surface2:#fff1f1;
+    --border:rgba(185,28,28,.14); --accent:#dc2626; --accent2:#b91c1c;
+    --text:#1f2937; --muted:#6b7280; --success:#16a34a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px;}
+  .wrap{max-width:480px;margin:0 auto;padding:0 14px;}
+  .topbar{background:linear-gradient(135deg,#ef4444 0%,#991b1b 100%);padding:20px 18px;color:#fff;border-radius:0 0 20px 20px;box-shadow:0 6px 20px rgba(220,38,38,.25);}
+  .topbar .loja{font-size:12px;opacity:.85;font-weight:500;}
+  .topbar .title{font-size:18px;font-weight:800;margin-top:2px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:14px;box-shadow:0 2px 10px rgba(0,0,0,.04);}
+  label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:5px;}
+  input,textarea,select{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--text);font-size:15px;font-family:inherit;outline:none;}
+  input:focus,textarea:focus{border-color:var(--accent);}
+  textarea{resize:vertical;min-height:60px;}
+  .row{display:flex;gap:10px;}
+  .row>div{flex:1;}
+  .btn{width:100%;padding:13px;border:none;border-radius:12px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .btn-primary{background:linear-gradient(135deg,#ef4444 0%,#b91c1c 100%);color:#fff;}
+  .btn-ghost{background:var(--surface2);color:var(--accent2);border:1px solid var(--border);}
+  .btn-success{background:linear-gradient(135deg,#16a34a 0%,#15803d 100%);color:#fff;}
+  .btn:disabled{opacity:.5;}
+  .mt{margin-top:10px;}
+  .photos{display:flex;gap:8px;margin-top:4px;}
+  .photo-slot{flex:1;}
+  .photo-box{aspect-ratio:1;border:1.5px dashed rgba(185,28,28,.3);border-radius:11px;background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--accent2);cursor:pointer;overflow:hidden;position:relative;}
+  .photo-box img{width:100%;height:100%;object-fit:cover;}
+  .photo-box .lbl{font-size:9px;text-align:center;line-height:1.1;}
+  .photo-cap{text-align:center;font-size:9.5px;color:var(--muted);margin-top:4px;}
+  .item{border:1px solid var(--border);border-radius:11px;padding:10px;margin-bottom:8px;display:flex;gap:10px;align-items:center;}
+  .item .thumbs{display:flex;gap:3px;flex-shrink:0;}
+  .item .thumbs img{width:30px;height:30px;border-radius:6px;object-fit:cover;}
+  .item .info{flex:1;min-width:0;}
+  .item .info .l1{font-size:12.5px;font-weight:700;}
+  .item .info .l2{font-size:11px;color:var(--accent2);}
+  .item .del{color:#cbd5e1;cursor:pointer;font-size:15px;padding:4px;}
+  .badge{display:inline-block;font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:20px;}
+  .b-open{background:rgba(22,163,74,.12);color:var(--success);}
+  .b-closed{background:#fef3c7;color:#92400e;}
+  .muted{color:var(--muted);font-size:12px;}
+  .center{text-align:center;}
+  .hidden{display:none!important;}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:100;padding:0;}
+  .sheet{background:var(--surface);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:18px 16px 26px;max-height:92vh;overflow-y:auto;animation:slideUp .25s ease;}
+  @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+  .sheet h3{font-size:16px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  .field{margin-bottom:12px;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:11px 18px;border-radius:24px;font-size:13px;font-weight:600;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:fadeIn .2s;}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:500;}
+  .loading-screen .sp{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+</style>
+</head>
+<body>
+
+<div id="loadingScreen" class="loading-screen">
+  <div class="sp"></div>
+  <div class="muted">Carregando...</div>
+</div>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="loja" id="lojaLabel">—</div>
+    <div class="title"><i class="fa-solid fa-shoe-prints" style="margin-right:6px;"></i> Registro de Defeitos</div>
+  </div>
+</div>
+
+<div class="wrap" id="app" style="display:none;">
+
+  <!-- Sem lote -->
+  <div id="noLote" class="card center hidden">
+    <div style="font-size:38px;color:var(--accent);opacity:.3;margin-bottom:8px;"><i class="fa-solid fa-folder-plus"></i></div>
+    <div style="font-weight:700;margin-bottom:4px;">Nenhum lote aberto</div>
+    <div class="muted" style="margin-bottom:14px;">Crie o lote do mês para começar a registrar os defeitos.</div>
+    <button class="btn btn-primary" onclick="criarLote()"><i class="fa-solid fa-plus"></i> Criar lote do mês</button>
+  </div>
+
+  <!-- Lote ativo -->
+  <div id="loteAtivo" class="hidden">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:15px;font-weight:800;" id="loteMes">—</div>
+          <div class="muted" id="loteInfo">0 itens</div>
+        </div>
+        <span class="badge b-open" id="loteBadge">● Aberto</span>
+      </div>
+    </div>
+
+    <div id="itensList"></div>
+
+    <button class="btn btn-ghost mt" id="btnAddItem" onclick="abrirItemSheet()"><i class="fa-solid fa-plus"></i> Adicionar item</button>
+    <button class="btn btn-success mt" id="btnFechar" onclick="fecharLote()"><i class="fa-solid fa-lock"></i> Fechar lote do mês</button>
+    <div class="center muted mt" style="line-height:1.5;">Você pode adicionar itens em vários dias.<br>Feche o lote só quando terminar o mês.</div>
+
+    <!-- Lote fechado: reabrir -->
+    <div id="loteFechadoBox" class="card center hidden" style="margin-top:14px;">
+      <div style="color:#92400e;font-weight:700;margin-bottom:4px;"><i class="fa-solid fa-circle-check"></i> Lote enviado!</div>
+      <div class="muted" style="margin-bottom:12px;">O lote foi fechado e enviado. Precisa corrigir algo?</div>
+      <button class="btn btn-ghost" onclick="reabrirLote()"><i class="fa-solid fa-lock-open"></i> Reabrir para editar</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Sheet: adicionar item -->
+<div id="itemSheet" class="overlay hidden" onclick="if(event.target===this)fecharItemSheet()">
+  <div class="sheet">
+    <h3><i class="fa-solid fa-plus" style="color:var(--accent);"></i> Novo item</h3>
+    <div class="field">
+      <label>Código de barras</label>
+      <input id="fCodigo" type="text" inputmode="numeric" placeholder="Ex: 789000000001">
+    </div>
+    <div class="row field">
+      <div><label>Referência</label><input id="fRef" type="text" placeholder="Ref."></div>
+      <div><label>Cor</label><input id="fCor" type="text" placeholder="Cor"></div>
+      <div style="max-width:80px;"><label>Tam.</label><input id="fTam" type="text" inputmode="numeric" placeholder="38"></div>
+    </div>
+    <div class="field">
+      <label>Defeito</label>
+      <textarea id="fDefeito" placeholder="Descreva o defeito..."></textarea>
+    </div>
+    <label>Fotos (todas obrigatórias)</label>
+    <div class="photos">
+      <div class="photo-slot">
+        <div class="photo-box" id="box0" onclick="document.getElementById('foto0').click()">
+          <i class="fa-solid fa-camera"></i><span class="lbl">Defeito</span>
+        </div>
+        <div class="photo-cap">Defeito</div>
+        <input id="foto0" type="file" accept="image/*" capture="environment" class="hidden" onchange="onFoto(0,this)">
+      </div>
+      <div class="photo-slot">
+        <div class="photo-box" id="box1" onclick="document.getElementById('foto1').click()">
+          <i class="fa-solid fa-camera"></i><span class="lbl">Solado</span>
+        </div>
+        <div class="photo-cap">Solado</div>
+        <input id="foto1" type="file" accept="image/*" capture="environment" class="hidden" onchange="onFoto(1,this)">
+      </div>
+      <div class="photo-slot">
+        <div class="photo-box" id="box2" onclick="document.getElementById('foto2').click()">
+          <i class="fa-solid fa-camera"></i><span class="lbl">Calçado</span>
+        </div>
+        <div class="photo-cap">Calçado</div>
+        <input id="foto2" type="file" accept="image/*" capture="environment" class="hidden" onchange="onFoto(2,this)">
+      </div>
+    </div>
+    <button class="btn btn-primary mt" id="btnSalvarItem" style="margin-top:18px;" onclick="salvarItem()"><i class="fa-solid fa-check"></i> Adicionar ao lote</button>
+    <button class="btn btn-ghost mt" onclick="fecharItemSheet()">Cancelar</button>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref as ref_, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCOPjrSD6FtuVEmKsCw2dUKAQJ4Q51GlEY",
+  authDomain: "controle-defeitos-f27ba.firebaseapp.com",
+  projectId: "controle-defeitos-f27ba",
+  storageBucket: "controle-defeitos-f27ba.firebasestorage.app",
+  messagingSenderId: "472257351573",
+  appId: "1:472257351573:web:2103ab5cf4898b245af09c"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// ── Estado ──
+let LOJA = "";
+let loteAtual = null;        // { id, mes, status, ... }
+let itens = [];              // itens do lote atual
+let fotos = [null, null, null]; // arquivos comprimidos pendentes do item em edição
+
+// ── Identifica a loja pelo link (?loja=Nome) ──
+function getLojaFromURL() {
+  const p = new URLSearchParams(location.search);
+  return (p.get("loja") || "").trim();
+}
+
+function toast(msg) {
+  const t = document.createElement("div");
+  t.className = "toast"; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2600);
+}
+
+function mesAtual() {
+  const d = new Date();
+  return d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+}
+function mesKey() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0");
+}
+
+// ── Comprime a foto (lado máx 1000px, qualidade 0.6) ──
+function comprimir(file) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = e => { img.src = e.target.result; };
+    img.onload = () => {
+      const max = 1000;
+      let { width, height } = img;
+      if(width > height && width > max) { height = height*max/width; width = max; }
+      else if(height > max) { width = width*max/height; height = max; }
+      const c = document.createElement("canvas");
+      c.width = width; c.height = height;
+      c.getContext("2d").drawImage(img, 0, 0, width, height);
+      c.toBlob(b => resolve(b), "image/jpeg", 0.6);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── Carrega lote aberto da loja ──
+async function carregarLote() {
+  itens = [];
+  loteAtual = null;
+  const q = query(collection(db, "lotes"), where("loja", "==", LOJA));
+  const snap = await getDocs(q);
+  // pega o lote do mês atual (aberto ou fechado mas não aprovado)
+  let encontrado = null;
+  snap.forEach(d => {
+    const data = d.data();
+    if(data.mesKey === mesKey() && data.status !== "aprovado") {
+      encontrado = { id: d.id, ...data };
+    }
+  });
+  loteAtual = encontrado;
+  if(loteAtual) await carregarItens();
+  render();
+}
+
+async function carregarItens() {
+  itens = [];
+  const q = query(collection(db, "itens"), where("loteId", "==", loteAtual.id));
+  const snap = await getDocs(q);
+  snap.forEach(d => itens.push({ id: d.id, ...d.data() }));
+}
+
+// ── Render ──
+function render() {
+  document.getElementById("loadingScreen").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  const noLote = document.getElementById("noLote");
+  const loteBox = document.getElementById("loteAtivo");
+  if(!loteAtual) {
+    noLote.classList.remove("hidden");
+    loteBox.classList.add("hidden");
+    return;
+  }
+  noLote.classList.add("hidden");
+  loteBox.classList.remove("hidden");
+  document.getElementById("loteMes").textContent = "Lote de " + loteAtual.mes;
+  document.getElementById("loteInfo").textContent = itens.length + (itens.length===1?" item":" itens");
+
+  const fechado = loteAtual.status === "fechado";
+  const badge = document.getElementById("loteBadge");
+  badge.className = "badge " + (fechado ? "b-closed" : "b-open");
+  badge.textContent = fechado ? "Fechado" : "● Aberto";
+
+  // botões conforme status
+  document.getElementById("btnAddItem").style.display = fechado ? "none" : "flex";
+  document.getElementById("btnFechar").style.display = (fechado || itens.length===0) ? "none" : "flex";
+  document.getElementById("loteFechadoBox").classList.toggle("hidden", !fechado);
+
+  // lista de itens
+  const list = document.getElementById("itensList");
+  list.innerHTML = itens.map(it => `
+    <div class="item">
+      <div class="thumbs">
+        ${(it.fotos||[]).map(u => `<img src="${u}" alt="">`).join("")}
+      </div>
+      <div class="info">
+        <div class="l1">Ref. ${it.referencia||"—"} · ${it.cor||"—"} · ${it.tamanho||"—"}</div>
+        <div class="l2">${it.defeito||""}</div>
+      </div>
+      ${!fechado ? `<i class="fa-solid fa-trash del" onclick="excluirItem('${it.id}')"></i>` : ""}
+    </div>
+  `).join("");
+}
+
+// ── Ações de lote ──
+window.criarLote = async function() {
+  try {
+    const ref = await addDoc(collection(db, "lotes"), {
+      loja: LOJA, mes: mesAtual(), mesKey: mesKey(),
+      status: "aberto", criadoEm: serverTimestamp()
+    });
+    loteAtual = { id: ref.id, loja: LOJA, mes: mesAtual(), mesKey: mesKey(), status: "aberto" };
+    itens = [];
+    render();
+    toast("Lote criado!");
+  } catch(e) { console.error(e); toast("Erro ao criar lote."); }
+};
+
+window.fecharLote = async function() {
+  if(!confirm("Fechar o lote do mês? Ele será enviado para aprovação. Você ainda poderá reabrir se precisar corrigir.")) return;
+  try {
+    await updateDoc(doc(db, "lotes", loteAtual.id), { status: "fechado", fechadoEm: serverTimestamp() });
+    loteAtual.status = "fechado";
+    render();
+    toast("Lote fechado e enviado!");
+  } catch(e) { console.error(e); toast("Erro ao fechar."); }
+};
+
+window.reabrirLote = async function() {
+  try {
+    await updateDoc(doc(db, "lotes", loteAtual.id), { status: "aberto" });
+    loteAtual.status = "aberto";
+    render();
+    toast("Lote reaberto.");
+  } catch(e) { console.error(e); toast("Erro ao reabrir."); }
+};
+
+// ── Item sheet ──
+window.abrirItemSheet = function() {
+  fotos = [null, null, null];
+  ["fCodigo","fRef","fCor","fTam","fDefeito"].forEach(id => document.getElementById(id).value = "");
+  for(let i=0;i<3;i++){
+    const box = document.getElementById("box"+i);
+    const lbls = ["Defeito","Solado","Calçado"];
+    box.innerHTML = `<i class="fa-solid fa-camera"></i><span class="lbl">${lbls[i]}</span>`;
+  }
+  document.getElementById("itemSheet").classList.remove("hidden");
+};
+window.fecharItemSheet = function() {
+  document.getElementById("itemSheet").classList.add("hidden");
+};
+
+window.onFoto = async function(idx, input) {
+  const file = input.files[0];
+  if(!file) return;
+  const box = document.getElementById("box"+idx);
+  box.innerHTML = `<div class="spinner" style="border-color:rgba(220,38,38,.3);border-top-color:var(--accent);"></div>`;
+  const blob = await comprimir(file);
+  fotos[idx] = blob;
+  const url = URL.createObjectURL(blob);
+  box.innerHTML = `<img src="${url}" alt="">`;
+};
+
+window.salvarItem = async function() {
+  const codigo = document.getElementById("fCodigo").value.trim();
+  const ref = document.getElementById("fRef").value.trim();
+  const cor = document.getElementById("fCor").value.trim();
+  const tam = document.getElementById("fTam").value.trim();
+  const defeito = document.getElementById("fDefeito").value.trim();
+  if(!codigo || !ref || !tam || !defeito) { toast("Preencha código, referência, tamanho e defeito."); return; }
+  if(fotos.some(f => !f)) { toast("Anexe as 3 fotos."); return; }
+
+  const btn = document.getElementById("btnSalvarItem");
+  btn.disabled = true;
+  btn.innerHTML = `<div class="spinner"></div> Enviando...`;
+  try {
+    // sobe as 3 fotos
+    const urls = [];
+    const nomes = ["defeito","solado","calcado"];
+    const itemId = "item_" + Date.now();
+    for(let i=0;i<3;i++){
+      const r = ref_(storage, `lotes/${loteAtual.id}/${itemId}_${nomes[i]}.jpg`);
+      await uploadBytes(r, fotos[i]);
+      urls.push(await getDownloadURL(r));
+    }
+    await addDoc(collection(db, "itens"), {
+      loteId: loteAtual.id, loja: LOJA,
+      codigoBarras: codigo, referencia: ref, cor: cor, tamanho: tam,
+      defeito: defeito, fotos: urls, criadoEm: serverTimestamp()
+    });
+    await carregarItens();
+    render();
+    fecharItemSheet();
+    toast("Item adicionado!");
+  } catch(e) {
+    console.error(e); toast("Erro ao enviar item.");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<i class="fa-solid fa-check"></i> Adicionar ao lote`;
+  }
+};
+
+window.excluirItem = async function(id) {
+  if(!confirm("Excluir este item do lote?")) return;
+  try {
+    await deleteDoc(doc(db, "itens", id));
+    await carregarItens();
+    render();
+    toast("Item excluído.");
+  } catch(e) { console.error(e); toast("Erro ao excluir."); }
+};
+
+// ── Inicialização ──
+LOJA = getLojaFromURL();
+if(!LOJA) {
+  document.getElementById("loadingScreen").innerHTML =
+    `<div style="text-align:center;padding:20px;"><div style="font-size:34px;color:var(--accent);margin-bottom:10px;"><i class="fa-solid fa-circle-exclamation"></i></div>
+     <div style="font-weight:700;margin-bottom:6px;">Link inválido</div>
+     <div class="muted">Este link não identifica a loja.<br>Peça o link correto ao responsável.</div></div>`;
+} else {
+  document.getElementById("lojaLabel").textContent = LOJA;
+  carregarLote().catch(e => {
+    console.error(e);
+    document.getElementById("loadingScreen").innerHTML =
+      `<div style="text-align:center;padding:20px;"><div style="font-size:34px;color:var(--accent);margin-bottom:10px;"><i class="fa-solid fa-wifi"></i></div>
+       <div style="font-weight:700;margin-bottom:6px;">Erro de conexão</div>
+       <div class="muted">Não foi possível conectar. Verifique a internet e recarregue.</div></div>`;
+  });
+}
+</script>
+</body>
+</html>
