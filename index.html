@@ -8282,7 +8282,7 @@ function scrollToTop() {
 })();
 
 // ───── NAVEGAÇÃO SIDEBAR ─────
-const _navSections = ['dashboard','cadastro','defeitos','nfes','vencidos','semsolucao','fornecedores'];
+const _navSections = ['dashboard','cadastro','defeitos','nfes','lotes','vencidos','semsolucao','fornecedores','marcas'];
 
 function navTo(section) {
   // Seções exclusivas (ocupam a tela inteira, escondem o restante)
@@ -8405,17 +8405,19 @@ function setNavActive(section) {
     const semSolSec = document.getElementById('section-semsolucao');
     const fornSec = document.getElementById('section-fornecedores');
     const marcasSec = document.getElementById('section-marcas');
+    const lotesSec = document.getElementById('section-lotes');
     if(nfeSec && nfeSec.style.display !== 'none' && nfeSec.style.display !== '') return;
     if(vencSec && vencSec.style.display !== 'none' && vencSec.style.display !== '') return;
     if(semSolSec && semSolSec.style.display !== 'none' && semSolSec.style.display !== '') return;
     if(fornSec && fornSec.style.display !== 'none' && fornSec.style.display !== '') return;
     if(marcasSec && marcasSec.style.display !== 'none' && marcasSec.style.display !== '') return;
+    if(lotesSec && lotesSec.style.display !== 'none' && lotesSec.style.display !== '') return;
 
     const main = document.querySelector('main');
     const scrollTop = (main && main.scrollTop > 0) ? main.scrollTop : window.scrollY;
     let current = 'dashboard';
     _navSections.forEach(s => {
-      if(s === 'nfes' || s === 'vencidos' || s === 'semsolucao' || s === 'fornecedores' || s === 'marcas') return;
+      if(s === 'nfes' || s === 'vencidos' || s === 'semsolucao' || s === 'fornecedores' || s === 'marcas' || s === 'lotes') return;
       const el = document.getElementById('section-' + s);
       if(el && el.getBoundingClientRect().top <= 80) current = s;
     });
