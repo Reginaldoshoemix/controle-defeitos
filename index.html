@@ -5866,6 +5866,7 @@ function renderTable() {
 
       // ── Ações secundárias (vão para o menu "⋯") ──
       let menuItens = [];
+      if(i.fotosLoja && i.fotosLoja.length) menuItens.push({ icon:'fa-images', cor:'#2563eb', label:'Ver fotos da loja', fn:`verFotosLoja(${i.id})` });
       menuItens.push({ icon:'fa-copy', cor:'#7c3aed', label:'Duplicar (novo tamanho)', fn:`duplicarDefeito(${i.id})` });
       if(!resolvido && !analise && !isSemSol) menuItens.push({ icon:'fa-ban', cor:'#0f766e', label:'Sem solução', fn:`marcarSemSolucao(${i.id})` });
       if(analise) { menuItens.push({ icon:'fa-ban', cor:'#0f766e', label:'Sem solução', fn:`marcarSemSolucao(${i.id})` }); if(!nfeConcluida) menuItens.push({ icon:'fa-rotate-left', cor:'#475569', label:'Reabrir pendente', fn:`voltarPendente(${i.id})` }); }
@@ -6128,6 +6129,58 @@ function clearResolved() {
 
 // ───── MODAL EDIÇÃO ─────
 let _duplicando = false;
+
+// ── Visualizador de fotos da loja (ver/baixar para enviar ao fabricante) ──
+function verFotosLoja(id) {
+  const item = defeitos.find(i => i.id === id);
+  if(!item || !item.fotosLoja || !item.fotosLoja.length) { showToast("Este item não tem fotos da loja.", "info"); return; }
+  const fotos = item.fotosLoja;
+  const nomes = ["defeito","solado","calcado"];
+  const refSafe = (item.referencia||"item").replace(/[^a-zA-Z0-9]/g,"_");
+  const tam = item.numeracao || "";
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.id = "fotosLojaModal";
+  overlay.style.cssText = "display:flex;z-index:9998;";
+  overlay.innerHTML = `
+    <div class="modal-box" onclick="event.stopPropagation()" style="max-width:520px;">
+      <div class="modal-title" style="justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-images" style="color:#2563eb;"></i> Fotos da loja</span>
+      </div>
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">Ref. ${item.referencia||"—"} · ${item.cor||""} · Tam. ${tam} — clique numa foto para ampliar, ou baixe para enviar ao fabricante.</p>
+      <div style="display:flex;gap:10px;margin-bottom:16px;">
+        ${fotos.map((u,i) => `
+          <div style="flex:1;text-align:center;">
+            <img src="${u}" onclick="ampliarFoto('${u}')" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:zoom-in;border:1px solid var(--border);">
+            <div style="font-size:10px;color:var(--muted);margin-top:4px;text-transform:capitalize;">${nomes[i]||("foto "+(i+1))}</div>
+            <a href="${u}" download="${refSafe}_${tam}_${nomes[i]||i}.jpg" target="_blank" style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;font-size:10.5px;font-weight:700;color:#2563eb;text-decoration:none;"><i class="fa-solid fa-download"></i> Baixar</a>
+          </div>`).join("")}
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-primary" style="flex:1;justify-content:center;padding:10px;" onclick="baixarTodasFotos(${item.id})"><i class="fa-solid fa-download"></i> Baixar as ${fotos.length} fotos</button>
+        <button class="btn-ghost" style="padding:10px 16px;" onclick="document.getElementById('fotosLojaModal').remove()">Fechar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener("click", e => { if(e.target === overlay) overlay.remove(); });
+}
+
+function baixarTodasFotos(id) {
+  const item = defeitos.find(i => i.id === id);
+  if(!item || !item.fotosLoja) return;
+  const nomes = ["defeito","solado","calcado"];
+  const refSafe = (item.referencia||"item").replace(/[^a-zA-Z0-9]/g,"_");
+  const tam = item.numeracao || "";
+  // baixa uma a uma (abrir cada link força o download pelo atributo download)
+  item.fotosLoja.forEach((u,i) => {
+    setTimeout(() => {
+      const a = document.createElement("a");
+      a.href = u; a.download = `${refSafe}_${tam}_${nomes[i]||i}.jpg`; a.target = "_blank";
+      document.body.appendChild(a); a.click(); a.remove();
+    }, i * 400);
+  });
+  showToast("Baixando as fotos...", "info");
+}
 
 // ═══════════ ÁREA DE LOTES DAS LOJAS (Firebase) ═══════════
 let _lotesCache = [];
