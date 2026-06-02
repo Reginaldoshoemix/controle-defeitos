@@ -124,6 +124,10 @@
       <label>Código de barras</label>
       <input id="fCodigo" type="text" inputmode="numeric" placeholder="Ex: 789000000001">
     </div>
+    <div class="field">
+      <label>Marca</label>
+      <input id="fMarca" type="text" placeholder="Ex: Nike, Adidas...">
+    </div>
     <div class="row field">
       <div><label>Referência</label><input id="fRef" type="text" placeholder="Ref."></div>
       <div><label>Cor</label><input id="fCor" type="text" placeholder="Cor"></div>
@@ -289,7 +293,7 @@ function render() {
         ${(it.fotos||[]).map(u => `<img src="${u}" alt="">`).join("")}
       </div>
       <div class="info">
-        <div class="l1">Ref. ${it.referencia||"—"} · ${it.cor||"—"} · ${it.tamanho||"—"}</div>
+        <div class="l1">${it.marca?it.marca+" · ":""}Ref. ${it.referencia||"—"} · ${it.cor||"—"} · ${it.tamanho||"—"}</div>
         <div class="l2">${it.defeito||""}</div>
       </div>
       ${!fechado ? `<i class="fa-solid fa-trash del" onclick="excluirItem('${it.id}')"></i>` : ""}
@@ -333,7 +337,7 @@ window.reabrirLote = async function() {
 // ── Item sheet ──
 window.abrirItemSheet = function() {
   fotos = [null, null, null];
-  ["fCodigo","fRef","fCor","fTam","fDefeito"].forEach(id => document.getElementById(id).value = "");
+  ["fCodigo","fMarca","fRef","fCor","fTam","fDefeito"].forEach(id => document.getElementById(id).value = "");
   for(let i=0;i<3;i++){
     const box = document.getElementById("box"+i);
     const lbls = ["Defeito","Solado","Calçado"];
@@ -358,11 +362,12 @@ window.onFoto = async function(idx, input) {
 
 window.salvarItem = async function() {
   const codigo = document.getElementById("fCodigo").value.trim();
+  const marca = document.getElementById("fMarca").value.trim();
   const ref = document.getElementById("fRef").value.trim();
   const cor = document.getElementById("fCor").value.trim();
   const tam = document.getElementById("fTam").value.trim();
   const defeito = document.getElementById("fDefeito").value.trim();
-  if(!codigo || !ref || !tam || !defeito) { toast("Preencha código, referência, tamanho e defeito."); return; }
+  if(!codigo || !marca || !ref || !tam || !defeito) { toast("Preencha código, marca, referência, tamanho e defeito."); return; }
   if(fotos.some(f => !f)) { toast("Anexe as 3 fotos."); return; }
 
   const btn = document.getElementById("btnSalvarItem");
@@ -380,7 +385,7 @@ window.salvarItem = async function() {
     }
     await addDoc(collection(db, "itens"), {
       loteId: loteAtual.id, loja: LOJA,
-      codigoBarras: codigo, referencia: ref, cor: cor, tamanho: tam,
+      codigoBarras: codigo, marca: marca, referencia: ref, cor: cor, tamanho: tam,
       defeito: defeito, fotos: urls, criadoEm: serverTimestamp()
     });
     await carregarItens();
