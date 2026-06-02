@@ -6153,7 +6153,7 @@ function verFotosLoja(id) {
           <div style="flex:1;text-align:center;">
             <img src="${u}" onclick="ampliarFoto('${u}')" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:zoom-in;border:1px solid var(--border);">
             <div style="font-size:10px;color:var(--muted);margin-top:4px;text-transform:capitalize;">${nomes[i]||("foto "+(i+1))}</div>
-            <a href="${u}" download="${refSafe}_${tam}_${nomes[i]||i}.jpg" target="_blank" style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;font-size:10.5px;font-weight:700;color:#2563eb;text-decoration:none;"><i class="fa-solid fa-download"></i> Baixar</a>
+            <div onclick="baixarUmaFoto('${u}','${refSafe}_${tam}_${nomes[i]||i}.jpg')" style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;font-size:10.5px;font-weight:700;color:#2563eb;cursor:pointer;"><i class="fa-solid fa-download"></i> Baixar</div>
           </div>`).join("")}
       </div>
       <div style="display:flex;gap:8px;">
@@ -6165,21 +6165,34 @@ function verFotosLoja(id) {
   overlay.addEventListener("click", e => { if(e.target === overlay) overlay.remove(); });
 }
 
+async function baixarUmaFoto(url, nomeArquivo) {
+  try {
+    const resp = await fetch(url);
+    const blob = await resp.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl; a.download = nomeArquivo;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    return true;
+  } catch(e) {
+    console.error("download foto:", e);
+    // fallback: abre em nova aba se o fetch falhar
+    window.open(url, "_blank");
+    return false;
+  }
+}
+
 function baixarTodasFotos(id) {
   const item = defeitos.find(i => i.id === id);
   if(!item || !item.fotosLoja) return;
   const nomes = ["defeito","solado","calcado"];
   const refSafe = (item.referencia||"item").replace(/[^a-zA-Z0-9]/g,"_");
   const tam = item.numeracao || "";
-  // baixa uma a uma (abrir cada link força o download pelo atributo download)
-  item.fotosLoja.forEach((u,i) => {
-    setTimeout(() => {
-      const a = document.createElement("a");
-      a.href = u; a.download = `${refSafe}_${tam}_${nomes[i]||i}.jpg`; a.target = "_blank";
-      document.body.appendChild(a); a.click(); a.remove();
-    }, i * 400);
-  });
   showToast("Baixando as fotos...", "info");
+  item.fotosLoja.forEach((u,i) => {
+    setTimeout(() => baixarUmaFoto(u, `${refSafe}_${tam}_${nomes[i]||i}.jpg`), i * 600);
+  });
 }
 
 // ═══════════ ÁREA DE LOTES DAS LOJAS (Firebase) ═══════════
