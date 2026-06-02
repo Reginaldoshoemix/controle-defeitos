@@ -8289,6 +8289,9 @@ function navTo(section) {
   const exclusiveSections = ['nfes', 'vencidos'];
   const mainSections = ['section-dashboard','section-cadastro','section-defeitos','section-graficos-alertas'];
 
+  // Garante que a seção de lotes só apareça na própria aba
+  if(section !== 'lotes') { const lt = document.getElementById('section-lotes'); if(lt) lt.style.display = 'none'; }
+
   if(section === 'nfes') {
     mainSections.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
     document.getElementById('section-vencidos').style.display = 'none';
@@ -8372,6 +8375,7 @@ function navTo(section) {
   document.getElementById('section-semsolucao').style.display = 'none';
   document.getElementById('section-fornecedores').style.display = 'none';
   document.getElementById('section-marcas').style.display = 'none';
+  { const lt = document.getElementById('section-lotes'); if(lt) lt.style.display = 'none'; }
   mainSections.filter(id => id !== 'section-cadastro').forEach(id => {
     const el = document.getElementById(id); if(el) el.style.display = '';
   });
