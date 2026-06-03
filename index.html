@@ -6242,7 +6242,7 @@ async function renderLotesPage() {
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
           <div>
             <div style="font-size:15px;font-weight:800;">${lote.loja||"—"}</div>
-            <div style="font-size:12.5px;color:var(--muted);margin-top:2px;">${lote.mes||""} · ${itens.length} ${itens.length===1?"item":"itens"}</div>
+            <div style="font-size:12.5px;color:var(--muted);margin-top:2px;">${lote.numero ? "Lote "+lote.numero+" · " : ""}${lote.mes||""} · ${itens.length} ${itens.length===1?"item":"itens"}</div>
           </div>
           <span style="background:#fef3c7;color:#92400e;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;">aguardando</span>
         </div>
@@ -6268,7 +6268,7 @@ function revisarLote(loteId) {
   overlay.innerHTML = `
     <div class="modal-box" onclick="event.stopPropagation()" style="max-width:560px;max-height:88vh;overflow-y:auto;">
       <div class="modal-title" style="justify-content:space-between;">
-        <span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-boxes-stacked" style="color:#16a34a;"></i> ${lote.loja} — ${lote.mes}</span>
+        <span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-boxes-stacked" style="color:#16a34a;"></i> ${lote.loja} — ${lote.numero ? "Lote "+lote.numero : lote.mes}</span>
       </div>
       <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">${itens.length} itens. Revise cada um e aprove para virar defeito na base.</p>
       <div id="loteItensRevisao"></div>
@@ -6315,7 +6315,8 @@ function ampliarFoto(url) {
 }
 
 // converte um item do lote em objeto defeito da base
-function _itemLoteParaDefeito(it, loja) {
+function _itemLoteParaDefeito(it, loja, loteNumero) {
+  const obsLote = loteNumero ? ("Lote loja: " + loteNumero) : "";
   return {
     id: Date.now() + Math.floor(Math.random()*10000),
     loja: loja || it.loja || "",
@@ -6332,7 +6333,7 @@ function _itemLoteParaDefeito(it, loja) {
     dataEmissaoNfe: "",
     cnpj: "",
     xml: "",
-    obs: "",
+    obs: obsLote,
     fotosLoja: it.fotos || [],
     fornecedorId: "",
     status: "pendente"
@@ -6369,7 +6370,7 @@ function editarItemLote(loteId, itemId) {
   const fi=document.getElementById("editFornecedorInput"); if(fi) fi.value="";
   const tEl=document.getElementById("editModalTitle"); if(tEl) tEl.textContent="Revisar item da loja";
   const bEl=document.getElementById("editSaveBtn"); if(bEl) bEl.innerHTML='<i class="fa-solid fa-check"></i>Aprovar e adicionar';
-  _modoItemLote = { loteId, itemId, fotos: it.fotos||[] };
+  _modoItemLote = { loteId, itemId, fotos: it.fotos||[], numero: lote.numero||"" };
   document.getElementById("editModal").style.display="flex";
 }
 let _modoItemLote = null;
@@ -6378,7 +6379,7 @@ async function aprovarItemLote(loteId, itemId) {
   const lote = _lotesCache.find(l => l.id === loteId);
   const it = lote && (lote._itens||[]).find(x => x.id === itemId);
   if(!it) return;
-  const novo = _itemLoteParaDefeito(it, lote.loja);
+  const novo = _itemLoteParaDefeito(it, lote.loja, lote.numero);
   defeitos.unshift(novo);
   saveData(); renderLight();
   // remove visualmente o item do modal
@@ -6396,7 +6397,7 @@ async function aprovarLoteTodo(loteId) {
   const itens = (lote._itens||[]).filter(it => !it._aprovado);
   if(!itens.length) { showToast("Nenhum item novo para aprovar.", "info"); return; }
   openConfirm(`Aprovar todos os ${itens.length} itens deste lote?`, "warn", async () => {
-    itens.forEach(it => { defeitos.unshift(_itemLoteParaDefeito(it, lote.loja)); it._aprovado = true; });
+    itens.forEach(it => { defeitos.unshift(_itemLoteParaDefeito(it, lote.loja, lote.numero)); it._aprovado = true; });
     saveData(); renderLight();
     try { await window.firebaseLotes.aprovarLote(loteId); } catch(e){ console.error(e); }
     if(typeof autoSave!=="undefined" && autoSave.markDirty) autoSave.markDirty();
@@ -6604,7 +6605,7 @@ function salvarItemLoteEditado() {
     dataEmissaoNfe: document.getElementById("editDataEmissaoNfe").value,
     cnpj: document.getElementById("editCnpj").value.trim(),
     xml: document.getElementById("editXml").value.trim(),
-    obs: document.getElementById("editObs").value.trim(),
+    obs: ((document.getElementById("editObs").value.trim()) + (_modoItemLote.numero ? (document.getElementById("editObs").value.trim() ? " · " : "") + "Lote loja: " + _modoItemLote.numero : "")),
     fotosLoja: _modoItemLote.fotos || [],
     fornecedorId: document.getElementById("editFornecedorId")?.value || "",
     status: "pendente"
