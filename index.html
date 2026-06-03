@@ -3462,7 +3462,7 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
     <div class="space-y-3">
       <input type="hidden" id="fornId">
       <div class="grid grid-cols-2 gap-3">
-        <div><label class="section-label block mb-1">Marca *</label><input id="fornMarca" type="text" placeholder="Ex: Nike, Adidas" class="input w-full" style="padding:9px 12px;"></div>
+        <div style="position:relative;"><label class="section-label block mb-1">Marca *</label><input id="fornMarca" type="text" placeholder="Ex: Nike, Adidas" class="input w-full" style="padding:9px 12px;" autocomplete="off" oninput="showFornMarcaSuggestions(this.value)" onblur="setTimeout(()=>hideFornMarcaSuggestions(),180)"><div id="fornMarcaSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--accent-border);border-radius:10px;z-index:200;max-height:180px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:3px;"></div></div>
         <div><label class="section-label block mb-1">Razão Social</label><input id="fornRazaoSocial" type="text" placeholder="Razão social completa" class="input w-full" style="padding:9px 12px;"></div>
       </div>
       <div class="grid grid-cols-2 gap-3">
@@ -3540,6 +3540,7 @@ let LOJAS = LOJAS_PADRAO.map(l => ({...l}));
 let defeitos = [];
 let nfes = [];
 let fornecedores = []; // ← FORNECEDORES
+let marcasInfo = {};   // ← dados extras por marca (prazo, cnpjs das fábricas, obs)
 let formOpened = true;
 let currentPage = 1;
 let sortField = "data";
@@ -3673,6 +3674,12 @@ async function loadFromDB() {
     const rawForn = localStorage.getItem("fornecedores");
     fornecedores = rawForn ? JSON.parse(rawForn) : [];
   } catch(e) { fornecedores = []; }
+
+  // Carregar dados extras das marcas
+  try {
+    const rawMi = localStorage.getItem("shoemix_marcasInfo");
+    marcasInfo = rawMi ? JSON.parse(rawMi) : {};
+  } catch(e) { marcasInfo = {}; }
 
   // Carregar lojas
   const cfgLojas = await dbGetAll("config");
@@ -4647,6 +4654,7 @@ const autoSave = (() => {
   function buildBackupCompleto() {
     const payload = { defeitos, nfes, fornecedores };
     try { if(typeof LOJAS !== "undefined" && Array.isArray(LOJAS)) payload.lojas = LOJAS; } catch(_) {}
+    try { if(typeof marcasInfo !== "undefined") payload.marcasInfo = marcasInfo; } catch(_) {}
     payload.exportedAt = new Date().toISOString();
     return JSON.stringify(payload, null, 2);
   }
@@ -5212,6 +5220,7 @@ function aplicarBackupDrive(raw) {
     defeitos = data; nfes = dataNfes;
     if(dataForn.length) { fornecedores = dataForn; saveFornecedores(); }
     if(dataLojas.length) { LOJAS = dataLojas; try { saveLojas(); } catch(_){} }
+    if(preparado.marcasInfo && Object.keys(preparado.marcasInfo).length) { marcasInfo = preparado.marcasInfo; saveMarcasInfo(); }
     saveData(); render();
     if(document.getElementById('nfeList')) renderNfeTable();
     document.body.removeChild(overlay);
@@ -6630,7 +6639,7 @@ function closeModal(e) {
 
 // ───── BACKUP / IMPORT ─────
 function exportBackup() {
-  const json = JSON.stringify({ defeitos, nfes, fornecedores }, null, 2);
+  const json = JSON.stringify({ defeitos, nfes, fornecedores, marcasInfo }, null, 2);
   const blob = new Blob([json], { type: "application/json" });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement("a");
@@ -6743,6 +6752,7 @@ function prepararBackupImportacao(raw) {
     nfes: Array.isArray(raw) ? [] : (raw.nfes || []),
     lojas: Array.isArray(raw) ? [] : (raw.lojas || []),
     fornecedores: Array.isArray(raw) ? [] : (raw.fornecedores || []),
+    marcasInfo: Array.isArray(raw) ? {} : (raw.marcasInfo || {}),
     meta: { formato: Array.isArray(raw) ? 'array_defeitos' : 'sistema_atual' }
   };
 }
@@ -6830,6 +6840,11 @@ function importBackup(event) {
           saveFornecedores();
         }
         const lojasAdd = mesclarLojasImportadas(dataLojas);
+        // Mesclar info de marcas (mantém existentes, adiciona novas)
+        if(preparado.marcasInfo && Object.keys(preparado.marcasInfo).length) {
+          Object.keys(preparado.marcasInfo).forEach(k => { if(!marcasInfo[k]) marcasInfo[k] = preparado.marcasInfo[k]; });
+          saveMarcasInfo();
+        }
         saveData(); render();
         if(document.getElementById('nfeList')) renderNfeTable();
         document.body.removeChild(overlay);
@@ -6842,6 +6857,7 @@ function importBackup(event) {
         const dataForn = preparado.fornecedores || [];
         if(dataForn.length) { fornecedores = dataForn; saveFornecedores(); }
         if(dataLojas.length) { LOJAS = dataLojas; saveLojas(); }
+        if(preparado.marcasInfo && Object.keys(preparado.marcasInfo).length) { marcasInfo = preparado.marcasInfo; saveMarcasInfo(); }
         saveData(); render();
         if(document.getElementById('nfeList')) renderNfeTable();
         document.body.removeChild(overlay);
@@ -7402,6 +7418,38 @@ function selectMarca(m) {
 
 function hideMarcaSuggestions() {
   const box = document.getElementById("marcaSuggestions");
+  if(box) box.style.display = "none";
+}
+
+// ── Autocomplete de marca no cadastro de FORNECEDOR ──
+function getTodasMarcas() {
+  const set = new Set();
+  defeitos.forEach(d => { if(d.marca) set.add(d.marca.trim().toUpperCase()); });
+  fornecedores.forEach(f => { if(f.marca) set.add(f.marca.trim().toUpperCase()); });
+  return [...set].sort();
+}
+function showFornMarcaSuggestions(val) {
+  const box = document.getElementById("fornMarcaSuggestions");
+  if(!box) return;
+  const q = (val||"").trim().toUpperCase();
+  if(!q) { box.style.display = "none"; return; }
+  const marcas = getTodasMarcas().filter(m => m.includes(q) && m !== q);
+  if(!marcas.length) { box.style.display = "none"; return; }
+  box.innerHTML = marcas.slice(0, 8).map(m =>
+    `<div class="autocomplete-item" onmousedown="selectFornMarca('${m.replace(/'/g,"\\'")}')">
+      <i class="fa-solid fa-tag" style="font-size:10px;color:var(--accent);margin-right:7px;"></i>${m}
+    </div>`
+  ).join("");
+  box.style.display = "block";
+}
+function selectFornMarca(m) {
+  const inp = document.getElementById("fornMarca");
+  if(inp) inp.value = m;
+  const box = document.getElementById("fornMarcaSuggestions");
+  if(box) box.style.display = "none";
+}
+function hideFornMarcaSuggestions() {
+  const box = document.getElementById("fornMarcaSuggestions");
   if(box) box.style.display = "none";
 }
 
@@ -10934,6 +10982,67 @@ function saveFornecedores() {
 
 // ── Cards do dashboard de fornecedores ──
 // ── Aba Marcas ──────────────────────────────────────────────
+function saveMarcasInfo() {
+  try { localStorage.setItem("shoemix_marcasInfo", JSON.stringify(marcasInfo)); } catch(e) { console.error(e); }
+}
+
+function getMarcaInfo(nome) {
+  const key = (nome||"").trim().toUpperCase();
+  return marcasInfo[key] || { prazo: "", cnpjsFabrica: [], obs: "" };
+}
+
+function abrirInfoMarca(nome) {
+  const key = (nome||"").trim().toUpperCase();
+  const info = getMarcaInfo(nome);
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.id = "infoMarcaModal";
+  overlay.style.cssText = "display:flex;z-index:9998;";
+  overlay.innerHTML = `
+    <div class="modal-box" onclick="event.stopPropagation()" style="max-width:460px;">
+      <div class="modal-title">
+        <div style="width:28px;height:28px;border-radius:8px;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.2);display:flex;align-items:center;justify-content:center;color:#7c3aed;font-size:12px;"><i class="fa-solid fa-tag"></i></div>
+        ${key}
+      </div>
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:16px;">Informações desta marca para consulta na hora da devolução.</p>
+
+      <div style="margin-bottom:13px;">
+        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:5px;">Prazo de indenização (dias a partir da NF-e de origem)</label>
+        <input id="miPrazo" type="number" inputmode="numeric" value="${info.prazo||""}" placeholder="Ex: 90" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface2);color:var(--text);font-size:14px;">
+      </div>
+
+      <div style="margin-bottom:13px;">
+        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:5px;">CNPJs das fábricas (um por linha)</label>
+        <textarea id="miCnpjs" placeholder="Ex:&#10;12.345.678/0001-90&#10;98.765.432/0001-10" style="width:100%;min-height:70px;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface2);color:var(--text);font-size:13px;font-family:'Space Mono',monospace;resize:vertical;">${(info.cnpjsFabrica||[]).join("\n")}</textarea>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:5px;">Observações</label>
+        <textarea id="miObs" placeholder="Outras informações sobre a marca..." style="width:100%;min-height:80px;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface2);color:var(--text);font-size:13px;resize:vertical;">${(info.obs||"").replace(/</g,"&lt;")}</textarea>
+      </div>
+
+      <div style="display:flex;gap:8px;">
+        <button class="btn-primary" style="flex:1;justify-content:center;padding:11px;background:#7c3aed;border-color:#7c3aed;" onclick="salvarInfoMarca('${key.replace(/'/g,"\\'")}')"><i class="fa-solid fa-floppy-disk"></i> Salvar</button>
+        <button class="btn-ghost" style="padding:11px 16px;" onclick="document.getElementById('infoMarcaModal').remove()">Fechar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener("click", e => { if(e.target === overlay) overlay.remove(); });
+}
+
+function salvarInfoMarca(key) {
+  const prazo = document.getElementById("miPrazo").value.trim();
+  const cnpjs = document.getElementById("miCnpjs").value.split("\n").map(c => c.trim()).filter(Boolean);
+  const obs = document.getElementById("miObs").value.trim();
+  marcasInfo[key] = { prazo: prazo, cnpjsFabrica: cnpjs, obs: obs };
+  saveMarcasInfo();
+  if(typeof autoSave !== "undefined" && autoSave.markDirty) autoSave.markDirty();
+  const m = document.getElementById("infoMarcaModal");
+  if(m) m.remove();
+  renderMarcasTab();
+  showToast("Informações da marca salvas!", "success");
+}
+
 function renderMarcasTab() {
   // Agrupa defeitos ativos por marca
   const ativos = defeitos.filter(d => d.status !== 'resolvido');
@@ -11041,6 +11150,9 @@ function renderMarcasTab() {
         <span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);">${valorFmt}</span>
       </td>
       <td style="text-align:center;">
+        <button class="action-btn" onclick="abrirInfoMarca('${m.nome.replace(/'/g, "\\'")}')" title="Informações da marca (prazo, CNPJs, obs)" style="color:#7c3aed;">
+          <i class="fa-solid fa-circle-info" style="font-size:12px;pointer-events:none;"></i>
+        </button>
         <button class="action-btn" onclick="filtrarPorMarcaAlerta('${m.nome.replace(/'/g, "\\'")}') " title="Ver defeitos desta marca" style="color:#7c3aed;">
           <i class="fa-solid fa-filter" style="font-size:11px;pointer-events:none;"></i>
         </button>
