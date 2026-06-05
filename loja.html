@@ -103,7 +103,7 @@
 
     <div id="itensList"></div>
 
-    <button class="btn btn-ghost mt" id="btnImprimir" onclick="abrirEtiquetaAvulsa()"><i class="fa-solid fa-print"></i> Imprimir etiqueta</button>
+    <button class="btn btn-ghost mt" id="btnImprimir" onclick="imprimirComprovantes()"><i class="fa-solid fa-print"></i> Imprimir comprovantes</button>
     <button class="btn btn-ghost mt" id="btnAddItem" onclick="abrirItemSheet()"><i class="fa-solid fa-plus"></i> Adicionar item</button>
     <button class="btn btn-success mt" id="btnFechar" onclick="fecharLote()"><i class="fa-solid fa-lock"></i> Fechar lote do mês</button>
     <div class="center muted mt" style="line-height:1.5;">Você pode adicionar itens em vários dias.<br>Feche o lote só quando terminar o mês.</div>
@@ -165,20 +165,6 @@
     </div>
     <button class="btn btn-primary mt" id="btnSalvarItem" style="margin-top:18px;" onclick="salvarItem()"><i class="fa-solid fa-check"></i> Adicionar ao lote</button>
     <button class="btn btn-ghost mt" onclick="fecharItemSheet()">Cancelar</button>
-  </div>
-</div>
-
-<!-- Sheet: imprimir etiqueta avulsa -->
-<div id="etiquetaSheet" class="overlay hidden" onclick="if(event.target===this)fecharEtiquetaSheet()">
-  <div class="sheet">
-    <h3><i class="fa-solid fa-print" style="color:var(--accent);"></i> Imprimir etiqueta</h3>
-    <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">A etiqueta sai com o número do lote e a marca. Você cola a etiqueta do código de barras no espaço indicado.</p>
-    <div class="field">
-      <label>Marca</label>
-      <input id="etqMarca" type="text" placeholder="Ex: Nike, Adidas..." onkeydown="if(event.key==='Enter')imprimirEtiquetaAvulsa()">
-    </div>
-    <button class="btn btn-primary mt" style="margin-top:10px;" onclick="imprimirEtiquetaAvulsa()"><i class="fa-solid fa-print"></i> Imprimir</button>
-    <button class="btn btn-ghost mt" onclick="fecharEtiquetaSheet()">Cancelar</button>
   </div>
 </div>
 
@@ -352,59 +338,87 @@ window.reabrirLote = async function() {
   } catch(e) { console.error(e); toast("Erro ao reabrir."); }
 };
 
-window.abrirEtiquetaAvulsa = function() {
+window.imprimirComprovantes = function() {
   if(!loteAtual) { toast("Crie o lote primeiro."); return; }
-  document.getElementById("etqMarca").value = "";
-  document.getElementById("etiquetaSheet").classList.remove("hidden");
-  setTimeout(() => document.getElementById("etqMarca").focus(), 100);
-};
-window.fecharEtiquetaSheet = function() {
-  document.getElementById("etiquetaSheet").classList.add("hidden");
-};
-
-window.imprimirEtiquetaAvulsa = function() {
-  const marca = document.getElementById("etqMarca").value.trim();
-  if(!marca) { toast("Digite a marca."); return; }
   const loteNum = loteAtual.numero || (loteAtual.id || "").slice(-6).toUpperCase();
   const dataHoje = new Date().toLocaleDateString("pt-BR");
+  const lojaNome = (LOJA||"").replace(/</g,"");
+
+  // 4 comprovantes por folha
+  const um = `
+    <div class="comp">
+      <div class="c-head">
+        <div class="c-titulo">SHOE MIX CALÇADOS</div>
+        <div class="c-sub">Comprovante de Defeito</div>
+      </div>
+      <div class="c-divisor"></div>
+      <div class="c-row">
+        <div class="c-campo" style="flex:1.3;">
+          <div class="c-label">Loja</div>
+          <div class="c-valor">${lojaNome}</div>
+        </div>
+        <div class="c-campo" style="flex:1;">
+          <div class="c-label">Data</div>
+          <div class="c-valor">${dataHoje}</div>
+        </div>
+        <div class="c-campo" style="flex:1;">
+          <div class="c-label">Lote</div>
+          <div class="c-valor c-forte">${loteNum}</div>
+        </div>
+      </div>
+      <div class="c-row">
+        <div class="c-campo" style="flex:1;">
+          <div class="c-label">Responsável</div>
+          <div class="c-linha-escrever"></div>
+        </div>
+        <div class="c-campo" style="flex:1;">
+          <div class="c-label">Marca</div>
+          <div class="c-linha-escrever"></div>
+        </div>
+      </div>
+      <div class="c-label" style="margin-bottom:5px;">Etiqueta do produto com defeito</div>
+      <div class="c-colar"><span>colar etiqueta aqui</span></div>
+      <div class="c-motivo">
+        <div class="c-label" style="margin-bottom:5px;">Motivo</div>
+        <div class="c-linha-fina"></div>
+        <div class="c-linha-fina"></div>
+      </div>
+      <div class="c-ass">
+        <div class="c-ass-linha"><div class="c-ass-leg">Gerente Responsável</div></div>
+      </div>
+    </div>`;
 
   const win = window.open("", "_blank");
   win.document.write(`
-    <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Etiqueta — Lote ${loteNum}</title>
+    <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Comprovantes — Lote ${loteNum}</title>
     <style>
       *{margin:0;padding:0;box-sizing:border-box;}
-      body{font-family:Arial,Helvetica,sans-serif;padding:14px;}
-      .etiqueta{width:300px;border:1.5px solid #000;border-radius:8px;padding:14px;page-break-inside:avoid;}
-      .et-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #ccc;padding-bottom:7px;margin-bottom:10px;}
-      .et-lote{font-size:16px;font-weight:800;}
-      .et-loja{font-size:10px;color:#555;margin-top:1px;}
-      .et-marca{font-size:22px;font-weight:800;letter-spacing:.5px;margin-bottom:11px;}
-      .et-colar{border:1.5px dashed #999;border-radius:6px;height:74px;display:flex;align-items:center;justify-content:center;background:#fafafa;}
-      .et-colar span{font-size:10px;color:#999;letter-spacing:.5px;}
-      .et-rodape{display:flex;gap:14px;margin-top:13px;}
-      .et-rodape>div{flex:1;}
-      .et-linha{border-bottom:1px solid #000;height:22px;}
-      .et-leg{font-size:9px;color:#555;margin-top:2px;text-align:center;}
+      body{font-family:'Helvetica Neue',Arial,sans-serif;padding:10px;}
+      .folha{display:flex;flex-wrap:wrap;gap:10px;}
+      .comp{width:48.5%;border:1px solid #d8d8d8;border-radius:14px;padding:14px;page-break-inside:avoid;}
+      .c-head{text-align:center;margin-bottom:11px;}
+      .c-titulo{font-size:14px;font-weight:800;letter-spacing:1.3px;color:#111;}
+      .c-sub{font-size:8.5px;font-weight:600;letter-spacing:2.2px;color:#999;text-transform:uppercase;margin-top:3px;}
+      .c-divisor{height:1px;background:#ececec;margin-bottom:11px;}
+      .c-row{display:flex;gap:8px;margin-bottom:10px;}
+      .c-campo{min-width:0;}
+      .c-label{font-size:7.5px;font-weight:700;letter-spacing:.8px;color:#aaa;text-transform:uppercase;}
+      .c-valor{font-size:10.5px;font-weight:600;color:#111;margin-top:2px;}
+      .c-forte{font-weight:800;}
+      .c-linha-escrever{border-bottom:1px solid #e0e0e0;height:16px;margin-top:3px;}
+      .c-colar{border:1.5px dashed #d5d5d5;border-radius:10px;height:86px;display:flex;align-items:center;justify-content:center;background:#fafafa;margin-bottom:11px;}
+      .c-colar span{font-size:8.5px;color:#bbb;letter-spacing:.5px;}
+      .c-motivo{margin-bottom:14px;}
+      .c-linha-fina{border-bottom:1px solid #e8e8e8;height:14px;margin-top:6px;}
+      .c-ass{text-align:center;padding-top:4px;}
+      .c-ass-linha{border-top:1px solid #ccc;width:70%;margin:0 auto;padding-top:5px;}
+      .c-ass-leg{font-size:7.5px;font-weight:700;letter-spacing:1px;color:#888;text-transform:uppercase;}
       @media print{ body{padding:0;} }
     </style></head><body>
-    <div class="etiqueta">
-      <div class="et-head">
-        <div>
-          <div class="et-lote">LOTE ${loteNum}</div>
-          <div class="et-loja">${LOJA} · ${loteAtual.mes}</div>
-        </div>
-      </div>
-      <div class="et-marca">${marca.toUpperCase().replace(/</g,"")}</div>
-      <div class="et-colar"><span>colar etiqueta do código de barras aqui</span></div>
-      <div class="et-rodape">
-        <div><div class="et-linha"></div><div class="et-leg">Assinatura do gerente</div></div>
-        <div><div class="et-linha"></div><div class="et-leg">Data: ${dataHoje}</div></div>
-      </div>
-    </div>
+    <div class="folha">${um}${um}${um}${um}</div>
     <script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script>
     </body></html>`);
   win.document.close();
-  fecharEtiquetaSheet();
 };
 
 // ── Item sheet ──
