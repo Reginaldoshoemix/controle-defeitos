@@ -1662,7 +1662,7 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
           <div class="sc-label-row">Valor Total em Aberto</div>
           <div class="sc-footer sc-footer-red">
             <span class="sc-dot" style="background:#dc2626;"></span>
-            <span id="totalDefeitosText">0 registros (pendentes e vencidos)</span>
+            <span id="totalDefeitosText">0 registros em aberto</span>
           </div>
         </div>
 
@@ -4129,7 +4129,7 @@ function extrairItensTransferencia(texto, rawItems) {
   let notaOrigem = "";
 
   // Padrão de numeração aceito
-  const NUM_PAT = /^(\d{2,3}[./]\d{2,3}|\d{2,3}\/\d{2,3}|[A-Z]{1,3}\d{1,3}|\d{2,3}|UN|UNICA|ÚNICO|UNI|GGG|XGG|XG|GG|PP|[PMG]\b|U\b|I\d+)$/i;
+  const NUM_PAT = /^(\d{2,3}[./-]\d{2,3}|[A-Z]{1,3}\d{1,3}|\d{2,3}|UN|UNICA|ÚNICO|UNI|GGG|XGG|XG|GG|PP|[PMG]\b|U\b|I\d+)$/i;
 
   let referenciaAtual = "";
   for(const linha of linhas) {
@@ -4382,7 +4382,12 @@ function extrairCor(descricao) {
     "BRONZE","COBRE","ENVELHECIDO","VINTAGE","WASHED","DEGRADE","DEGRADÊ",
     "MULTICOR","MULTICOLOR","ESTAMPADO","FLORAL","ANIMAL","ZEBRA","LEOPARDO","ONCA","COBRA",
     "GLITTER","METALICO","METÁLICO","HOLOGRAFICO","HOLOGRÁFICO","PEROLADO","PEROLADA",
-    "TRANSPARENTE","CRISTAL","CRYSTAL","SMOKE","FUMÊ","FUME"
+    "TRANSPARENTE","CRISTAL","CRYSTAL","SMOKE","FUMÊ","FUME",
+    // Cores adicionais identificadas em descrições de fábrica
+    "SAND","COCONUT","NATURE","NUDE","SAFRA","TAN","CARVAO","CARVÃO","GRAFFITE",
+    "PURPURA","PÚRPURA","ARDOSIA","ARDÓSIA","TIJOLO","BARRO","AVELÃ","NOZ","TRUFA",
+    "CHANTILLY","BISCOITO","AMENDOIM","TOSTADO","CARAMELADO","MEL","TABACO","CACAU",
+    "PERVINCA","JAMBO","UVA","FRAMBOESA","CHICLETE","BABY","ICE","MILK","CAFFE","LATTE"
   ];
 
   const coresSet = new Set(coresCertas);
@@ -5404,7 +5409,7 @@ function renderCards() {
   const _elResolvidosText = document.getElementById("totalResolvidosText");
   if (_elResolvidosText) _elResolvidosText.innerText = resolvidos.length + (resolvidos.length === 1 ? " registro" : " registros");
   document.getElementById("totalValor").innerText    = "R$ " + formatBRL(totalValorReais);
-  document.getElementById("totalDefeitosText").innerText = ativosValor.length + " registro" + (ativosValor.length !== 1 ? "s" : "") + " (pendentes e vencidos)";
+  document.getElementById("totalDefeitosText").innerText = ativosValor.length + " registro" + (ativosValor.length !== 1 ? "s" : "") + " em aberto";
   document.getElementById("totalMarcas").innerText   = marcas.length;
   document.getElementById("marcasEnvio").innerText   = envio;
 
@@ -8154,7 +8159,7 @@ function gerarPDF() {
           <tbody>
             ${itens.map(i => `<tr>
               <td style="font-weight:700;color:#dc2626;white-space:nowrap;">${i.marca}</td>
-              <td class="td-ref">${i.referencia}${i.numeracao ? `<span style="font-weight:400;color:#9ca3af;"> · nº ${i.numeracao}</span>` : ""}</td>
+              <td class="td-ref">${i.referencia}${i.cor ? `<span style="font-weight:400;color:#6b7280;"> · ${i.cor}</span>` : ""}${i.numeracao ? `<span style="font-weight:400;color:#9ca3af;"> · nº ${i.numeracao}</span>` : ""}</td>
               <td class="td-defeito">${i.defeito || "-"}</td>
               <td class="td-nota">${i.notaOrigem || "-"}</td>
               ${isVencidoPdf ? `<td class="td-nota" style="white-space:nowrap;">${i.dataEmissaoNfe ? formatDate(i.dataEmissaoNfe) : "-"}<br><span style="font-size:9px;font-weight:700;color:#7c3aed;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);border-radius:4px;padding:1px 5px;display:inline-block;margin-top:2px;">Vencida</span></td>` : ""}
