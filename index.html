@@ -4294,7 +4294,10 @@ function detectarMarca(descricao) {
     "BETTY BOOP","REBECCA BONBON","FOUR SEASONS","LACOURO",
     "MORMAII","BAGAGGIO","GANGSTER","YES","FUSECO",
     // Vestuário
-    "RED NOSE","MARIA FORMOSA","GRINGA"
+    "RED NOSE","MARIA FORMOSA","GRINGA",
+    // Marcas adicionais identificadas em transferências
+    "JOTA PE","JOTAPE","JOTA PÉ","BERTELLI","ZAPY","DEMOCRATA","KILDARE","SAMELLO",
+    "FREE WAY","FREEWAY","CALVEST","RAFARILLO","SÂNDALO","SANDALO","SAPATOTERAPIA"
   ];
   const achou = marcasConhecidas.find(m => d.includes(m));
   if(achou) return achou;
@@ -4387,7 +4390,8 @@ function extrairCor(descricao) {
     "SAND","COCONUT","NATURE","NUDE","SAFRA","TAN","CARVAO","CARVÃO","GRAFFITE",
     "PURPURA","PÚRPURA","ARDOSIA","ARDÓSIA","TIJOLO","BARRO","AVELÃ","NOZ","TRUFA",
     "CHANTILLY","BISCOITO","AMENDOIM","TOSTADO","CARAMELADO","MEL","TABACO","CACAU",
-    "PERVINCA","JAMBO","UVA","FRAMBOESA","CHICLETE","BABY","ICE","MILK","CAFFE","LATTE"
+    "PERVINCA","JAMBO","UVA","FRAMBOESA","CHICLETE","BABY","ICE","MILK","CAFFE","LATTE",
+    "DARK","BROWN","LIGHT","BEIGE","CAMEL","TAUPE","KHAKI","OLIVE","WINE","BURGUNDY","MUSTARD"
   ];
 
   const coresSet = new Set(coresCertas);
