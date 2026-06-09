@@ -3320,6 +3320,7 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
       <button onclick="adicionarLoja()" class="btn-primary" style="padding:9px 14px;"><i class="fa-solid fa-plus"></i>Adicionar</button>
     </div>
     <div id="lojasListModal" style="max-height:300px;overflow-y:auto;margin-bottom:14px;"></div>
+    <button onclick="padronizarLojas()" class="btn-ghost w-full justify-center" style="padding:10px;margin-bottom:8px;color:#b45309;border-color:rgba(245,158,11,.3);"><i class="fa-solid fa-wand-magic-sparkles"></i>Padronizar nomes (Loja 01, 02...)</button>
     <button onclick="document.getElementById('lojasModal').style.display='none'" class="btn-ghost w-full justify-center" style="padding:10px;">Fechar</button>
   </div>
 </div>
@@ -6648,6 +6649,66 @@ function closeModal(e) {
 }
 
 // ───── BACKUP / IMPORT ─────
+// ── Padroniza nomes de loja para dois dígitos (Loja 01, 02...) ──
+function _normalizarNomeLoja(nome) {
+  if(!nome) return nome;
+  // Captura "Loja" seguido de um número (com ou sem zero, qualquer caixa/espaço)
+  const m = String(nome).trim().match(/^loja\s*0*(\d{1,2})$/i);
+  if(!m) return nome; // não bate o padrão "Loja N" → deixa como está
+  const num = m[1].padStart(2, "0");
+  return "Loja " + num;
+}
+
+function padronizarLojas() {
+  // Conta o que mudaria nos defeitos
+  let mudancas = [];
+  defeitos.forEach(d => {
+    const novo = _normalizarNomeLoja(d.loja);
+    if(novo !== d.loja) mudancas.push({ de: d.loja, para: novo });
+  });
+  // Resumo das transformações únicas
+  const resumo = {};
+  mudancas.forEach(m => { const k = m.de + " → " + m.para; resumo[k] = (resumo[k]||0)+1; });
+  const linhas = Object.keys(resumo);
+
+  if(!linhas.length) {
+    showToast("Nenhum nome de loja precisa ser padronizado. Tudo já está certo!", "success");
+    return;
+  }
+
+  const detalhe = linhas.map(l => {
+    const [transf] = l.split("|");
+    return `• ${l}  (${resumo[l]} ${resumo[l]===1?"registro":"registros"})`;
+  }).join("\n");
+
+  openConfirm(
+    `Padronizar ${mudancas.length} registro(s) de defeito?`,
+    "warn",
+    () => {
+      // Aplica nos defeitos
+      defeitos.forEach(d => { d.loja = _normalizarNomeLoja(d.loja); });
+      // Aplica na lista de lojas, removendo duplicatas que ficaram iguais
+      try {
+        const vistas = new Set();
+        const novaLista = [];
+        LOJAS.forEach(l => {
+          const nomeNorm = _normalizarNomeLoja(l.nome);
+          if(!vistas.has(nomeNorm)) {
+            vistas.add(nomeNorm);
+            novaLista.push({ ...l, nome: nomeNorm });
+          }
+        });
+        LOJAS = novaLista.sort((a,b) => a.nome.localeCompare(b.nome, 'pt', {numeric:true}));
+        saveLojas();
+      } catch(e) { console.error(e); }
+      saveData(); renderLight();
+      if(typeof autoSave !== "undefined" && autoSave.markDirty) autoSave.markDirty();
+      showToast(`Pronto! ${mudancas.length} registro(s) padronizado(s).`, "success");
+    },
+    detalhe
+  );
+}
+
 function exportBackup() {
   const json = JSON.stringify({ defeitos, nfes, fornecedores, marcasInfo }, null, 2);
   const blob = new Blob([json], { type: "application/json" });
