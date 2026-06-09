@@ -1959,14 +1959,14 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
                     </div>
 
                     <div style="position:relative;">
-                      <label class="section-label block mb-1">Fornecedor / Fábrica</label>
-                      <input id="fornecedorInput" type="text" placeholder="Buscar fornecedor ou marca..." class="input w-full" style="padding:9px 12px;" autocomplete="off" oninput="showFornecedorSuggestions(this.value,'fornecedorSuggestions','fornecedorId')" onblur="setTimeout(()=>{const s=document.getElementById('fornecedorSuggestions');if(s)s.style.display='none'},180)">
+                      <label class="section-label block mb-1">Vincular fornecedor cadastrado</label>
+                      <input id="fornecedorInput" type="text" placeholder="Buscar por nome ou marca já cadastrados..." class="input w-full" style="padding:9px 12px;" autocomplete="off" oninput="showFornecedorSuggestions(this.value,'fornecedorSuggestions','fornecedorId')" onblur="setTimeout(()=>{const s=document.getElementById('fornecedorSuggestions');if(s)s.style.display='none'},180)">
                       <input type="hidden" id="fornecedorId" value="">
                       <div id="fornecedorSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--accent-border);border-radius:10px;z-index:200;max-height:180px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:3px;"></div>
                     </div>
 
                     <div>
-                      <label class="section-label block mb-1">CNPJ Fornecedor</label>
+                      <label class="section-label block mb-1">CNPJ avulso (se não for cadastrado)</label>
                       <input id="cnpj" type="text" placeholder="00.000.000/0000-00" class="input w-full" style="padding:9px 12px;" maxlength="18" oninput="mascaraCnpj(this)">
                     </div>
 
@@ -4305,7 +4305,10 @@ function detectarMarca(descricao) {
     "RED NOSE","MARIA FORMOSA","GRINGA",
     // Marcas adicionais identificadas em transferências
     "JOTA PE","JOTAPE","JOTA PÉ","BERTELLI","ZAPY","DEMOCRATA","KILDARE","SAMELLO",
-    "FREE WAY","FREEWAY","CALVEST","RAFARILLO","SÂNDALO","SANDALO","SAPATOTERAPIA"
+    "FREE WAY","FREEWAY","CALVEST","RAFARILLO","SÂNDALO","SANDALO","SAPATOTERAPIA",
+    "SUA CIA","SUACIA","VIZZANO","MOLECA","FACChINNI","FACCHINI","DAKOTA","TANARA",
+    "RAMARIM","MODARE","BEIRA RIO","GRUPO BEIRA RIO","USAFLEX","PICCADILLY","BOTTERO",
+    "MISSISSIPI","MARES","LIVIA FERRAZ","MINI PE","MINIPE","SUA CIA."
   ];
   const achou = marcasConhecidas.find(m => d.includes(m));
   if(achou) return achou;
@@ -4399,7 +4402,9 @@ function extrairCor(descricao) {
     "PURPURA","PÚRPURA","ARDOSIA","ARDÓSIA","TIJOLO","BARRO","AVELÃ","NOZ","TRUFA",
     "CHANTILLY","BISCOITO","AMENDOIM","TOSTADO","CARAMELADO","MEL","TABACO","CACAU",
     "PERVINCA","JAMBO","UVA","FRAMBOESA","CHICLETE","BABY","ICE","MILK","CAFFE","LATTE",
-    "DARK","BROWN","LIGHT","BEIGE","CAMEL","TAUPE","KHAKI","OLIVE","WINE","BURGUNDY","MUSTARD"
+    "DARK","BROWN","LIGHT","BEIGE","CAMEL","TAUPE","KHAKI","OLIVE","WINE","BURGUNDY","MUSTARD",
+    "CASTOR","AVELA","AMENDOA","CARVALHO","PINHAO","NOZES","CEDRO","FENDI","GELO","PERLA","PEROLA",
+    "GOLD","ROSE","SILVER","PLATINUM","CHAMPANHE","MARSALA","TERRACOTA","CARMIM","GRENA"
   ];
 
   const coresSet = new Set(coresCertas);
