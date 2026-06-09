@@ -2974,6 +2974,13 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
           </div>
         </div>
         <div style="margin-top:10px;">
+          <label class="section-label block mb-1"><i class="fa-solid fa-industry" style="color:#0369a1;font-size:10px;margin-right:3px;"></i>CNPJ da fábrica</label>
+          <div style="position:relative;">
+            <input id="nfeCnpjFabrica" type="text" placeholder="Digite o CNPJ da fábrica..." maxlength="18" class="input w-full" style="padding:9px 12px;" autocomplete="off" oninput="mascaraCnpj(this);showNfeCnpjSuggestions(this.value)" onblur="setTimeout(()=>{const s=document.getElementById('nfeCnpjSuggestions');if(s)s.style.display='none'},180)">
+            <div id="nfeCnpjSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid rgba(3,105,161,.24);border-radius:10px;z-index:450;max-height:180px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:3px;"></div>
+          </div>
+        </div>
+        <div style="margin-top:10px;">
           <label class="section-label block mb-1"><i class="fa-solid fa-receipt" style="color:#2563eb;font-size:10px;margin-right:3px;"></i>Valor da NF-e (R$)</label>
           <div style="position:relative;">
             <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:700;color:var(--muted);pointer-events:none;">R$</span>
@@ -9821,6 +9828,38 @@ function selecionarFornecedorNfe(id) {
   if(box) box.style.display = 'none';
 }
 
+// ── Sugestão de fábrica pelo CNPJ digitado ──
+function showNfeCnpjSuggestions(value) {
+  const box = document.getElementById('nfeCnpjSuggestions');
+  if(!box) return;
+  const qCnpj = normalizarCNPJ(String(value || ''));
+  if(!qCnpj || !fornecedores.length) { box.style.display = 'none'; return; }
+  const matches = fornecedores.filter(f => normalizarCNPJ(f.cnpj).includes(qCnpj)).slice(0, 8);
+  if(!matches.length) {
+    box.style.display = 'block';
+    box.innerHTML = `<div style="padding:9px 12px;font-size:12px;color:var(--muted);">Nenhuma fábrica cadastrada com esse CNPJ.</div>`;
+    return;
+  }
+  box.style.display = 'block';
+  box.innerHTML = matches.map(f => `
+    <div class="autocomplete-item" onmousedown="selecionarFabricaPorCnpj(${Number(f.id)})">
+      <div style="font-weight:800;font-size:13px;">${f.marca || 'Fornecedor'}</div>
+      <div style="font-size:11px;color:var(--muted);">${[f.razaoSocial, f.cnpj].filter(Boolean).join(' · ')}</div>
+    </div>
+  `).join('');
+}
+
+function selecionarFabricaPorCnpj(id) {
+  const f = fornecedores.find(x => Number(x.id) === Number(id));
+  if(!f) return;
+  aplicarFornecedorNaNfe(f, 'manual');
+  // preenche o campo CNPJ com o CNPJ formatado da fábrica selecionada
+  const cnpjInp = document.getElementById('nfeCnpjFabrica');
+  if(cnpjInp) cnpjInp.value = formatarCNPJBasico(f.cnpj || '');
+  const box = document.getElementById('nfeCnpjSuggestions');
+  if(box) box.style.display = 'none';
+}
+
 function vincularFornecedorPorXML(dadosXml) {
   window._nfeXmlFornecedorEncontrado = dadosXml || null;
   const cnpj = dadosXml?.cnpj || '';
@@ -9983,6 +10022,7 @@ function openNfeModal(nfeId) {
   document.getElementById('nfeFornecedor').value= nfe?.fornecedor || '';
   document.getElementById('nfeFornecedorId').value = nfe?.fornecedorId || '';
   document.getElementById('nfeFornecedorCnpj').value = nfe?.fornecedorCnpj || '';
+  { const cf = document.getElementById('nfeCnpjFabrica'); if(cf) cf.value = nfe?.fornecedorCnpj || ''; }
   document.getElementById('nfeFornecedorMarca').value = nfe?.fornecedorMarca || nfe?.fornecedor || '';
   document.getElementById('nfeStatus').value    = nfe?.status     || 'pendente';
   document.getElementById('nfeDataColeta').value    = nfe?.dataColeta    || '';
@@ -10094,6 +10134,17 @@ async function saveNfe() {
 
   const fornecedorInferido = inferirFornecedorNfe(produtosRelacionados);
   if(fornecedorInferido && !document.getElementById('nfeFornecedorId').value) aplicarFornecedorNaNfe(fornecedorInferido, 'produto');
+  // Se digitou CNPJ no campo da fábrica, tenta vincular/usar esse CNPJ
+  const cnpjDigitado = document.getElementById('nfeCnpjFabrica')?.value?.trim() || '';
+  if(cnpjDigitado) {
+    const fAchado = buscarFornecedorPorCNPJ(cnpjDigitado);
+    if(fAchado && !document.getElementById('nfeFornecedorId').value) {
+      aplicarFornecedorNaNfe(fAchado, 'manual');
+    } else if(!document.getElementById('nfeFornecedorCnpj').value) {
+      // sem fornecedor cadastrado: grava ao menos o CNPJ digitado
+      document.getElementById('nfeFornecedorCnpj').value = cnpjDigitado;
+    }
+  }
   const nfeFornecedorId = document.getElementById('nfeFornecedorId')?.value || '';
   const nfeFornecedorCnpj = document.getElementById('nfeFornecedorCnpj')?.value || '';
   const nfeFornecedorMarca = document.getElementById('nfeFornecedorMarca')?.value || document.getElementById('nfeFornecedor').value.trim();
@@ -11281,18 +11332,25 @@ function getDefeitosFornecedor(f) {
   });
 }
 
-// ── Retorna NF-es vinculadas a um fornecedor (via produtos relacionados) ──
+// ── Retorna NF-es vinculadas a um fornecedor (CNPJ tem prioridade; marca é fallback) ──
 function getNfesFornecedor(f, defeitosVinc = getDefeitosFornecedor(f)) {
   const idsDefeitos = new Set(defeitosVinc.map(d => Number(d.id)));
   const cnpjForn = normalizarCNPJ(f.cnpj);
   const marcaForn = String(f.marca || '').trim().toLowerCase();
   return nfes.filter(n => {
+    // 1) Vínculo direto por ID do fornecedor
     if(n.fornecedorId && Number(n.fornecedorId) === Number(f.id)) return true;
-    if(cnpjForn && normalizarCNPJ(n.fornecedorCnpj) === cnpjForn) return true;
+    // 2) Se a NF-e TEM CNPJ, associa SOMENTE pelo CNPJ exato (não usa marca)
+    const cnpjNfe = normalizarCNPJ(n.fornecedorCnpj);
+    if(cnpjNfe) {
+      return cnpjForn && cnpjNfe === cnpjForn;
+    }
+    // 3) NF-e SEM CNPJ: aí sim usa a marca como fallback
     if(marcaForn) {
       const nfMarca = String(n.fornecedorMarca || n.fornecedor || '').trim().toLowerCase();
       if(nfMarca && (nfMarca === marcaForn || nfMarca.includes(marcaForn) || marcaForn.includes(nfMarca))) return true;
     }
+    // 4) Ou por produtos relacionados (defeitos daquele fornecedor)
     return (n.produtosRelacionados || []).some(pid => idsDefeitos.has(Number(pid)));
   });
 }
