@@ -9772,16 +9772,25 @@ function buscarFornecedorPorMarca(marca) {
          fornecedores.find(f => alvo.includes(String(f.marca || '').trim().toLowerCase()) || String(f.marca || '').trim().toLowerCase().includes(alvo)) || null;
 }
 
-function aplicarFornecedorNaNfe(fornecedor, origem = 'manual') {
+function aplicarFornecedorNaNfe(fornecedor, origem = 'manual', preservarMarca = false) {
   if(!fornecedor) return false;
   const inp = document.getElementById('nfeFornecedor');
   const hid = document.getElementById('nfeFornecedorId');
   const cnpj = document.getElementById('nfeFornecedorCnpj');
   const marca = document.getElementById('nfeFornecedorMarca');
-  if(inp) inp.value = fornecedor.marca || fornecedor.razaoSocial || '';
-  if(hid) hid.value = fornecedor.id || '';
-  if(cnpj) cnpj.value = fornecedor.cnpj || '';
-  if(marca) marca.value = fornecedor.marca || '';
+  // Se preservarMarca, mantém a marca já preenchida pelo usuário (caso de 1 CNPJ com várias marcas)
+  const marcaJaDigitada = inp && inp.value.trim();
+  if(preservarMarca && marcaJaDigitada) {
+    // mantém inp.value atual; só vincula id e cnpj, e sincroniza o hidden da marca com o digitado
+    if(hid) hid.value = fornecedor.id || '';
+    if(cnpj) cnpj.value = fornecedor.cnpj || '';
+    if(marca) marca.value = inp.value.trim();
+  } else {
+    if(inp) inp.value = fornecedor.marca || fornecedor.razaoSocial || '';
+    if(hid) hid.value = fornecedor.id || '';
+    if(cnpj) cnpj.value = fornecedor.cnpj || '';
+    if(marca) marca.value = fornecedor.marca || '';
+  }
   if(origem === 'xml') showToast('Fornecedor vinculado automaticamente pelo CNPJ do XML.', 'success');
   if(origem === 'produto') showToast('Fornecedor preenchido pelos produtos selecionados.', 'info');
   return true;
@@ -9872,7 +9881,7 @@ function showNfeCnpjSuggestions(value) {
 function selecionarFabricaPorCnpj(id) {
   const f = fornecedores.find(x => Number(x.id) === Number(id));
   if(!f) return;
-  aplicarFornecedorNaNfe(f, 'manual');
+  aplicarFornecedorNaNfe(f, 'manual', true); // preserva marca já digitada
   // preenche o campo CNPJ com o CNPJ formatado da fábrica selecionada
   const cnpjInp = document.getElementById('nfeCnpjFabrica');
   if(cnpjInp) cnpjInp.value = formatarCNPJBasico(f.cnpj || '');
@@ -10159,7 +10168,7 @@ async function saveNfe() {
   if(cnpjDigitado) {
     const fAchado = buscarFornecedorPorCNPJ(cnpjDigitado);
     if(fAchado && !document.getElementById('nfeFornecedorId').value) {
-      aplicarFornecedorNaNfe(fAchado, 'manual');
+      aplicarFornecedorNaNfe(fAchado, 'manual', true); // preserva marca já digitada
     } else if(!document.getElementById('nfeFornecedorCnpj').value) {
       // sem fornecedor cadastrado: grava ao menos o CNPJ digitado
       document.getElementById('nfeFornecedorCnpj').value = cnpjDigitado;
