@@ -9808,7 +9808,18 @@ function renderNfeTable() {
 
   let lista = nfes.filter(n => {
     const texto = [n.numeroNfe, n.fornecedor, n.fornecedorMarca, n.fornecedorCnpj, n.loja, n.obs, nfeStatusLabel(n.status), nfeTipoResolucaoLabel(n.tipoResolucao)].join(' ').toLowerCase();
-    if(search && !texto.includes(search)) return false;
+    if(search) {
+      // tenta casar como texto; se não, tenta casar como CNPJ (só números)
+      let bate = texto.includes(search);
+      if(!bate) {
+        const searchNums = search.replace(/\D/g, '');
+        if(searchNums.length >= 8) {
+          const cnpjNums = normalizarCNPJ(n.fornecedorCnpj || '');
+          if(cnpjNums && cnpjNums.includes(searchNums)) bate = true;
+        }
+      }
+      if(!bate) return false;
+    }
     if(filterStatus && n.status !== filterStatus) return false;
     if(filterTipoRes && n.tipoResolucao !== filterTipoRes) return false;
     if(filterColetaDe && (n.dataColeta || '') < filterColetaDe) return false;
@@ -11720,7 +11731,12 @@ function filtrarNfesPorFornecedor(fornId) {
   navTo('nfes');
   setTimeout(() => {
     const s = document.getElementById("nfeSearch");
-    if(s) { s.value = f.marca; s.dispatchEvent(new Event('input')); }
+    if(s) {
+      // Filtra pelo CNPJ (assim traz TODAS as notas daquele CNPJ, mesmo com marcas
+      // diferentes — ex.: Mizuno e Olympikus no mesmo CNPJ). Sem CNPJ, usa a marca.
+      s.value = (f.cnpj && f.cnpj.trim()) ? f.cnpj.trim() : f.marca;
+      s.dispatchEvent(new Event('input'));
+    }
   }, 80);
 }
 
