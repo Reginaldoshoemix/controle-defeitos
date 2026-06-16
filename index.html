@@ -1325,7 +1325,7 @@ tr.analise-row td { background: linear-gradient(90deg,rgba(234,179,8,.18) 0%,tra
 <!-- ===== FIREBASE — leitura de lotes das lojas ===== -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, query, where, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, query, where, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCOPjrSD6FtuVEmKsCw2dUKAQJ4Q51GlEY",
@@ -1359,6 +1359,23 @@ window.firebaseLotes = {
   async aprovarLote(loteId) {
     if(!_db) throw new Error("Firebase indisponível");
     await updateDoc(doc(_db, "lotes", loteId), { status: "aprovado", aprovadoEm: new Date().toISOString() });
+  },
+  // ── Avaliações avulsas ──
+  async listarAvaliacoesPendentes() {
+    if(!_db) throw new Error("Firebase indisponível");
+    const q = query(collection(_db, "avaliacoes"), where("status", "==", "pendente"));
+    const snap = await getDocs(q);
+    const avs = [];
+    snap.forEach(d => avs.push({ id: d.id, ...d.data() }));
+    return avs;
+  },
+  async marcarAvaliacao(avId, novoStatus) {
+    if(!_db) throw new Error("Firebase indisponível");
+    await updateDoc(doc(_db, "avaliacoes", avId), { status: novoStatus, respondidoEm: new Date().toISOString() });
+  },
+  async excluirAvaliacao(avId) {
+    if(!_db) throw new Error("Firebase indisponível");
+    await deleteDoc(doc(_db, "avaliacoes", avId));
   }
 };
 window.dispatchEvent(new Event("firebaseLotesReady"));
@@ -2819,6 +2836,10 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
         </div>
         <button onclick="renderLotesPage()" class="btn-ghost" style="padding:9px 16px;align-self:flex-start;"><i class="fa-solid fa-rotate"></i> Atualizar</button>
       </div>
+
+      <!-- Avaliações avulsas -->
+      <div id="avaliacoesContainer" style="margin-bottom:22px;"></div>
+
       <div id="lotesContainer">
         <div style="text-align:center;padding:40px;color:var(--muted);">Carregando lotes...</div>
       </div>
@@ -6245,6 +6266,7 @@ function baixarTodasFotos(id) {
 let _lotesCache = [];
 
 async function renderLotesPage() {
+  renderAvaliacoesAvulsas(); // carrega as avaliações avulsas junto
   const cont = document.getElementById("lotesContainer");
   if(!cont) return;
   if(!window.firebaseLotes || !window.firebaseLotes.disponivel()) {
@@ -6292,6 +6314,95 @@ async function renderLotesPage() {
     console.error(e);
     cont.innerHTML = `<div style="text-align:center;padding:40px;color:var(--danger);">Erro ao carregar lotes: ${e.message}</div>`;
   }
+}
+
+// ═══════════ AVALIAÇÕES AVULSAS (Firebase) ═══════════
+let _avaliacoesCache = [];
+
+async function renderAvaliacoesAvulsas() {
+  const cont = document.getElementById("avaliacoesContainer");
+  if(!cont) return;
+  if(!window.firebaseLotes || !window.firebaseLotes.disponivel() || !window.firebaseLotes.listarAvaliacoesPendentes) {
+    cont.innerHTML = ""; return;
+  }
+  try {
+    const avs = await window.firebaseLotes.listarAvaliacoesPendentes();
+    _avaliacoesCache = avs;
+    if(!avs.length) { cont.innerHTML = ""; return; }
+    let html = `<div style="background:var(--surface);border:1px solid rgba(220,38,38,.25);border-radius:13px;padding:16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <span style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#dc2626,#b91c1c);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;"><i class="fa-solid fa-bolt"></i></span>
+        <div>
+          <div style="font-size:15px;font-weight:800;">Avaliações avulsas</div>
+          <div style="font-size:12px;color:var(--muted);">${avs.length} ${avs.length===1?"item aguardando":"itens aguardando"} resposta da fábrica</div>
+        </div>
+      </div>`;
+    avs.forEach(av => {
+      const fotos = (av.fotos||[]).map(u => `<img src="${u}" onclick="ampliarFotoAvaliacao('${u}')" style="width:46px;height:46px;border-radius:8px;object-fit:cover;cursor:zoom-in;border:1px solid var(--border);">`).join("");
+      html += `
+        <div style="border:1px solid var(--border);border-radius:11px;padding:12px;margin-bottom:9px;">
+          <div style="display:flex;gap:11px;align-items:flex-start;">
+            <div style="display:flex;gap:4px;flex-shrink:0;">${fotos}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13.5px;font-weight:800;">${(av.marca||"—").toUpperCase()} · ${av.referencia||""}</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:1px;">${av.loja||""} · ${(av.cor||"").toUpperCase()} · Tam. ${av.tamanho||"—"}</div>
+              <div style="font-size:12.5px;margin-top:5px;color:var(--text);">${av.defeito||""}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:11px;">
+            <button class="btn-primary" style="flex:1;justify-content:center;padding:8px;background:#16a34a;border-color:#16a34a;" onclick="autorizarAvaliacao('${av.id}')"><i class="fa-solid fa-check"></i> Autorizado (vira defeito)</button>
+            <button class="btn-ghost" style="padding:8px 14px;color:var(--danger);border-color:rgba(220,38,38,.3);" onclick="negarAvaliacao('${av.id}')"><i class="fa-solid fa-xmark"></i> Negado</button>
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+    cont.innerHTML = html;
+  } catch(e) {
+    console.error(e);
+    cont.innerHTML = "";
+  }
+}
+
+window.ampliarFotoAvaliacao = function(url) {
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;z-index:10001;cursor:zoom-out;padding:16px;";
+  ov.innerHTML = `<img src="${url}" style="max-width:100%;max-height:100%;border-radius:10px;object-fit:contain;"><div style="position:absolute;top:18px;right:20px;color:#fff;font-size:30px;opacity:.85;">&times;</div>`;
+  ov.onclick = () => ov.remove();
+  document.body.appendChild(ov);
+};
+
+async function autorizarAvaliacao(avId) {
+  const av = _avaliacoesCache.find(a => a.id === avId);
+  if(!av) return;
+  try {
+    // converte em defeito (reaproveita a mesma lógica dos itens de lote)
+    const novo = _itemLoteParaDefeito(av, av.loja, "");
+    novo.obs = "Avaliação avulsa — troca autorizada pela fábrica";
+    defeitos.push(novo);
+    saveData();
+    // marca como autorizada no Firebase (sai da lista de pendentes)
+    await window.firebaseLotes.marcarAvaliacao(avId, "autorizado");
+    renderLight();
+    renderAvaliacoesAvulsas();
+    showToast("Avaliação autorizada! Virou defeito na base.", "success");
+  } catch(e) { console.error(e); showToast("Erro ao autorizar: " + e.message, "error"); }
+}
+
+function negarAvaliacao(avId) {
+  const av = _avaliacoesCache.find(a => a.id === avId);
+  if(!av) return;
+  openConfirm(
+    "Negar e descartar esta avaliação?",
+    "warn",
+    async () => {
+      try {
+        await window.firebaseLotes.excluirAvaliacao(avId);
+        renderAvaliacoesAvulsas();
+        showToast("Avaliação descartada.", "info");
+      } catch(e) { console.error(e); showToast("Erro ao descartar: " + e.message, "error"); }
+    },
+    `${(av.marca||"").toUpperCase()} ${av.referencia||""} — ${av.loja||""}. Esta ação não pode ser desfeita.`
+  );
 }
 
 function revisarLote(loteId) {
