@@ -6371,21 +6371,69 @@ window.ampliarFotoAvaliacao = function(url) {
   document.body.appendChild(ov);
 };
 
-async function autorizarAvaliacao(avId) {
+let _modoAvaliacao = null;
+function autorizarAvaliacao(avId) {
   const av = _avaliacoesCache.find(a => a.id === avId);
   if(!av) return;
-  try {
-    // converte em defeito (reaproveita a mesma lógica dos itens de lote)
-    const novo = _itemLoteParaDefeito(av, av.loja, "");
-    novo.obs = "Avaliação avulsa — troca autorizada pela fábrica";
-    defeitos.push(novo);
-    saveData();
-    // marca como autorizada no Firebase (sai da lista de pendentes)
-    await window.firebaseLotes.marcarAvaliacao(avId, "autorizado");
-    renderLight();
-    renderAvaliacoesAvulsas();
-    showToast("Avaliação autorizada! Virou defeito na base.", "success");
-  } catch(e) { console.error(e); showToast("Erro ao autorizar: " + e.message, "error"); }
+  _duplicando = false;
+  _modoItemLote = null; // garante que não conflita com o modo de item de lote
+  // preenche o modal de edição com os dados da avaliação (igual revisão de item de lote)
+  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.value=v; };
+  set("editId","");
+  set("editLoja", av.loja||"");
+  set("editMarca", (av.marca||"").toUpperCase());
+  set("editCodigoBarras", av.codigoBarras||"");
+  set("editReferencia", av.referencia||"");
+  set("editCor", (av.cor||"").toUpperCase());
+  set("editNumeracao", av.tamanho||"");
+  set("editQuantidade", 1);
+  set("editDefeito", av.defeito||"");
+  set("editCustoUnitario","");
+  set("editData", today());
+  set("editNotaOrigem","");
+  set("editDataEmissaoNfe","");
+  set("editCnpj","");
+  set("editXml","");
+  set("editObs","Avaliação avulsa — troca autorizada pela fábrica");
+  const fh=document.getElementById("editFornecedorId"); if(fh) fh.value="";
+  const fi=document.getElementById("editFornecedorInput"); if(fi) fi.value="";
+  const tEl=document.getElementById("editModalTitle"); if(tEl) tEl.textContent="Autorizar avaliação avulsa";
+  const bEl=document.getElementById("editSaveBtn"); if(bEl) bEl.innerHTML='<i class="fa-solid fa-check"></i>Autorizar e adicionar';
+  _modoAvaliacao = { avId, fotos: av.fotos||[] };
+  document.getElementById("editModal").style.display="flex";
+}
+
+async function salvarAvaliacaoEditada() {
+  const novo = {
+    id: Date.now() + Math.floor(Math.random()*10000),
+    loja: document.getElementById("editLoja").value,
+    marca: document.getElementById("editMarca").value.trim().toUpperCase(),
+    codigoBarras: document.getElementById("editCodigoBarras").value.trim(),
+    referencia: document.getElementById("editReferencia").value,
+    cor: document.getElementById("editCor").value.trim().toUpperCase(),
+    numeracao: document.getElementById("editNumeracao").value,
+    quantidade: Number(document.getElementById("editQuantidade").value) || 1,
+    custoUnitario: document.getElementById("editCustoUnitario").value ? Number(document.getElementById("editCustoUnitario").value) : "",
+    defeito: document.getElementById("editDefeito").value,
+    data: document.getElementById("editData").value || today(),
+    notaOrigem: document.getElementById("editNotaOrigem").value,
+    dataEmissaoNfe: document.getElementById("editDataEmissaoNfe").value,
+    cnpj: document.getElementById("editCnpj").value.trim(),
+    xml: document.getElementById("editXml").value.trim(),
+    obs: document.getElementById("editObs").value.trim(),
+    fotosLoja: _modoAvaliacao.fotos || [],
+    fornecedorId: document.getElementById("editFornecedorId")?.value || "",
+    status: "pendente"
+  };
+  defeitos.unshift(novo);
+  saveData(); renderLight();
+  // marca a avaliação como autorizada no Firebase (sai dos pendentes)
+  try { await window.firebaseLotes.marcarAvaliacao(_modoAvaliacao.avId, "autorizado"); } catch(e) { console.error(e); }
+  _modoAvaliacao = null;
+  document.getElementById("editModal").style.display = "none";
+  if(typeof autoSave !== "undefined" && autoSave.markDirty) autoSave.markDirty();
+  renderAvaliacoesAvulsas();
+  showToast("Avaliação autorizada e adicionada aos defeitos!", "success");
 }
 
 function negarAvaliacao(avId) {
@@ -6580,6 +6628,8 @@ document.addEventListener('click', (e) => {
 function duplicarDefeito(id) {
   const item = defeitos.find(i => i.id === id);
   if(!item) return;
+  _modoItemLote = null;
+  _modoAvaliacao = null;
   // Preenche o modal de edição com os dados do original
   document.getElementById("editId").value            = item.id;
   document.getElementById("editLoja").value          = item.loja;
@@ -6627,6 +6677,7 @@ function duplicarDefeito(id) {
 function openEdit(id) {
   _duplicando = false;
   _modoItemLote = null;
+  _modoAvaliacao = null;
   const tEl = document.getElementById("editModalTitle");
   const bEl = document.getElementById("editSaveBtn");
   if(tEl) tEl.textContent = "Editar Defeito";
@@ -6666,6 +6717,7 @@ function openEdit(id) {
 }
 
 function saveEdit() {
+  if(_modoAvaliacao) { salvarAvaliacaoEditada(); return; }
   if(_modoItemLote) { salvarItemLoteEditado(); return; }
   if(_duplicando) { salvarDuplicado(); return; }
   const id = Number(document.getElementById("editId").value);
