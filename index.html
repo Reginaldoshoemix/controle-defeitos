@@ -9968,14 +9968,16 @@ function aplicarFornecedorNaNfe(fornecedor, origem = 'manual', preservarMarca = 
   const hid = document.getElementById('nfeFornecedorId');
   const cnpj = document.getElementById('nfeFornecedorCnpj');
   const marca = document.getElementById('nfeFornecedorMarca');
-  // Se preservarMarca, mantém a marca já preenchida pelo usuário (caso de 1 CNPJ com várias marcas)
+  // REGRA: a marca que o usuário já digitou SEMPRE vence (caso de 1 CNPJ com várias marcas,
+  // ex.: Mizuno e Olympikus no mesmo CNPJ). O vínculo do fornecedor só preenche id e CNPJ,
+  // nunca sobrescreve a marca digitada.
   const marcaJaDigitada = inp && inp.value.trim();
-  if(preservarMarca && marcaJaDigitada) {
-    // mantém inp.value atual; só vincula id e cnpj, e sincroniza o hidden da marca com o digitado
+  if(marcaJaDigitada) {
     if(hid) hid.value = fornecedor.id || '';
     if(cnpj) cnpj.value = fornecedor.cnpj || '';
     if(marca) marca.value = inp.value.trim();
   } else {
+    // campo vazio: aí sim usa a marca do fornecedor
     if(inp) inp.value = fornecedor.marca || fornecedor.razaoSocial || '';
     if(hid) hid.value = fornecedor.id || '';
     if(cnpj) cnpj.value = fornecedor.cnpj || '';
