@@ -80,6 +80,16 @@
 
 <div class="wrap" id="app" style="display:none;">
 
+  <!-- Tela de escolha: Lote ou Avulso -->
+  <div id="escolhaModo" class="card center hidden">
+    <div style="font-size:38px;color:var(--accent);opacity:.35;margin-bottom:10px;"><i class="fa-solid fa-clipboard-list"></i></div>
+    <div style="font-weight:800;font-size:16px;margin-bottom:4px;">O que você quer registrar?</div>
+    <div class="muted" style="margin-bottom:18px;">Escolha como deseja enviar o defeito.</div>
+    <button class="btn btn-primary" style="margin-bottom:10px;" onclick="modoLote()"><i class="fa-solid fa-boxes-stacked"></i> Lote do mês</button>
+    <button class="btn btn-ghost" onclick="modoAvulso()"><i class="fa-solid fa-bolt"></i> Avaliação avulsa</button>
+    <div class="center muted mt" style="line-height:1.5;font-size:12px;">O <b>lote</b> junta vários itens do mês.<br>A <b>avaliação avulsa</b> envia 1 item na hora.</div>
+  </div>
+
   <!-- Sem lote -->
   <div id="noLote" class="card center hidden">
     <div style="font-size:38px;color:var(--accent);opacity:.3;margin-bottom:8px;"><i class="fa-solid fa-folder-plus"></i></div>
@@ -99,6 +109,7 @@
         </div>
         <span class="badge b-open" id="loteBadge">● Aberto</span>
       </div>
+      <button class="btn btn-ghost" style="width:auto;padding:6px 11px;margin-top:10px;font-size:12px;" onclick="voltarEscolha()"><i class="fa-solid fa-arrow-left"></i> Trocar modo</button>
     </div>
 
     <div id="itensList"></div>
@@ -116,8 +127,23 @@
     </div>
   </div>
 
-</div>
+  <!-- Avaliação avulsa -->
+  <div id="modoAvulsoView" class="hidden">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:15px;font-weight:800;"><i class="fa-solid fa-bolt" style="color:var(--accent);"></i> Avaliação avulsa</div>
+          <div class="muted">Envia 1 item na hora para avaliação</div>
+        </div>
+        <button class="btn btn-ghost" style="width:auto;padding:7px 12px;" onclick="voltarEscolha()"><i class="fa-solid fa-arrow-left"></i></button>
+      </div>
+    </div>
+    <button class="btn btn-primary mt" onclick="abrirItemSheet(true)"><i class="fa-solid fa-plus"></i> Registrar avaliação</button>
+    <div class="center muted mt" style="line-height:1.5;">O item aparece imediatamente no sistema<br>para avaliação com a fábrica.</div>
+  </div>
 
+</div>
+<!-- fim app -->
 <!-- Sheet: adicionar item -->
 <div id="itemSheet" class="overlay hidden" onclick="if(event.target===this)fecharItemSheet()">
   <div class="sheet">
@@ -279,8 +305,30 @@ async function carregarItens() {
 function render() {
   document.getElementById("loadingScreen").style.display = "none";
   document.getElementById("app").style.display = "block";
+  const escolha = document.getElementById("escolhaModo");
   const noLote = document.getElementById("noLote");
   const loteBox = document.getElementById("loteAtivo");
+  const avulsoView = document.getElementById("modoAvulsoView");
+
+  // Modo avulso: mostra só a tela de avulso
+  if(window._modo === "avulso") {
+    escolha.classList.add("hidden");
+    noLote.classList.add("hidden");
+    loteBox.classList.add("hidden");
+    avulsoView.classList.remove("hidden");
+    return;
+  }
+  // Sem modo escolhido ainda: mostra a tela de escolha
+  if(window._modo !== "lote") {
+    escolha.classList.remove("hidden");
+    noLote.classList.add("hidden");
+    loteBox.classList.add("hidden");
+    avulsoView.classList.add("hidden");
+    return;
+  }
+  // Modo lote
+  escolha.classList.add("hidden");
+  avulsoView.classList.add("hidden");
   if(!loteAtual) {
     noLote.classList.remove("hidden");
     loteBox.classList.add("hidden");
@@ -460,7 +508,7 @@ window.imprimirComprovantes = function(qtd) {
 };
 
 // ── Item sheet ──
-window.abrirItemSheet = function() {
+window.abrirItemSheet = function(avulso) {
   fotos = [null, null, null];
   ["fCodigo","fMarca","fRef","fCor","fTam","fDefeito"].forEach(id => document.getElementById(id).value = "");
   for(let i=0;i<3;i++){
@@ -468,11 +516,28 @@ window.abrirItemSheet = function() {
     const lbls = ["Defeito","Solado","Calçado"];
     box.innerHTML = `<i class="fa-solid fa-camera"></i><span class="lbl">${lbls[i]}</span>`;
   }
+  // configura o sheet conforme o modo
+  const btn = document.getElementById("btnSalvarItem");
+  const titulo = document.querySelector("#itemSheet h3");
+  if(avulso === true) {
+    window._sheetAvulso = true;
+    if(titulo) titulo.innerHTML = `<i class="fa-solid fa-bolt" style="color:var(--accent);"></i> Avaliação avulsa`;
+    if(btn) btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Enviar avaliação`;
+  } else {
+    window._sheetAvulso = false;
+    if(titulo) titulo.innerHTML = `<i class="fa-solid fa-plus" style="color:var(--accent);"></i> Novo item`;
+    if(btn) btn.innerHTML = `<i class="fa-solid fa-check"></i> Adicionar ao lote`;
+  }
   document.getElementById("itemSheet").classList.remove("hidden");
 };
 window.fecharItemSheet = function() {
   document.getElementById("itemSheet").classList.add("hidden");
 };
+
+// ── Modos (escolha / lote / avulso) ──
+window.modoLote = function() { window._modo = "lote"; carregarLote(); };
+window.modoAvulso = function() { window._modo = "avulso"; render(); };
+window.voltarEscolha = function() { window._modo = null; render(); };
 
 window.onFoto = async function(idx, input) {
   const file = input.files[0];
@@ -494,6 +559,35 @@ window.salvarItem = async function() {
   const defeito = document.getElementById("fDefeito").value.trim();
   if(!codigo || !marca || !ref || !tam || !defeito) { toast("Preencha código, marca, referência, tamanho e defeito."); return; }
   if(fotos.some(f => !f)) { toast("Anexe as 3 fotos."); return; }
+
+  // Modo avaliação avulsa: salva em coleção própria, sem lote
+  if(window._sheetAvulso === true) {
+    const btn = document.getElementById("btnSalvarItem");
+    btn.disabled = true;
+    btn.innerHTML = `<div class="spinner"></div> Enviando...`;
+    try {
+      const urls = [];
+      const nomes = ["defeito","solado","calcado"];
+      const avId = "av_" + Date.now();
+      for(let i=0;i<3;i++){
+        const r = ref_(storage, `avaliacoes/${LOJA}/${avId}_${nomes[i]}.jpg`);
+        await uploadBytes(r, fotos[i]);
+        urls.push(await getDownloadURL(r));
+      }
+      await addDoc(collection(db, "avaliacoes"), {
+        loja: LOJA, codigoBarras: codigo, marca: marca, referencia: ref, cor: cor, tamanho: tam,
+        defeito: defeito, fotos: urls, status: "pendente", criadoEm: serverTimestamp()
+      });
+      fecharItemSheet();
+      toast("Avaliação enviada! Já aparece no sistema.");
+    } catch(e) {
+      console.error(e); toast("Erro ao enviar avaliação.");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Enviar avaliação`;
+    }
+    return;
+  }
 
   const btn = document.getElementById("btnSalvarItem");
   btn.disabled = true;
@@ -544,13 +638,17 @@ if(!LOJA) {
      <div class="muted">Este link não identifica a loja.<br>Peça o link correto ao responsável.</div></div>`;
 } else {
   document.getElementById("lojaLabel").textContent = LOJA;
-  carregarLote().catch(e => {
+  // Começa na tela de escolha (Lote ou Avulso) — não vai direto pro lote
+  window._modo = null;
+  try {
+    render();
+  } catch(e) {
     console.error(e);
     document.getElementById("loadingScreen").innerHTML =
       `<div style="text-align:center;padding:20px;"><div style="font-size:34px;color:var(--accent);margin-bottom:10px;"><i class="fa-solid fa-wifi"></i></div>
        <div style="font-weight:700;margin-bottom:6px;">Erro de conexão</div>
        <div class="muted">Não foi possível conectar. Verifique a internet e recarregue.</div></div>`;
-  });
+  }
 }
 </script>
 </body>
