@@ -6279,9 +6279,8 @@ async function renderLotesPage() {
   try {
     const lotes = await window.firebaseLotes.listarFechados();
     _lotesCache = lotes;
-    // badge no menu
-    const badge = document.getElementById("sidebarLotesBadge");
-    if(badge) { if(lotes.length){ badge.style.display="inline-block"; badge.textContent=lotes.length; } else badge.style.display="none"; }
+    // badge no menu (soma lotes + avaliações avulsas pendentes)
+    atualizarBadgeLotes();
 
     if(!lotes.length) {
       cont.innerHTML = `<div style="text-align:center;padding:50px 20px;color:var(--muted);">
@@ -6319,6 +6318,33 @@ async function renderLotesPage() {
 // ═══════════ AVALIAÇÕES AVULSAS (Firebase) ═══════════
 let _avaliacoesCache = [];
 
+// Atualiza o badge do menu somando lotes fechados + avaliações avulsas pendentes
+function atualizarBadgeLotes() {
+  const badge = document.getElementById("sidebarLotesBadge");
+  if(!badge) return;
+  const total = (_lotesCache ? _lotesCache.length : 0) + (_avaliacoesCache ? _avaliacoesCache.length : 0);
+  if(total > 0) { badge.style.display = "inline-block"; badge.textContent = total; }
+  else badge.style.display = "none";
+}
+
+// Checa pendências (lotes + avaliações) ao abrir o sistema, sem precisar entrar na aba
+async function checarPendenciasLojas() {
+  if(!window.firebaseLotes || !window.firebaseLotes.disponivel()) return;
+  try {
+    const lotes = await window.firebaseLotes.listarFechados();
+    _lotesCache = lotes;
+    if(window.firebaseLotes.listarAvaliacoesPendentes) {
+      const avs = await window.firebaseLotes.listarAvaliacoesPendentes();
+      _avaliacoesCache = avs;
+    }
+    atualizarBadgeLotes();
+  } catch(e) { console.error("checarPendenciasLojas:", e); }
+}
+
+// Checa pendências assim que possível (Firebase pode já estar pronto ou não)
+window.addEventListener("firebaseLotesReady", () => { checarPendenciasLojas(); });
+setTimeout(() => { if(window.firebaseLotes && window.firebaseLotes.disponivel()) checarPendenciasLojas(); }, 1500);
+
 async function renderAvaliacoesAvulsas() {
   const cont = document.getElementById("avaliacoesContainer");
   if(!cont) return;
@@ -6328,6 +6354,7 @@ async function renderAvaliacoesAvulsas() {
   try {
     const avs = await window.firebaseLotes.listarAvaliacoesPendentes();
     _avaliacoesCache = avs;
+    atualizarBadgeLotes();
     if(!avs.length) { cont.innerHTML = ""; return; }
     let html = `<div style="background:var(--surface);border:1px solid rgba(220,38,38,.25);border-radius:13px;padding:16px;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
@@ -10118,7 +10145,6 @@ function lerXmlNfe(input) {
       const dhEmi = gTxt('dhEmi') || gTxt('dEmi');
       let dataFormatada = '';
       if (dhEmi) {
-        // formato ISO: 2024-05-10T... ou 2024-05-10
         const match = dhEmi.match(/(\d{4}-\d{2}-\d{2})/);
         if (match) dataFormatada = match[1];
       }
@@ -10126,31 +10152,9 @@ function lerXmlNfe(input) {
       // ── Valor total da NF-e ──
       const vNF = gTxt('vNF');
 
-      // ── Marca: xMarca do produto (campo principal) ──
-      const xMarcaEl = gEl('xMarca');
-      let marca = xMarcaEl ? xMarcaEl.textContent.trim() : '';
-
-      // ── Destinatário (apenas para o feedback informativo, não preenche campo) ──
+      // ── CNPJ da fábrica = SEMPRE o DESTINATÁRIO (em devolução, o emitente é a Shoemix) ──
       const destEl = gEl('dest');
-      const emitEl = gEl('emit');
-      const emitCnpj = emitEl?.getElementsByTagNameNS('*', 'CNPJ')?.[0]?.textContent?.trim() || '';
-      const emitRazao = emitEl?.getElementsByTagNameNS('*', 'xNome')?.[0]?.textContent?.trim() || '';
-      const emitFantasia = emitEl?.getElementsByTagNameNS('*', 'xFant')?.[0]?.textContent?.trim() || '';
-      const emitEnder = emitEl?.getElementsByTagNameNS('*', 'enderEmit')?.[0] || null;
-      const emitCidade = emitEnder?.getElementsByTagNameNS('*', 'xMun')?.[0]?.textContent?.trim() || '';
-      const emitUF = emitEnder?.getElementsByTagNameNS('*', 'UF')?.[0]?.textContent?.trim() || '';
-      const emitFone = emitEnder?.getElementsByTagNameNS('*', 'fone')?.[0]?.textContent?.trim() || '';
-      const emitEmail = emitEl?.getElementsByTagNameNS('*', 'email')?.[0]?.textContent?.trim() || '';
-
-      let destinatario = '';
-      if (destEl) {
-        const xNome = destEl.getElementsByTagNameNS('*', 'xNome');
-        if (xNome.length) destinatario = xNome[0].textContent.trim();
-      }
-      if (!destinatario && emitEl) {
-        const xNome = emitEl.getElementsByTagNameNS('*', 'xNome');
-        if (xNome.length) destinatario = xNome[0].textContent.trim();
-      }
+      const destCnpj = destEl?.getElementsByTagNameNS('*', 'CNPJ')?.[0]?.textContent?.trim() || '';
 
       // ── Quantidade total de pares (soma qCom de todos os itens) ──
       const qComEls = xml.getElementsByTagNameNS('*', 'qCom');
@@ -10160,42 +10164,29 @@ function lerXmlNfe(input) {
         if (!isNaN(v)) totalPares += v;
       }
 
-      // ── Preenche os campos do modal ──
+      // ── Preenche APENAS: número, data, valor, CNPJ da fábrica (destinatário) ──
+      // NÃO preenche marca nem fornecedor automaticamente — usuário escolhe.
       if (nNF)           document.getElementById('nfeNumero').value    = nNF;
       if (dataFormatada) document.getElementById('nfeData').value      = dataFormatada;
       if (vNF)           document.getElementById('nfeValorNota').value  = parseFloat(vNF).toFixed(2);
-      if (marca)         document.getElementById('nfeFornecedor').value = marca;
+      // Marca permanece vazia
+      const fornInp = document.getElementById('nfeFornecedor'); if(fornInp) fornInp.value = '';
+      // CNPJ da fábrica = destinatário
+      const cnpjFabricaInp = document.getElementById('nfeCnpjFabrica');
+      if (cnpjFabricaInp && destCnpj) cnpjFabricaInp.value = formatarCNPJBasico(destCnpj);
+      const cnpjHidden = document.getElementById('nfeFornecedorCnpj');
+      if (cnpjHidden && destCnpj) cnpjHidden.value = destCnpj;
 
-      const dadosFornecedorXml = {
-        cnpj: emitCnpj,
-        razaoSocial: emitRazao,
-        nomeFantasia: emitFantasia,
-        marca: marca || emitFantasia || emitRazao,
-        cidade: emitCidade,
-        uf: emitUF,
-        telefone: emitFone,
-        email: emitEmail
-      };
-      const vinculoXml = vincularFornecedorPorXML(dadosFornecedorXml);
-
-      // Monta mensagem de feedback
-      const linhas = [];
-      if (nNF)            linhas.push(`<b>NF-e nº ${nNF}</b>`);
-      if (marca)          linhas.push(`Marca: <b>${marca}</b>`);
-      if (emitCnpj)        linhas.push(`CNPJ fábrica: <b>${formatarCNPJBasico(emitCnpj)}</b>`);
-      if (vinculoXml.encontrado) linhas.push(`Fornecedor vinculado: <b>${vinculoXml.fornecedor.marca || vinculoXml.fornecedor.razaoSocial}</b>`);
-      if (destinatario)   linhas.push(`Destinatário: <b>${destinatario}</b>`);
-      if (vNF)            linhas.push(`Valor: <b>R$ ${parseFloat(vNF).toFixed(2).replace('.', ',')}</b>`);
-      if (totalPares > 0) linhas.push(`Qtd. de pares: <b>${totalPares % 1 === 0 ? totalPares : totalPares.toFixed(2)}</b>`);
-
+      // ── Feedback enxuto ──
+      const qtdFmt = totalPares % 1 === 0 ? totalPares : totalPares.toFixed(2);
       const fb = document.getElementById('nfeXmlFeedback');
       document.getElementById('nfeXmlFeedbackMsg').innerHTML =
-        `XML lido com sucesso! &nbsp;${linhas.join(' &nbsp;·&nbsp; ')}` +
-        (!marca ? `<br><span style="font-size:11px;opacity:.8;">Marca não encontrada no XML — preencha manualmente.</span>` : '') +
-        (emitCnpj && !vinculoXml.encontrado ? `<br><span style="font-size:11px;color:#b45309;font-weight:700;">CNPJ encontrado no XML, mas não está cadastrado em Fornecedores.</span> <button type="button" onclick="cadastrarFornecedorDoXml()" style="margin-top:7px;border:1px solid rgba(3,105,161,.25);background:rgba(3,105,161,.10);color:#0369a1;border-radius:7px;padding:4px 8px;font-size:11px;font-weight:800;cursor:pointer;">Cadastrar fornecedor com dados do XML</button>` : '');
+        `XML carregado com sucesso: <b>NF nº ${nNF || '—'}</b> &nbsp;·&nbsp; CNPJ fabricante <b>${destCnpj ? formatarCNPJBasico(destCnpj) : '—'}</b> &nbsp;·&nbsp; Valor <b>R$ ${vNF ? parseFloat(vNF).toFixed(2).replace('.', ',') : '0,00'}</b> &nbsp;·&nbsp; Quantidade <b>${qtdFmt || 0}</b>`;
       fb.style.display = 'flex';
 
-      // Se não tem xMarca, não preenche o campo marca automaticamente
+      // ── Foco automático no campo Marca ──
+      setTimeout(() => { if(fornInp) fornInp.focus(); }, 100);
+
 
     } catch(err) {
       showToast('Erro ao ler o XML. Verifique se é um arquivo de NF-e válido.', 'error');
