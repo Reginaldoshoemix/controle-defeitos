@@ -4316,7 +4316,7 @@ function extrairLojaOrigem(texto, rawItems) {
 }
 
 function detectarMarca(descricao) {
-  const d = (descricao || "").toUpperCase();
+  const d = (descricao || "").toUpperCase().replace(/\s+/g, " ").trim();
 
   // Lista de marcas conhecidas — verificadas primeiro
   const marcasConhecidas = [
@@ -4344,7 +4344,8 @@ function detectarMarca(descricao) {
     "FREE WAY","FREEWAY","CALVEST","RAFARILLO","SÂNDALO","SANDALO","SAPATOTERAPIA",
     "SUA CIA","SUACIA","VIZZANO","MOLECA","FACChINNI","FACCHINI","DAKOTA","TANARA",
     "RAMARIM","MODARE","BEIRA RIO","GRUPO BEIRA RIO","USAFLEX","PICCADILLY","BOTTERO",
-    "MISSISSIPI","MARES","LIVIA FERRAZ","MINI PE","MINIPE","SUA CIA."
+    "MISSISSIPI","MARES","LIVIA FERRAZ","MINI PE","MINIPE","SUA CIA.",
+    "CLASSE COURO","VIA MARTE","BEBECE","DUMOND","AREZZO","SCHUTZ","LUIZA BARCELOS"
   ];
   const achou = marcasConhecidas.find(m => d.includes(m));
   if(achou) return achou;
@@ -4365,6 +4366,7 @@ function detectarMarca(descricao) {
     "PLUS","ULTRA","DAY","AIR","GEL","FIT","MAX","NEON",
     // Bolsas e acessórios (genérico)
     "BOLSA","TOTE","MOCHILA","CARTEIRA","CLUTCH",
+    "CAMERA","BAG","LATERAL","CROSSBODY","CROOSBODY","COURO","SATCHEL","HOBO","SHOPPER",
     "ACESSORIOS","ACESSÓRIO","CONFECCOES","CONFECÇÕES",
     // Adjetivos de produto
     "FEMININO","FEMININA","MASCULINO","MASCULINA","INFANTIL","KIDS","PREMIUM",
@@ -4405,7 +4407,7 @@ function detectarMarca(descricao) {
 }
 
 function extrairCor(descricao) {
-  const d = (descricao || "").toUpperCase().trim();
+  const d = (descricao || "").toUpperCase().replace(/\s+/g, " ").trim();
 
   const coresCertas = [
     "NATURAL","ALMOND","AVELA","AMENDOA","COBRE","AMBAR","AMBER","MENTA","LILAS",
@@ -4440,7 +4442,8 @@ function extrairCor(descricao) {
     "PERVINCA","JAMBO","UVA","FRAMBOESA","CHICLETE","BABY","ICE","MILK","CAFFE","LATTE",
     "DARK","BROWN","LIGHT","BEIGE","CAMEL","TAUPE","KHAKI","OLIVE","WINE","BURGUNDY","MUSTARD",
     "CASTOR","AVELA","AMENDOA","CARVALHO","PINHAO","NOZES","CEDRO","FENDI","GELO","PERLA","PEROLA",
-    "GOLD","ROSE","SILVER","PLATINUM","CHAMPANHE","MARSALA","TERRACOTA","CARMIM","GRENA"
+    "GOLD","ROSE","SILVER","PLATINUM","CHAMPANHE","MARSALA","TERRACOTA","CARMIM","GRENA",
+    "NOCIOLLA","NOCIOLA","ONIX","ÔNIX","BROW","STONE WASHED","COBALTO","CEREJA","MAUVE"
   ];
 
   const coresSet = new Set(coresCertas);
