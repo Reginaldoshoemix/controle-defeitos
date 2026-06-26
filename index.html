@@ -3168,7 +3168,12 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
     </div>
     <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">Selecione a NF-e que receberá este produto, ou crie uma nova.</p>
     <input type="hidden" id="nfeVincularProdutoId">
-    <div id="nfeVincularList" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:14px;"></div>
+    <div style="margin-bottom:10px;">
+      <select id="nfeVincularFiltroLoja" class="input w-full" style="padding:8px 12px;font-size:13px;" onchange="renderNfeVincularList()">
+        <option value="">Todas as lojas</option>
+      </select>
+    </div>
+    <div id="nfeVincularList" style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:14px;"></div>
     <div class="flex gap-2">
       <button onclick="openNfeModal();document.getElementById('nfeVincularModal').style.display='none';" class="btn-ghost flex-1 justify-center" style="padding:10px;border-color:rgba(37,99,235,.3);color:#2563eb;">
         <i class="fa-solid fa-plus"></i>Nova NF-e
@@ -10644,24 +10649,42 @@ function desvincularProdutoNfe(prodId, nfeId) {
 // ── Vincular NF-e rápido a partir de um produto ──
 function openNfeVincular(prodId) {
   document.getElementById('nfeVincularProdutoId').value = prodId;
-  const list = document.getElementById('nfeVincularList');
 
-  const disponíveis = nfes.filter(n => n.status !== 'cancelado' && n.status !== 'devolvido');
+  // Popula filtro de lojas com as lojas presentes nas NF-es ativas
+  const disponiveis = nfes.filter(n => n.status !== 'cancelado' && n.status !== 'devolvido');
+  const lojasNasNfes = [...new Set(disponiveis.map(n => n.loja || '').filter(Boolean))].sort();
+  const sel = document.getElementById('nfeVincularFiltroLoja');
+  sel.innerHTML = '<option value="">Todas as lojas</option>';
+  lojasNasNfes.forEach(l => { sel.innerHTML += `<option value="${l}">${l}</option>`; });
+  // Se só tiver uma loja, pré-seleciona
+  if (lojasNasNfes.length === 1) sel.value = lojasNasNfes[0];
+  else sel.value = '';
 
-  if(!disponíveis.length) {
-    list.innerHTML = `<div style="text-align:center;padding:16px;color:var(--muted);font-size:12.5px;">Nenhuma NF-e ativa disponível.<br>Crie uma nova NF-e primeiro.</div>`;
+  renderNfeVincularList();
+  document.getElementById('nfeVincularModal').style.display = 'flex';
+}
+
+function renderNfeVincularList() {
+  const prodId   = document.getElementById('nfeVincularProdutoId').value;
+  const lojaFilt = document.getElementById('nfeVincularFiltroLoja').value;
+  const list     = document.getElementById('nfeVincularList');
+
+  let disponiveis = nfes.filter(n => n.status !== 'cancelado' && n.status !== 'devolvido');
+  if (lojaFilt) disponiveis = disponiveis.filter(n => (n.loja || '') === lojaFilt);
+
+  if (!disponiveis.length) {
+    list.innerHTML = `<div style="text-align:center;padding:16px;color:var(--muted);font-size:12.5px;">Nenhuma NF-e ativa${lojaFilt ? ' para esta loja' : ''}.<br>Crie uma nova NF-e primeiro.</div>`;
   } else {
-    list.innerHTML = disponíveis.map(n => `
+    list.innerHTML = disponiveis.map(n => `
       <div onclick="vincularProdutoRapido(${prodId},'${n.id}')" style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:.15s;" class="table-row">
         <div style="width:34px;height:34px;border-radius:9px;background:rgba(37,99,235,.10);color:#2563eb;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;"><i class="fa-solid fa-file-invoice"></i></div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:13px;font-weight:700;color:var(--text);">NF-e ${n.numeroNfe}</div>
-          <div style="font-size:11px;color:var(--muted);">${n.fornecedor ? n.fornecedor + ' · ' : ''}${n.data ? formatDate(n.data) : ''} · ${(n.produtosRelacionados||[]).length} produto(s)</div>
+          <div style="font-size:11px;color:var(--muted);">${n.loja ? n.loja + ' · ' : ''}${n.fornecedor ? n.fornecedor + ' · ' : ''}${n.data ? formatDate(n.data) : ''} · ${(n.produtosRelacionados||[]).length} produto(s)</div>
         </div>
         <span style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;border-radius:5px;padding:2px 7px;${nfeStatusStyle(n.status)}">${nfeStatusLabel(n.status)}</span>
       </div>`).join('');
   }
-  document.getElementById('nfeVincularModal').style.display = 'flex';
 }
 
 function vincularProdutoRapido(prodId, nfeId) {
