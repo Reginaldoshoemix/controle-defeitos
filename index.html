@@ -3112,15 +3112,20 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
           <span style="display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-box" style="font-size:9px;color:var(--accent);"></i>Vincular Produtos</span>
           <span id="nfeProdutosSelecionadosCount" style="font-size:11px;font-weight:700;color:var(--accent2);font-family:'Space Mono',monospace;">0 selecionados</span>
         </div>
-        <div style="margin-bottom:8px;display:flex;gap:6px;">
+        <div style="margin-bottom:6px;display:flex;gap:6px;">
           <div style="position:relative;flex:1;">
             <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:11px;pointer-events:none;"></i>
-            <input id="nfeProdutoSearch" type="text" placeholder="Buscar produto por marca, ref, código..." class="input w-full" style="padding:8px 12px 8px 30px;font-size:12px;" oninput="renderNfeProdutosList()">
+            <input id="nfeProdutoSearch" type="text" placeholder="Marca, ref, cód. de barras..." class="input w-full" style="padding:8px 12px 8px 30px;font-size:12px;" oninput="renderNfeProdutosList()">
           </div>
           <select id="nfeProdutoFiltroStatus" class="input" style="padding:8px 10px;font-size:12px;" onchange="renderNfeProdutosList()">
             <option value="pendente">Pendentes</option>
             <option value="">Todos</option>
             <option value="analise">Em análise</option>
+          </select>
+        </div>
+        <div style="margin-bottom:8px;">
+          <select id="nfeProdutoFiltroLoja" class="input w-full" style="padding:8px 10px;font-size:12px;" onchange="renderNfeProdutosList()">
+            <option value="">Todas as lojas</option>
           </select>
         </div>
         <div id="nfeProdutosList" style="max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;padding-right:2px;scrollbar-width:thin;scrollbar-color:var(--accent-border) transparent;"></div>
@@ -10242,12 +10247,25 @@ function renderNfeProdutosList() {
   if(!container) return;
   const search = (document.getElementById('nfeProdutoSearch')?.value || '').toLowerCase().trim();
   const statusFiltro = document.getElementById('nfeProdutoFiltroStatus')?.value || '';
+  const lojaFiltro   = document.getElementById('nfeProdutoFiltroLoja')?.value  || '';
   const editingNfeId = document.getElementById('nfeEditId')?.value || '';
+
+  // Popula o select de lojas com as lojas presentes nos defeitos visíveis
+  const selLoja = document.getElementById('nfeProdutoFiltroLoja');
+  if (selLoja) {
+    const lojaAtual = selLoja.value;
+    const lojasDef = [...new Set(defeitos.map(d => d.loja || '').filter(Boolean))].sort();
+    selLoja.innerHTML = '<option value="">Todas as lojas</option>';
+    lojasDef.forEach(l => { selLoja.innerHTML += `<option value="${l}">${l}</option>`; });
+    selLoja.value = lojaAtual; // mantém seleção
+  }
 
   let lista = defeitos.filter(d => {
     // Status
     if(statusFiltro && d.status !== statusFiltro) return false;
-    // Busca
+    // Loja
+    if(lojaFiltro && (d.loja || '') !== lojaFiltro) return false;
+    // Busca (marca, referência, código de barras, numeração, loja)
     const txt = [d.marca,d.referencia,d.codigoBarras,d.numeracao,d.loja].join(' ').toLowerCase();
     if(search && !txt.includes(search)) return false;
     // Não mostrar itens já vinculados a OUTRA NF-e
