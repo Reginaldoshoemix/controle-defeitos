@@ -10260,21 +10260,55 @@ function renderNfeProdutosList() {
     selLoja.value = lojaAtual; // mantém seleção
   }
 
+  // Se a busca for só dígitos, compara ignorando espaços/pontos/traços (caso de código de barras)
+  const searchDigits = search.replace(/[\s.\-]/g, '');
+  const buscaSoNumeros = search.length > 0 && /^[0-9]+$/.test(searchDigits);
+
   let lista = defeitos.filter(d => {
     // Status
     if(statusFiltro && d.status !== statusFiltro) return false;
     // Loja
     if(lojaFiltro && (d.loja || '') !== lojaFiltro) return false;
     // Busca (marca, referência, código de barras, numeração, loja)
-    const txt = [d.marca,d.referencia,d.codigoBarras,d.numeracao,d.loja].join(' ').toLowerCase();
-    if(search && !txt.includes(search)) return false;
+    if(search) {
+      const txt = [d.marca,d.referencia,d.codigoBarras,d.numeracao,d.loja].join(' ').toLowerCase();
+      let achou = txt.includes(search);
+      // Comparação extra para código de barras: ignora espaços/pontos dos dois lados
+      if(!achou && buscaSoNumeros) {
+        const codLimpo = String(d.codigoBarras || '').replace(/[\s.\-]/g, '');
+        if(codLimpo.includes(searchDigits)) achou = true;
+      }
+      if(!achou) return false;
+    }
     // Não mostrar itens já vinculados a OUTRA NF-e
     if(d.nfeId && d.nfeId !== editingNfeId && !window._nfeSelectedProds.has(d.id)) return false;
     return true;
   });
 
   if(!lista.length) {
-    container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12.5px;"><i class="fa-solid fa-inbox" style="display:block;font-size:24px;opacity:.3;margin-bottom:8px;"></i>Nenhum produto encontrado.</div>`;
+    // Se há busca/loja mas o filtro de status pode estar escondendo, avisa
+    const temBuscaOuLoja = search || lojaFiltro;
+    let existeEmOutroStatus = false;
+    if(temBuscaOuLoja && statusFiltro) {
+      existeEmOutroStatus = defeitos.some(d => {
+        if(lojaFiltro && (d.loja || '') !== lojaFiltro) return false;
+        if(search) {
+          const txt = [d.marca,d.referencia,d.codigoBarras,d.numeracao,d.loja].join(' ').toLowerCase();
+          let achou = txt.includes(search);
+          if(!achou && buscaSoNumeros) {
+            const codLimpo = String(d.codigoBarras || '').replace(/[\s.\-]/g, '');
+            if(codLimpo.includes(searchDigits)) achou = true;
+          }
+          if(!achou) return false;
+        }
+        if(d.nfeId && d.nfeId !== editingNfeId && !window._nfeSelectedProds.has(d.id)) return false;
+        return true; // encontrado, mas em outro status
+      });
+    }
+    const dica = existeEmOutroStatus
+      ? `<div style="margin-top:8px;font-size:11.5px;color:var(--accent2);">Há resultado(s) em outro status. Troque o filtro para <strong>Todos</strong> acima.</div>`
+      : '';
+    container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12.5px;"><i class="fa-solid fa-inbox" style="display:block;font-size:24px;opacity:.3;margin-bottom:8px;"></i>Nenhum produto encontrado.${dica}</div>`;
     document.getElementById('nfeProdutosSelecionadosCount').textContent = `${window._nfeSelectedProds.size} selecionados`;
     return;
   }
