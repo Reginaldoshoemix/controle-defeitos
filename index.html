@@ -5926,7 +5926,7 @@ function renderTable() {
           const venc = new Date(vy, vm - 1, vd);
           venc.setFullYear(venc.getFullYear() + 1);
           vencido = venc < hojeR;
-          if(vencido) diasVencido = Math.floor((hojeR - venc) / 86400000);
+          if(vencido) { const emissao = new Date(vy, vm - 1, vd); diasVencido = Math.floor((hojeR - emissao) / 86400000); }
         }
       }
 
@@ -8791,9 +8791,8 @@ function renderVencidosPage() {
     if(i.dataEmissaoNfe) {
       porMarca[m].datas.push(i.dataEmissaoNfe);
       const [ay, am, ad] = i.dataEmissaoNfe.split('-').map(Number);
-      const venc = new Date(ay, am - 1, ad);
-      venc.setFullYear(venc.getFullYear() + 1);
-      const dias = Math.floor((hojeV - venc) / 86400000);
+      const emissao = new Date(ay, am - 1, ad);
+      const dias = Math.floor((hojeV - emissao) / 86400000);
       if(dias > porMarca[m].maxDias) porMarca[m].maxDias = dias;
     }
   });
@@ -10286,29 +10285,61 @@ function renderNfeProdutosList() {
   });
 
   if(!lista.length) {
-    // Se há busca/loja mas o filtro de status pode estar escondendo, avisa
-    const temBuscaOuLoja = search || lojaFiltro;
-    let existeEmOutroStatus = false;
-    if(temBuscaOuLoja && statusFiltro) {
-      existeEmOutroStatus = defeitos.some(d => {
-        if(lojaFiltro && (d.loja || '') !== lojaFiltro) return false;
-        if(search) {
-          const txt = [d.marca,d.referencia,d.codigoBarras,d.numeracao,d.loja].join(' ').toLowerCase();
-          let achou = txt.includes(search);
-          if(!achou && buscaSoNumeros) {
-            const codLimpo = String(d.codigoBarras || '').replace(/[\s.\-]/g, '');
-            if(codLimpo.includes(searchDigits)) achou = true;
-          }
-          if(!achou) return false;
-        }
-        if(d.nfeId && d.nfeId !== editingNfeId && !window._nfeSelectedProds.has(d.id)) return false;
-        return true; // encontrado, mas em outro status
-      });
+    // Helper: o defeito casa com a busca de texto/código?
+    const casaBusca = (d) => {
+      if(!search) return true;
+      const txt = [d.marca,d.referencia,d.codigoBarras,d.numeracao,d.loja].join(' ').toLowerCase();
+      if(txt.includes(search)) return true;
+      if(buscaSoNumeros) {
+        const codLimpo = String(d.codigoBarras || '').replace(/[\s.\-]/g, '');
+        if(codLimpo.includes(searchDigits)) return true;
+      }
+      return false;
+    };
+    // Quantos casariam ignorando STATUS (mas respeitando loja e busca)?
+    const ignorandoStatus = defeitos.filter(d => {
+      if(lojaFiltro && (d.loja || '') !== lojaFiltro) return false;
+      if(!casaBusca(d)) return false;
+      if(d.nfeId && d.nfeId !== editingNfeId && !window._nfeSelectedProds.has(d.id)) return false;
+      return true;
+    });
+    // Quantos casariam ignorando LOJA (mas respeitando status e busca)?
+    const ignorandoLoja = defeitos.filter(d => {
+      if(statusFiltro && d.status !== statusFiltro) return false;
+      if(!casaBusca(d)) return false;
+      if(d.nfeId && d.nfeId !== editingNfeId && !window._nfeSelectedProds.has(d.id)) return false;
+      return true;
+    });
+    // Já está em outra NF-e?
+    const jaEmOutraNfe = defeitos.filter(d => {
+      if(lojaFiltro && (d.loja || '') !== lojaFiltro) return false;
+      if(statusFiltro && d.status !== statusFiltro) return false;
+      if(!casaBusca(d)) return false;
+      return d.nfeId && d.nfeId !== editingNfeId && !window._nfeSelectedProds.has(d.id);
+    });
+
+    let dicas = [];
+    if(statusFiltro && ignorandoStatus.length)
+      dicas.push(`Há ${ignorandoStatus.length} resultado(s) em <strong>outro status</strong>. Troque o filtro de status para <strong>Todos</strong>.`);
+    if(lojaFiltro && ignorandoLoja.length)
+      dicas.push(`Há ${ignorandoLoja.length} resultado(s) em <strong>outra loja</strong>. Verifique o filtro de loja (pode estar como "Loja 3" vs "Loja 03").`);
+    if(jaEmOutraNfe.length)
+      dicas.push(`${jaEmOutraNfe.length} produto(s) com esse código já está(ão) vinculado(s) a <strong>outra NF-e</strong>.`);
+
+    // Diagnóstico no console (F12) quando busca por código não acha nada
+    if(search) {
+      const amostra = defeitos
+        .filter(d => !lojaFiltro || (d.loja || '') === lojaFiltro)
+        .slice(0, 30)
+        .map(d => ({ loja: d.loja, status: d.status, codigoBarras: d.codigoBarras, marca: d.marca, nfeId: d.nfeId || null }));
+      console.log('[Diagnóstico busca NF-e] Você buscou:', JSON.stringify(search), '| dígitos:', JSON.stringify(searchDigits));
+      console.log('[Diagnóstico busca NF-e] Produtos da loja filtrada (amostra):', amostra);
     }
-    const dica = existeEmOutroStatus
-      ? `<div style="margin-top:8px;font-size:11.5px;color:var(--accent2);">Há resultado(s) em outro status. Troque o filtro para <strong>Todos</strong> acima.</div>`
+
+    const dicaHtml = dicas.length
+      ? `<div style="margin-top:10px;font-size:11.5px;color:var(--accent2);text-align:left;line-height:1.5;">${dicas.map(t => '• ' + t).join('<br>')}</div>`
       : '';
-    container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12.5px;"><i class="fa-solid fa-inbox" style="display:block;font-size:24px;opacity:.3;margin-bottom:8px;"></i>Nenhum produto encontrado.${dica}</div>`;
+    container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12.5px;"><i class="fa-solid fa-inbox" style="display:block;font-size:24px;opacity:.3;margin-bottom:8px;"></i>Nenhum produto encontrado.${dicaHtml}</div>`;
     document.getElementById('nfeProdutosSelecionadosCount').textContent = `${window._nfeSelectedProds.size} selecionados`;
     return;
   }
