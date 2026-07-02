@@ -105,8 +105,27 @@
       <i class="fa-solid fa-chevron-right" style="color:var(--border);font-size:15px;"></i>
     </div>
 
+    <!-- Histórico de lotes aprovados -->
+    <div onclick="abrirHistorico()" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin-top:13px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.04);">
+      <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#6b7280,#374151);display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;flex-shrink:0;"><i class="fa-solid fa-clock-rotate-left"></i></div>
+      <div style="flex:1;">
+        <div style="font-size:15.5px;font-weight:800;">Histórico de lotes</div>
+        <div class="muted" style="font-size:12px;margin-top:2px;line-height:1.35;">Veja os itens enviados em meses anteriores.</div>
+      </div>
+      <i class="fa-solid fa-chevron-right" style="color:var(--border);font-size:15px;"></i>
+    </div>
+
     <!-- Suas avaliações (status das avaliações enviadas) -->
     <div id="minhasAvaliacoes" style="margin-top:20px;"></div>
+  </div>
+
+  <!-- Histórico de lotes -->
+  <div id="historicoView" class="hidden">
+    <div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+      <button class="btn btn-ghost" style="width:auto;padding:7px 14px;font-size:12.5px;color:var(--muted);" onclick="voltarEscolha()"><i class="fa-solid fa-arrow-left" style="margin-right:5px;"></i> Voltar</button>
+      <div style="font-size:15px;font-weight:800;"><i class="fa-solid fa-clock-rotate-left" style="color:var(--accent);margin-right:6px;"></i>Histórico de lotes</div>
+    </div>
+    <div id="historicoList" style="margin-top:10px;"></div>
   </div>
 
   <!-- Sem lote -->
@@ -589,7 +608,80 @@ async function carregarMinhasAvaliacoes() {
 // ── Modos (escolha / lote / avulso) ──
 window.modoLote = function() { window._modo = "lote"; carregarLote(); };
 window.modoAvulso = function() { window._modo = "avulso"; render(); };
-window.voltarEscolha = function() { window._modo = null; render(); };
+window.abrirHistorico = async function() {
+  window._modo = "historico";
+  document.getElementById("escolhaModo").classList.add("hidden");
+  document.getElementById("historicoView").classList.remove("hidden");
+  const list = document.getElementById("historicoList");
+  list.innerHTML = `<div class="center muted" style="padding:20px;"><div class="sp" style="margin:0 auto 10px;"></div>Carregando...</div>`;
+
+  try {
+    const q = query(collection(db, "lotes"), where("loja", "==", LOJA), where("status", "==", "aprovado"));
+    const snap = await getDocs(q);
+    const lotesAprovados = [];
+    snap.forEach(d => lotesAprovados.push({ id: d.id, ...d.data() }));
+    lotesAprovados.sort((a,b) => (b.fechadoEm?.seconds||0) - (a.fechadoEm?.seconds||0));
+
+    if(!lotesAprovados.length) {
+      list.innerHTML = `<div class="center muted" style="padding:30px;"><i class="fa-solid fa-inbox" style="font-size:28px;opacity:.3;display:block;margin-bottom:8px;"></i>Nenhum lote aprovado ainda.</div>`;
+      return;
+    }
+
+    // Carrega itens de todos os lotes
+    const itensMap = {};
+    await Promise.all(lotesAprovados.map(async lote => {
+      const qi = query(collection(db, "itens"), where("loteId", "==", lote.id));
+      const si = await getDocs(qi);
+      itensMap[lote.id] = [];
+      si.forEach(d => itensMap[lote.id].push({ id: d.id, ...d.data() }));
+    }));
+
+    list.innerHTML = lotesAprovados.map(lote => {
+      const itensLote = itensMap[lote.id] || [];
+      const dataFechado = lote.fechadoEm ? new Date(lote.fechadoEm.seconds*1000).toLocaleDateString("pt-BR") : "";
+      return `<div class="hist-lote">
+        <div class="hist-lote-header" onclick="toggleHistLote('${lote.id}')">
+          <div>
+            <div class="hn"><i class="fa-solid fa-box" style="color:var(--accent);margin-right:6px;font-size:12px;"></i>Lote ${lote.numero||lote.mes||lote.id}</div>
+            <div class="hm">${lote.mes||""} ${dataFechado ? "· Fechado em "+dataFechado : ""} · ${itensLote.length} item${itensLote.length!==1?"s":""}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="hbadge"><i class="fa-solid fa-circle-check" style="margin-right:3px;"></i>Aprovado</span>
+            <i class="fa-solid fa-chevron-down" style="color:var(--muted);font-size:12px;" id="chev_${lote.id}"></i>
+          </div>
+        </div>
+        <div class="hist-itens" id="hist_${lote.id}">
+          ${itensLote.length === 0
+            ? `<div class="center muted" style="padding:10px;">Nenhum item encontrado.</div>`
+            : itensLote.map(it => `<div class="hist-item">
+                <div class="thumbs">${(it.fotos||[]).map(u=>`<img src="${u}" onclick="ampliarFotoLoja('${u}')">`).join("")}</div>
+                <div class="info">
+                  <div class="l1">${it.marca?it.marca+" · ":""}Ref. ${it.referencia||"—"} · ${it.cor||"—"} · nº ${it.tamanho||"—"}</div>
+                  <div class="l2">${it.defeito||""}</div>
+                </div>
+              </div>`).join("")
+          }
+        </div>
+      </div>`;
+    }).join("");
+  } catch(e) {
+    console.error(e);
+    list.innerHTML = `<div class="center muted" style="padding:20px;">Erro ao carregar histórico.</div>`;
+  }
+};
+
+window.toggleHistLote = function(id) {
+  const box = document.getElementById("hist_" + id);
+  const chev = document.getElementById("chev_" + id);
+  box.classList.toggle("open");
+  chev.style.transform = box.classList.contains("open") ? "rotate(180deg)" : "";
+};
+
+window.voltarEscolha = function() {
+  window._modo = null;
+  document.getElementById("historicoView").classList.add("hidden");
+  render();
+};
 
 window.onFoto = async function(idx, input) {
   const file = input.files[0];
