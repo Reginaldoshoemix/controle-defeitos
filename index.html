@@ -8322,9 +8322,21 @@ function gerarPDF() {
     .summary-val { font-size: 20px; font-weight: 800; color: #dc2626; line-height: 1; }
     .summary-lbl { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #9ca3af; margin-top: 4px; }
 
-    /* ── MARCA SECTION ── */
+    /* ── LOJA SECTION ── */
     .content { padding: 0 36px 36px; }
-    .marca-block { margin-bottom: 32px; break-inside: avoid; }
+    .loja-block { margin-bottom: 36px; }
+    .loja-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px;
+      background: #111827;
+      border-radius: 8px 8px 0 0;
+      margin-bottom: 0;
+    }
+    .loja-name { font-size: 13px; font-weight: 800; color: #fff; letter-spacing: .5px; text-transform: uppercase; }
+    .loja-content { border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; padding: 16px 16px 4px; }
+
+    /* ── MARCA SECTION ── */
+    .marca-block { margin-bottom: 24px; break-inside: avoid; }
     .marca-title {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 10px; padding-bottom: 8px;
@@ -8404,56 +8416,91 @@ function gerarPDF() {
   </div>
 
   <div class="content">
-    ${marcasFinais.map(m => {
-      const itens = agrupado[m];
-      const totalQtd = itens.reduce((s,i) => s+i.quantidade, 0);
-      const totalVal = itens.reduce((s,i) => s+(i.custoUnitario?Number(i.custoUnitario)*getQtdItem(i):0), 0);
-      const prontas  = totalQtd >= 5;
-      const temStatus = itens.some(i => i.status === "resolvido");
-      return `<div class="marca-block">
-        <div class="marca-title">
-          <span class="marca-name">${m}</span>
-          <div class="marca-meta">
-            ${prontas ? `<span class="tag-envio">📦 Pronto envio</span>` : ""}
-            <span class="tag-pares">${totalQtd} par${totalQtd > 1 ? "es" : ""}</span>
-            ${totalVal > 0 ? `<span class="tag-total">R$ ${totalVal.toFixed(2).replace(".",",")}</span>` : ""}
+    ${(() => {
+      // Agrupa por loja → marca
+      const porLoja = {};
+      marcasFinais.forEach(m => {
+        agrupado[m].forEach(i => {
+          const loja = i.loja || "Sem loja";
+          if(!porLoja[loja]) porLoja[loja] = {};
+          if(!porLoja[loja][m]) porLoja[loja][m] = [];
+          porLoja[loja][m].push(i);
+        });
+      });
+      const lojas = Object.keys(porLoja).sort();
+
+      return lojas.map(loja => {
+        const marcasDaLoja = Object.keys(porLoja[loja]).sort();
+        const todosItensLoja = marcasDaLoja.flatMap(m => porLoja[loja][m]);
+        const totalQtdLoja = todosItensLoja.reduce((s,i) => s+i.quantidade, 0);
+        const totalValLoja = todosItensLoja.reduce((s,i) => s+(i.custoUnitario?Number(i.custoUnitario)*getQtdItem(i):0), 0);
+
+        const marcasHtml = marcasDaLoja.map(m => {
+          const itens = porLoja[loja][m];
+          const totalQtd = itens.reduce((s,i) => s+i.quantidade, 0);
+          const totalVal = itens.reduce((s,i) => s+(i.custoUnitario?Number(i.custoUnitario)*getQtdItem(i):0), 0);
+          const prontas  = totalQtd >= 5;
+          const temStatus = itens.some(i => i.status === "resolvido");
+          return `<div class="marca-block">
+            <div class="marca-title">
+              <span class="marca-name">${m}</span>
+              <div class="marca-meta">
+                ${prontas ? `<span class="tag-envio">📦 Pronto envio</span>` : ""}
+                <span class="tag-pares">${totalQtd} par${totalQtd > 1 ? "es" : ""}</span>
+                ${totalVal > 0 ? `<span class="tag-total">R$ ${totalVal.toFixed(2).replace(".",",")}</span>` : ""}
+              </div>
+            </div>
+            <table>
+              <thead><tr>
+                <th>Marca</th>
+                <th>Referência</th>
+                <th>Defeito</th>
+                <th>Nota Origem</th>
+                ${isVencidoPdf ? "<th>Data NF-e</th>" : ""}
+                <th style="text-align:center;">Qtd</th>
+                <th>Custo Unit.</th>
+                <th>Total</th>
+                ${temStatus ? "<th>Status</th>" : ""}
+              </tr></thead>
+              <tbody>
+                ${itens.map(i => `<tr>
+                  <td style="font-weight:700;color:#dc2626;white-space:nowrap;">${i.marca}</td>
+                  <td class="td-ref">${i.referencia}${i.cor ? `<span style="font-weight:400;color:#6b7280;"> · ${i.cor}</span>` : ""}${i.numeracao ? `<span style="font-weight:400;color:#9ca3af;"> · nº ${i.numeracao}</span>` : ""}</td>
+                  <td class="td-defeito">${i.defeito || "-"}</td>
+                  <td class="td-nota">${i.notaOrigem || "-"}</td>
+                  ${isVencidoPdf ? `<td class="td-nota" style="white-space:nowrap;">${i.dataEmissaoNfe ? formatDate(i.dataEmissaoNfe) : "-"}<br><span style="font-size:9px;font-weight:700;color:#7c3aed;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);border-radius:4px;padding:1px 5px;display:inline-block;margin-top:2px;">Vencida</span></td>` : ""}
+                  <td class="td-qtd" style="text-align:center;">${i.quantidade}</td>
+                  <td class="td-custo">${i.custoUnitario ? "R$ "+Number(i.custoUnitario).toFixed(2).replace(".",",") : "-"}</td>
+                  <td class="td-total">${i.custoUnitario ? "R$ "+(Number(i.custoUnitario)*getQtdItem(i)).toFixed(2).replace(".",",") : "-"}</td>
+                  ${temStatus ? `<td><span class="${i.status==="resolvido"?"td-status-res":"td-status-pen"}">${i.status==="resolvido"?"Resolvido":"Pendente"}</span></td>` : ""}
+                </tr>`).join("")}
+              </tbody>
+              <tfoot><tr class="subtotal-row">
+                <td colspan="${isVencidoPdf ? 5 : 4}" style="color:#9ca3af;font-size:9px;letter-spacing:1px;">SUBTOTAL</td>
+                <td style="text-align:center;" class="subtotal-val">${totalQtd}</td>
+                <td></td>
+                <td class="subtotal-val">R$ ${totalVal.toFixed(2).replace(".",",")}</td>
+                ${temStatus ? "<td></td>" : ""}
+              </tr></tfoot>
+            </table>
+          </div>`;
+        }).join("");
+
+        return `<div class="loja-block">
+          <div class="loja-header">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span class="loja-name">${loja}</span>
+              <span style="font-size:10px;color:#6b7280;font-weight:500;">${marcasDaLoja.length} marca${marcasDaLoja.length>1?"s":""}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span style="font-size:11px;font-weight:700;color:#374151;">${totalQtdLoja} par${totalQtdLoja>1?"es":""}</span>
+              ${totalValLoja > 0 ? `<span style="font-size:11px;font-weight:800;color:#dc2626;">R$ ${totalValLoja.toFixed(2).replace(".",",")}</span>` : ""}
+            </div>
           </div>
-        </div>
-        <table>
-          <thead><tr>
-            <th>Marca</th>
-            <th>Referência</th>
-            <th>Defeito</th>
-            <th>Nota Origem</th>
-            ${isVencidoPdf ? "<th>Data NF-e</th>" : ""}
-            <th style="text-align:center;">Qtd</th>
-            <th>Custo Unit.</th>
-            <th>Total</th>
-            ${temStatus ? "<th>Status</th>" : ""}
-          </tr></thead>
-          <tbody>
-            ${itens.map(i => `<tr>
-              <td style="font-weight:700;color:#dc2626;white-space:nowrap;">${i.marca}</td>
-              <td class="td-ref">${i.referencia}${i.cor ? `<span style="font-weight:400;color:#6b7280;"> · ${i.cor}</span>` : ""}${i.numeracao ? `<span style="font-weight:400;color:#9ca3af;"> · nº ${i.numeracao}</span>` : ""}</td>
-              <td class="td-defeito">${i.defeito || "-"}</td>
-              <td class="td-nota">${i.notaOrigem || "-"}</td>
-              ${isVencidoPdf ? `<td class="td-nota" style="white-space:nowrap;">${i.dataEmissaoNfe ? formatDate(i.dataEmissaoNfe) : "-"}<br><span style="font-size:9px;font-weight:700;color:#7c3aed;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);border-radius:4px;padding:1px 5px;display:inline-block;margin-top:2px;">Vencida</span></td>` : ""}
-              <td class="td-qtd" style="text-align:center;">${i.quantidade}</td>
-              <td class="td-custo">${i.custoUnitario ? "R$ "+Number(i.custoUnitario).toFixed(2).replace(".",",") : "-"}</td>
-              <td class="td-total">${i.custoUnitario ? "R$ "+(Number(i.custoUnitario)*getQtdItem(i)).toFixed(2).replace(".",",") : "-"}</td>
-              ${temStatus ? `<td><span class="${i.status==="resolvido"?"td-status-res":"td-status-pen"}">${i.status==="resolvido"?"Resolvido":"Pendente"}</span></td>` : ""}
-            </tr>`).join("")}
-          </tbody>
-          <tfoot><tr class="subtotal-row">
-            <td colspan="${isVencidoPdf ? 5 : 4}" style="color:#9ca3af;font-size:9px;letter-spacing:1px;">SUBTOTAL</td>
-            <td style="text-align:center;" class="subtotal-val">${totalQtd}</td>
-            <td></td>
-            <td class="subtotal-val">R$ ${totalVal.toFixed(2).replace(".",",")}</td>
-            ${temStatus ? "<td></td>" : ""}
-          </tr></tfoot>
-        </table>
-      </div>`;
-    }).join("")}
+          <div class="loja-content">${marcasHtml}</div>
+        </div>`;
+      }).join("");
+    })()}
   </div>
 
   <div class="footer">
