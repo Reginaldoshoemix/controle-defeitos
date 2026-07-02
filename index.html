@@ -8488,8 +8488,9 @@ function gerarPDF() {
           </div>`;
         }).join("");
 
-        // Pega o CNPJ do primeiro item que tiver (podem ter itens sem CNPJ)
-        const cnpjLoja = todosItensLoja.find(i => i.cnpj)?.cnpj || "";
+        // Busca o CNPJ da loja no cadastro de lojas
+        const lojaInfo = LOJAS.find(l => l.nome === loja);
+        const cnpjLoja = lojaInfo?.cnpj || "";
 
         // Separa o primeiro bloco de marca dos restantes para grudar com o header
         const primeiroMarca = marcasDaLoja[0];
