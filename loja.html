@@ -676,8 +676,9 @@ window.abrirHistorico = async function() {
 window.toggleHistLote = function(id) {
   const box = document.getElementById("hist_" + id);
   const chev = document.getElementById("chev_" + id);
-  box.classList.toggle("open");
-  chev.style.transform = box.classList.contains("open") ? "rotate(180deg)" : "";
+  const aberto = box.style.display === "block";
+  box.style.display = aberto ? "none" : "block";
+  chev.style.transform = aberto ? "" : "rotate(180deg)";
 };
 
 window.voltarEscolha = function() {
