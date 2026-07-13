@@ -60,6 +60,7 @@
   @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
   .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,.4);}50%{box-shadow:0 0 0 6px rgba(22,163,74,0);}}
   .loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:500;}
   .loading-screen .sp{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
 </style>
@@ -105,27 +106,8 @@
       <i class="fa-solid fa-chevron-right" style="color:var(--border);font-size:15px;"></i>
     </div>
 
-    <!-- Histórico de lotes aprovados -->
-    <div onclick="abrirHistorico()" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin-top:13px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.04);">
-      <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#6b7280,#374151);display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;flex-shrink:0;"><i class="fa-solid fa-clock-rotate-left"></i></div>
-      <div style="flex:1;">
-        <div style="font-size:15.5px;font-weight:800;">Histórico de lotes</div>
-        <div class="muted" style="font-size:12px;margin-top:2px;line-height:1.35;">Veja os itens enviados em meses anteriores.</div>
-      </div>
-      <i class="fa-solid fa-chevron-right" style="color:var(--border);font-size:15px;"></i>
-    </div>
-
     <!-- Suas avaliações (status das avaliações enviadas) -->
     <div id="minhasAvaliacoes" style="margin-top:20px;"></div>
-  </div>
-
-  <!-- Histórico de lotes -->
-  <div id="historicoView" class="hidden">
-    <div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
-      <button class="btn btn-ghost" style="width:auto;padding:7px 14px;font-size:12.5px;color:var(--muted);" onclick="voltarEscolha()"><i class="fa-solid fa-arrow-left" style="margin-right:5px;"></i> Voltar</button>
-      <div style="font-size:15px;font-weight:800;"><i class="fa-solid fa-clock-rotate-left" style="color:var(--accent);margin-right:6px;"></i>Histórico de lotes</div>
-    </div>
-    <div id="historicoList" style="margin-top:10px;"></div>
   </div>
 
   <!-- Sem lote -->
@@ -571,6 +553,10 @@ window.abrirItemSheet = function(avulso) {
 };
 window.fecharItemSheet = function() {
   document.getElementById("itemSheet").classList.add("hidden");
+  window._editandoAvId = null;
+  window._fotosOriginais = [];
+  const btn = document.getElementById("btnSalvarItem");
+  if(btn) btn.innerHTML = `<i class="fa-solid fa-check"></i> Adicionar ao lote`;
 };
 
 // ── Carregar avaliações desta loja (status: pendente/autorizado/negado) ──
@@ -583,20 +569,56 @@ async function carregarMinhasAvaliacoes() {
     const avs = [];
     snap.forEach(d => avs.push({ id: d.id, ...d.data() }));
     if(!avs.length) { cont.innerHTML = ""; return; }
-    // ordena: pendentes primeiro, depois autorizados, depois negados
-    const ordem = { pendente: 0, autorizado: 1, negado: 2 };
-    avs.sort((a,b) => (ordem[a.status]||9) - (ordem[b.status]||9));
+
+    // Rastreia aprovações novas via localStorage
+    const vistoKey = "avsVistas_" + LOJA;
+    const vistos = JSON.parse(localStorage.getItem(vistoKey) || "[]");
+    const novasAprovacoes = avs.filter(av => av.status === "autorizado" && !vistos.includes(av.id));
+
+    // Ordena: novos aprovados primeiro, depois pendentes, depois vistos aprovados, depois negados
+    const ordem = { pendente: 1, autorizado: 2, negado: 3 };
+    avs.sort((a,b) => {
+      const aNovo = novasAprovacoes.find(x => x.id === a.id) ? 0 : (ordem[a.status]||9);
+      const bNovo = novasAprovacoes.find(x => x.id === b.id) ? 0 : (ordem[b.status]||9);
+      return aNovo - bNovo;
+    });
+
     let html = `<div style="font-weight:800;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:7px;"><i class="fa-solid fa-clipboard-check" style="color:var(--accent);"></i> Suas avaliações</div>`;
+
+    // Banner de novas aprovações
+    if(novasAprovacoes.length) {
+      html += `<div style="background:#dcfce7;border:1.5px solid #86efac;border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;background:#16a34a;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:pulse 1.5s infinite;">
+          <i class="fa-solid fa-circle-check" style="color:#fff;font-size:15px;"></i>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:800;color:#14532d;">${novasAprovacoes.length === 1 ? "1 avaliação aprovada!" : novasAprovacoes.length + " avaliações aprovadas!"}</div>
+          <div style="font-size:11.5px;color:#166534;margin-top:1px;">Toque em <strong>"OK, vi"</strong> para marcar como lido.</div>
+        </div>
+        <button onclick="marcarAprovacoesvistas(${JSON.stringify(novasAprovacoes.map(x=>x.id))})" style="margin-left:auto;background:#16a34a;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">OK, vi</button>
+      </div>`;
+    }
+
     avs.forEach(av => {
+      const eNova = novasAprovacoes.find(x => x.id === av.id);
       let badge = "";
-      if(av.status === "autorizado") badge = `<span style="background:#dcfce7;color:#166534;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;"><i class="fa-solid fa-check" style="font-size:9px;"></i> Autorizado</span>`;
-      else if(av.status === "negado") badge = `<span style="background:#fef2f2;color:#991b1b;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;"><i class="fa-solid fa-xmark" style="font-size:9px;"></i> Negado</span>`;
-      else badge = `<span style="background:#fef9c3;color:#854d0e;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;"><i class="fa-solid fa-clock" style="font-size:9px;"></i> Aguardando</span>`;
-      html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 13px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+      if(av.status === "autorizado")
+        badge = `<span style="background:#dcfce7;color:#166534;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;white-space:nowrap;"><i class="fa-solid fa-check" style="font-size:9px;"></i> Autorizado</span>`;
+      else if(av.status === "negado")
+        badge = `<span style="background:#fef2f2;color:#991b1b;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;white-space:nowrap;"><i class="fa-solid fa-xmark" style="font-size:9px;"></i> Negado</span>`;
+      else
+        badge = `<span style="background:#fef9c3;color:#854d0e;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;white-space:nowrap;"><i class="fa-solid fa-clock" style="font-size:9px;"></i> Aguardando</span>`;
+
+      const btnEditar = av.status === "pendente"
+        ? `<button onclick="editarAvaliacao('${av.id}')" style="background:none;border:1px solid var(--border);border-radius:7px;padding:4px 8px;cursor:pointer;color:var(--muted);font-size:11px;display:flex;align-items:center;gap:4px;margin-top:6px;"><i class="fa-solid fa-pen" style="font-size:9px;"></i> Editar</button>`
+        : "";
+
+      html += `<div style="background:var(--surface);border:1.5px solid ${eNova ? "#86efac" : "var(--border)"};border-radius:12px;padding:11px 13px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;${eNova ? "box-shadow:0 0 0 3px rgba(22,163,74,.08);" : ""}">
         <div style="min-width:0;flex:1;">
           <div style="font-size:13px;font-weight:800;">${(av.marca||"").toUpperCase()} · ${av.referencia||""}</div>
           <div class="muted" style="font-size:11.5px;margin-top:1px;">${(av.cor||"").toUpperCase()} · Tam. ${av.tamanho||"—"}</div>
           <div style="font-size:11.5px;margin-top:3px;color:var(--text);">${av.defeito||""}</div>
+          ${btnEditar}
         </div>
         <div style="flex-shrink:0;">${badge}</div>
       </div>`;
@@ -605,87 +627,52 @@ async function carregarMinhasAvaliacoes() {
   } catch(e) { console.error("carregarMinhasAvaliacoes:", e); cont.innerHTML = ""; }
 }
 
+window.marcarAprovacoesvistas = function(ids) {
+  const vistoKey = "avsVistas_" + LOJA;
+  const vistos = JSON.parse(localStorage.getItem(vistoKey) || "[]");
+  const novos = [...new Set([...vistos, ...ids])];
+  localStorage.setItem(vistoKey, JSON.stringify(novos));
+  carregarMinhasAvaliacoes();
+};
+
+window.editarAvaliacao = async function(avId) {
+  // Busca dados da avaliação
+  const { getDoc, doc: docRef_, updateDoc: updateDoc_ } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  const snap = await getDoc(docRef_(db, "avaliacoes", avId));
+  if(!snap.exists()) { toast("Item não encontrado."); return; }
+  const av = snap.data();
+
+  // Abre o sheet com os dados preenchidos
+  window._sheetAvulso = true;
+  window._editandoAvId = avId;
+  window._fotosOriginais = av.fotos || [];
+  abrirItemSheet(true);
+
+  // Aguarda o DOM do sheet estar pronto e preenche os campos
+  setTimeout(() => {
+    document.getElementById("fCodigo").value = av.codigoBarras || "";
+    document.getElementById("fMarca").value = av.marca || "";
+    document.getElementById("fRef").value = av.referencia || "";
+    document.getElementById("fCor").value = av.cor || "";
+    document.getElementById("fTam").value = av.tamanho || "";
+    document.getElementById("fDefeito").value = av.defeito || "";
+    // Mostra fotos existentes nos boxes
+    (av.fotos || []).forEach((url, i) => {
+      const box = document.getElementById("box" + i);
+      if(box) box.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
+      fotos[i] = url; // marca como já preenchida (url string)
+    });
+    // Muda título e botão
+    const titulo = document.querySelector("#itemSheet .sheet-title, #itemSheet h2, #itemSheet .modal-title");
+    const btn = document.getElementById("btnSalvarItem");
+    if(btn) { btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Salvar alterações`; }
+  }, 100);
+};
+
 // ── Modos (escolha / lote / avulso) ──
 window.modoLote = function() { window._modo = "lote"; carregarLote(); };
 window.modoAvulso = function() { window._modo = "avulso"; render(); };
-window.abrirHistorico = async function() {
-  window._modo = "historico";
-  document.getElementById("escolhaModo").classList.add("hidden");
-  document.getElementById("historicoView").classList.remove("hidden");
-  const list = document.getElementById("historicoList");
-  list.innerHTML = `<div class="center muted" style="padding:20px;"><div class="sp" style="margin:0 auto 10px;"></div>Carregando...</div>`;
-
-  try {
-    const q = query(collection(db, "lotes"), where("loja", "==", LOJA), where("status", "==", "aprovado"));
-    const snap = await getDocs(q);
-    const lotesAprovados = [];
-    snap.forEach(d => lotesAprovados.push({ id: d.id, ...d.data() }));
-    lotesAprovados.sort((a,b) => (b.fechadoEm?.seconds||0) - (a.fechadoEm?.seconds||0));
-
-    if(!lotesAprovados.length) {
-      list.innerHTML = `<div class="center muted" style="padding:30px;"><i class="fa-solid fa-inbox" style="font-size:28px;opacity:.3;display:block;margin-bottom:8px;"></i>Nenhum lote aprovado ainda.</div>`;
-      return;
-    }
-
-    // Carrega itens de todos os lotes
-    const itensMap = {};
-    await Promise.all(lotesAprovados.map(async lote => {
-      const qi = query(collection(db, "itens"), where("loteId", "==", lote.id));
-      const si = await getDocs(qi);
-      itensMap[lote.id] = [];
-      si.forEach(d => itensMap[lote.id].push({ id: d.id, ...d.data() }));
-    }));
-
-    list.innerHTML = lotesAprovados.map(lote => {
-      const itensLote = itensMap[lote.id] || [];
-      const dataFechado = lote.fechadoEm ? new Date(lote.fechadoEm.seconds*1000).toLocaleDateString("pt-BR") : "";
-      return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden;">
-        <div onclick="toggleHistLote('${lote.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:13px 14px;cursor:pointer;">
-          <div>
-            <div style="font-size:14px;font-weight:800;"><i class="fa-solid fa-box" style="color:var(--accent);margin-right:6px;font-size:12px;"></i>Lote ${lote.numero||lote.mes||lote.id}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px;">${lote.mes||""} ${dataFechado ? "· Fechado em "+dataFechado : ""} · ${itensLote.length} item${itensLote.length!==1?"s":""}</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:10px;font-weight:700;background:rgba(22,163,74,.12);color:#16a34a;padding:3px 9px;border-radius:20px;white-space:nowrap;"><i class="fa-solid fa-circle-check" style="margin-right:3px;"></i>Aprovado</span>
-            <i class="fa-solid fa-chevron-down" id="chev_${lote.id}" style="color:var(--muted);font-size:12px;transition:.2s;"></i>
-          </div>
-        </div>
-        <div id="hist_${lote.id}" style="display:none;border-top:1px solid var(--border);padding:10px 12px;">
-          ${itensLote.length === 0
-            ? `<div style="text-align:center;color:var(--muted);padding:10px;font-size:12px;">Nenhum item encontrado.</div>`
-            : itensLote.map(it => `
-              <div style="border:1px solid var(--border);border-radius:10px;padding:9px 10px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;">
-                <div style="display:flex;gap:4px;flex-shrink:0;">
-                  ${(it.fotos||[]).slice(0,3).map(u=>`<img src="${u}" onclick="ampliarFotoLoja('${u}')" style="width:40px;height:40px;border-radius:7px;object-fit:cover;cursor:zoom-in;flex-shrink:0;">`).join("")}
-                </div>
-                <div style="flex:1;min-width:0;">
-                  <div style="font-size:12.5px;font-weight:700;line-height:1.3;">${it.marca?it.marca+" · ":""}${it.referencia||"—"} · ${it.cor||"—"} · nº ${it.tamanho||"—"}</div>
-                  <div style="font-size:11.5px;color:var(--accent2);margin-top:2px;line-height:1.3;">${it.defeito||""}</div>
-                </div>
-              </div>`).join("")
-          }
-        </div>
-      </div>`;
-    }).join("");
-  } catch(e) {
-    console.error(e);
-    list.innerHTML = `<div class="center muted" style="padding:20px;">Erro ao carregar histórico.</div>`;
-  }
-};
-
-window.toggleHistLote = function(id) {
-  const box = document.getElementById("hist_" + id);
-  const chev = document.getElementById("chev_" + id);
-  const aberto = box.style.display === "block";
-  box.style.display = aberto ? "none" : "block";
-  chev.style.transform = aberto ? "" : "rotate(180deg)";
-};
-
-window.voltarEscolha = function() {
-  window._modo = null;
-  document.getElementById("historicoView").classList.add("hidden");
-  render();
-};
+window.voltarEscolha = function() { window._modo = null; render(); };
 
 window.onFoto = async function(idx, input) {
   const file = input.files[0];
@@ -712,27 +699,43 @@ window.salvarItem = async function() {
   if(window._sheetAvulso === true) {
     const btn = document.getElementById("btnSalvarItem");
     btn.disabled = true;
-    btn.innerHTML = `<div class="spinner"></div> Enviando...`;
+    const editando = !!window._editandoAvId;
+    btn.innerHTML = `<div class="spinner"></div> ${editando ? "Salvando..." : "Enviando..."}`;
     try {
-      const urls = [];
       const nomes = ["defeito","solado","calcado"];
-      const avId = "av_" + Date.now();
+      const urls = [];
+      const avId = editando ? window._editandoAvId : "av_" + Date.now();
       for(let i=0;i<3;i++){
-        const r = ref_(storage, `avaliacoes/${LOJA}/${avId}_${nomes[i]}.jpg`);
-        await uploadBytes(r, fotos[i]);
-        urls.push(await getDownloadURL(r));
+        if(typeof fotos[i] === "string") {
+          // Foto não foi alterada — mantém a URL original
+          urls.push(fotos[i]);
+        } else {
+          // Nova foto — faz upload
+          const r = ref_(storage, `avaliacoes/${LOJA}/${avId}_${nomes[i]}.jpg`);
+          await uploadBytes(r, fotos[i]);
+          urls.push(await getDownloadURL(r));
+        }
       }
-      await addDoc(collection(db, "avaliacoes"), {
-        loja: LOJA, codigoBarras: codigo, marca: marca, referencia: ref, cor: cor, tamanho: tam,
-        defeito: defeito, fotos: urls, status: "pendente", criadoEm: serverTimestamp()
-      });
-      fecharItemSheet();
-      toast("Avaliação enviada! Já aparece no sistema.");
+      const dados = { codigoBarras: codigo, marca: marca, referencia: ref, cor: cor, tamanho: tam, defeito: defeito, fotos: urls };
+      if(editando) {
+        const { doc: docRef_, updateDoc: updateDoc_ } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+        await updateDoc_(docRef_(db, "avaliacoes", window._editandoAvId), dados);
+        window._editandoAvId = null;
+        window._fotosOriginais = [];
+        fecharItemSheet();
+        toast("Avaliação atualizada!");
+      } else {
+        await addDoc(collection(db, "avaliacoes"), {
+          loja: LOJA, status: "pendente", criadoEm: serverTimestamp(), ...dados
+        });
+        fecharItemSheet();
+        toast("Avaliação enviada! Já aparece no sistema.");
+      }
     } catch(e) {
-      console.error(e); toast("Erro ao enviar avaliação.");
+      console.error(e); toast(editando ? "Erro ao salvar alterações." : "Erro ao enviar avaliação.");
     } finally {
       btn.disabled = false;
-      btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Enviar avaliação`;
+      btn.innerHTML = editando ? `<i class="fa-solid fa-floppy-disk"></i> Salvar alterações` : `<i class="fa-solid fa-paper-plane"></i> Enviar avaliação`;
     }
     return;
   }
