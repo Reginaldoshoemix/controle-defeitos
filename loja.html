@@ -382,7 +382,10 @@ function render() {
         <div class="l1">${it.marca?it.marca+" · ":""}Ref. ${it.referencia||"—"} · ${it.cor||"—"} · ${it.tamanho||"—"}</div>
         <div class="l2">${it.defeito||""}</div>
       </div>
-      ${!fechado ? `<i class="fa-solid fa-trash del" onclick="excluirItem('${it.id}')"></i>` : ""}
+      ${!fechado ? `<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+        <i class="fa-solid fa-pen" onclick="editarItemLoja('${it.id}')" style="cursor:pointer;color:var(--muted);font-size:14px;padding:4px;" title="Editar"></i>
+        <i class="fa-solid fa-trash del" onclick="excluirItem('${it.id}')"></i>
+      </div>` : ""}
     </div>
   `).join("");
 }
@@ -554,7 +557,9 @@ window.abrirItemSheet = function(avulso) {
 window.fecharItemSheet = function() {
   document.getElementById("itemSheet").classList.add("hidden");
   window._editandoAvId = null;
+  window._editandoItemId = null;
   window._fotosOriginais = [];
+  fotos = [null, null, null];
   const btn = document.getElementById("btnSalvarItem");
   if(btn) btn.innerHTML = `<i class="fa-solid fa-check"></i> Adicionar ao lote`;
 };
@@ -742,32 +747,68 @@ window.salvarItem = async function() {
 
   const btn = document.getElementById("btnSalvarItem");
   btn.disabled = true;
-  btn.innerHTML = `<div class="spinner"></div> Enviando...`;
+  const editandoItem = !!window._editandoItemId;
+  btn.innerHTML = `<div class="spinner"></div> ${editandoItem ? "Salvando..." : "Enviando..."}`;
   try {
-    // sobe as 3 fotos
-    const urls = [];
     const nomes = ["defeito","solado","calcado"];
-    const itemId = "item_" + Date.now();
+    const urls = [];
+    const itemId = editandoItem ? window._editandoItemId : "item_" + Date.now();
     for(let i=0;i<3;i++){
-      const r = ref_(storage, `lotes/${loteAtual.id}/${itemId}_${nomes[i]}.jpg`);
-      await uploadBytes(r, fotos[i]);
-      urls.push(await getDownloadURL(r));
+      if(typeof fotos[i] === "string") {
+        urls.push(fotos[i]); // foto não alterada
+      } else {
+        const r = ref_(storage, `lotes/${loteAtual.id}/${itemId}_${nomes[i]}.jpg`);
+        await uploadBytes(r, fotos[i]);
+        urls.push(await getDownloadURL(r));
+      }
     }
-    await addDoc(collection(db, "itens"), {
-      loteId: loteAtual.id, loja: LOJA,
-      codigoBarras: codigo, marca: marca, referencia: ref, cor: cor, tamanho: tam,
-      defeito: defeito, fotos: urls, criadoEm: serverTimestamp()
-    });
+    const dados = { codigoBarras: codigo, marca: marca, referencia: ref, cor: cor, tamanho: tam, defeito: defeito, fotos: urls };
+    if(editandoItem) {
+      await updateDoc(doc(db, "itens", window._editandoItemId), dados);
+      window._editandoItemId = null;
+      window._fotosOriginais = [];
+      toast("Item atualizado!");
+    } else {
+      await addDoc(collection(db, "itens"), {
+        loteId: loteAtual.id, loja: LOJA, criadoEm: serverTimestamp(), ...dados
+      });
+      toast("Item adicionado!");
+    }
     await carregarItens();
     render();
     fecharItemSheet();
-    toast("Item adicionado!");
   } catch(e) {
-    console.error(e); toast("Erro ao enviar item.");
+    console.error(e); toast(editandoItem ? "Erro ao salvar." : "Erro ao enviar item.");
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<i class="fa-solid fa-check"></i> Adicionar ao lote`;
   }
+};
+
+window.editarItemLoja = function(id) {
+  const it = itens.find(x => x.id === id);
+  if(!it) { toast("Item não encontrado."); return; }
+
+  window._sheetAvulso = false;
+  window._editandoItemId = id;
+  window._fotosOriginais = it.fotos || [];
+  abrirItemSheet(false);
+
+  setTimeout(() => {
+    document.getElementById("fCodigo").value = it.codigoBarras || "";
+    document.getElementById("fMarca").value = it.marca || "";
+    document.getElementById("fRef").value = it.referencia || "";
+    document.getElementById("fCor").value = it.cor || "";
+    document.getElementById("fTam").value = it.tamanho || "";
+    document.getElementById("fDefeito").value = it.defeito || "";
+    (it.fotos || []).forEach((url, i) => {
+      const box = document.getElementById("box" + i);
+      if(box) box.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
+      fotos[i] = url;
+    });
+    const btn = document.getElementById("btnSalvarItem");
+    if(btn) btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Salvar alterações`;
+  }, 100);
 };
 
 window.excluirItem = async function(id) {
