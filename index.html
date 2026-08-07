@@ -413,7 +413,7 @@ body.dark .marca-stat-card .stat-value {
 
 /* ── Marcas section responsivo ── */
 #section-marcas .grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 @media (max-width: 768px) {
   #section-marcas .grid {
@@ -427,6 +427,50 @@ body.dark .marca-stat-card .stat-value {
   #section-marcas .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
+}
+
+/* ── Caixas: identidade visual âmbar (módulo independente de Lotes das Lojas) ── */
+.caixa-stat-card::before { background: linear-gradient(180deg, #b45309, #d97706) !important; }
+.caixa-stat-card::after  { background: #b45309 !important; }
+.caixa-stat-card {
+  border-color: rgba(180, 83, 9, .25) !important;
+  background: linear-gradient(135deg, rgba(180, 83, 9, .10) 0%, rgba(217, 119, 6, .04) 100%) !important;
+}
+.caixa-stat-card:hover {
+  border-color: rgba(180, 83, 9, .45) !important;
+  box-shadow: 0 12px 32px rgba(180, 83, 9, .16), 0 2px 8px rgba(0,0,0,.05) !important;
+}
+.caixa-stat-card .stat-icon { background: rgba(180, 83, 9, .12) !important; color: #b45309 !important; }
+.caixa-stat-card .stat-value { color: #b45309 !important; }
+body.dark .caixa-stat-card {
+  background: linear-gradient(135deg, rgba(217, 119, 6, .14) 0%, rgba(217, 119, 6, .05) 100%) !important;
+  border-color: rgba(217, 119, 6, .25) !important;
+}
+body.dark .caixa-stat-card .stat-icon { background: rgba(217, 119, 6, .16) !important; color: #fbbf24 !important; }
+body.dark .caixa-stat-card .stat-value { color: #fbbf24 !important; }
+
+.caixa-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  padding: 14px;
+  transition: .15s;
+  cursor: pointer;
+}
+.caixa-card:hover { border-color: rgba(180, 83, 9, .4); box-shadow: 0 8px 20px rgba(180, 83, 9, .10); }
+.caixa-card.caixa-fechada { opacity: .78; }
+
+#section-caixas .grid.caixa-stats-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 768px) {
+  #section-caixas .grid.caixa-stats-grid { grid-template-columns: 1fr !important; }
+  #caixasListGrid { grid-template-columns: 1fr !important; }
+}
+@media (min-width: 769px) and (max-width: 1024px) {
+  #section-caixas .grid.caixa-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+#caixasListGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 1025px) and (max-width: 1400px) {
+  #caixasListGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* ── NF-es de Devolução: identidade visual azul ── */
@@ -1559,15 +1603,25 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
       <span class="sidebar-text">Marcas</span>
       <span id="sidebarMarcasBadge" style="display:none;margin-left:auto;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;font-size:9px;font-weight:800;border-radius:5px;padding:2px 6px;letter-spacing:.5px;"></span>
     </div>
+    <div id="nav-caixas" class="nav-item" onclick="navTo('caixas')" data-tip="Caixas">
+      <div class="nav-icon"><i class="fa-solid fa-box"></i></div>
+      <span class="sidebar-text">Caixas</span>
+      <span id="sidebarCaixasBadge" style="display:none;margin-left:auto;background:linear-gradient(135deg,#b45309,#d97706);color:#fff;font-size:9px;font-weight:800;border-radius:5px;padding:2px 6px;letter-spacing:.5px;"></span>
+    </div>
+    <div id="nav-inconsistencias" class="nav-item" onclick="navTo('inconsistencias')" data-tip="Inconsistências">
+      <div class="nav-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <span class="sidebar-text">Inconsistências</span>
+      <span id="sidebarInconsistenciasBadge" style="display:none;margin-left:auto;background:linear-gradient(135deg,#b91c1c,#dc2626);color:#fff;font-size:9px;font-weight:800;border-radius:5px;padding:2px 6px;letter-spacing:.5px;"></span>
+    </div>
 
     <!-- DIVISOR -->
     <div class="sidebar-divider" style="height:1px;background:var(--border);margin:10px 4px;width:100%;"></div>
 
     <!-- AÇÕES -->
     <div class="nav-section-label">Ações</div>
-    <div class="nav-item" onclick="openConfirm('Deseja apagar todos os itens resolvidos?','warn',clearResolved)" data-tip="Limpar Resolvidos" style="color:var(--muted);">
-      <div class="nav-icon"><i class="fa-solid fa-check-circle"></i></div>
-      <span class="sidebar-text">Limpar Resolvidos</span>
+    <div class="nav-item" onclick="abrirConfirmacaoArquivarResolvidos()" data-tip="Arquivar Resolvidos" style="color:var(--muted);">
+      <div class="nav-icon"><i class="fa-solid fa-box-archive"></i></div>
+      <span class="sidebar-text">Arquivar Resolvidos</span>
     </div>
 
     <!-- RESUMO POR LOJA NA SIDEBAR -->
@@ -2022,15 +2076,15 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
                     </div>
 
                     <div style="position:relative;">
-                      <label class="section-label block mb-1">Vincular fornecedor cadastrado</label>
-                      <input id="fornecedorInput" type="text" placeholder="Buscar por nome ou marca já cadastrados..." class="input w-full" style="padding:9px 12px;" autocomplete="off" oninput="showFornecedorSuggestions(this.value,'fornecedorSuggestions','fornecedorId')" onblur="setTimeout(()=>{const s=document.getElementById('fornecedorSuggestions');if(s)s.style.display='none'},180)">
+                      <label class="section-label block mb-1">Fornecedor / Fábrica <span style="color:var(--accent);font-weight:800;">*</span></label>
+                      <input id="fornecedorInput" type="text" placeholder="Buscar por marca, razão social ou CNPJ..." class="input w-full" style="padding:9px 12px;" autocomplete="off"
+                        oninput="onFornecedorInputChange(this.value,'fornecedorSuggestions','fornecedorId','fornecedorInput','cnpj')"
+                        onfocus="showFornecedorSuggestions(this.value,'fornecedorSuggestions','fornecedorId','fornecedorInput','cnpj')"
+                        onblur="setTimeout(()=>{const s=document.getElementById('fornecedorSuggestions');if(s)s.style.display='none'},180)">
                       <input type="hidden" id="fornecedorId" value="">
-                      <div id="fornecedorSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--accent-border);border-radius:10px;z-index:200;max-height:180px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:3px;"></div>
-                    </div>
-
-                    <div>
-                      <label class="section-label block mb-1">CNPJ avulso (se não for cadastrado)</label>
-                      <input id="cnpj" type="text" placeholder="00.000.000/0000-00" class="input w-full" style="padding:9px 12px;" maxlength="18" oninput="mascaraCnpj(this)">
+                      <input type="hidden" id="cnpj" value="">
+                      <div id="fornecedorSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--accent-border);border-radius:10px;z-index:200;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:3px;"></div>
+                      <div id="fornecedorInputMsg" style="font-size:11px;color:var(--muted);margin-top:4px;"></div>
                     </div>
 
                     <div>
@@ -2114,11 +2168,21 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
                 <i class="fa-solid fa-filter" style="color:var(--accent);"></i>
                 Use os filtros direto no cabeçalho da tabela · Clique nos títulos das colunas para ordenar
               </div>
-              <div id="filterCountBar" style="display:none;" class="filter-count-bar" onclick="limparFiltrosTabela()" title="Clique para limpar todos os filtros">
-                <i class="fa-solid fa-filter"></i>
-                <span id="filterCountLabel">0 filtros ativos</span>
-                <span class="filter-badge" id="filterCountBadge">0</span>
-                <i class="fa-solid fa-xmark" style="font-size:10px;margin-left:2px;"></i>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:6px;" title="Itens resolvidos arquivados saem da lista ativa, mas continuam nos totais históricos">
+                  <i class="fa-solid fa-box-archive" style="color:var(--muted);font-size:12px;"></i>
+                  <select id="filterArquivado" class="input table-filter" style="padding:6px 10px;font-size:12px;" onchange="applyFilters()">
+                    <option value="ativos">Itens ativos</option>
+                    <option value="arquivados">Arquivados</option>
+                    <option value="todos">Todos (ativos + arquivados)</option>
+                  </select>
+                </div>
+                <div id="filterCountBar" style="display:none;" class="filter-count-bar" onclick="limparFiltrosTabela()" title="Clique para limpar todos os filtros">
+                  <i class="fa-solid fa-filter"></i>
+                  <span id="filterCountLabel">0 filtros ativos</span>
+                  <span class="filter-badge" id="filterCountBadge">0</span>
+                  <i class="fa-solid fa-xmark" style="font-size:10px;margin-left:2px;"></i>
+                </div>
               </div>
             </div>
           </div>
@@ -2139,6 +2203,7 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
               <i class="fa-solid fa-trash"></i> Excluir
             </button>
             <button onclick="abrirBulkEditar()" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;border:1px solid rgba(124,58,237,.3);background:rgba(124,58,237,.10);color:#7c3aed;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.15s;" onmouseover="this.style.background='rgba(124,58,237,.20)'" onmouseout="this.style.background='rgba(124,58,237,.10)'"><i class="fa-solid fa-pen-to-square"></i> Editar</button>
+            <button onclick="abrirAddACaixaModal()" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;border:1px solid rgba(180,83,9,.3);background:rgba(180,83,9,.10);color:#b45309;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.15s;" onmouseover="this.style.background='rgba(180,83,9,.20)'" onmouseout="this.style.background='rgba(180,83,9,.10)'"><i class="fa-solid fa-box"></i> Adicionar à Caixa</button>
             <button onclick="clearSelection()" class="btn-ghost" style="padding:6px 10px;font-size:12px;margin-left:auto;">
               <i class="fa-solid fa-xmark"></i> Cancelar
             </button>
@@ -2841,7 +2906,7 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
               <tr>
                 <th><div class="th-inner"><span class="th-label">Marca / CNPJ</span></div></th>
                 <th><div class="th-inner"><span class="th-label">Razão Social</span></div></th>
-                <th style="text-align:center;"><div class="th-inner" style="justify-content:center;"><span class="th-label">Produtos</span></div></th>
+                <th style="text-align:center;"><div class="th-inner" style="justify-content:center;"><span class="th-label">Pares / Registros</span></div></th>
                 <th style="text-align:center;"><div class="th-inner" style="justify-content:center;"><span class="th-label">NF-es Dev.</span></div></th>
                 <th style="text-align:center;"><div class="th-inner" style="justify-content:center;"><span class="th-label">Ações</span></div></th>
               </tr>
@@ -2897,7 +2962,7 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
             <div class="stat-icon"><i class="fa-solid fa-tag"></i></div>
           </div>
           <div id="marcaStatTotal" class="stat-value" style="font-size:36px;font-weight:900;font-family:'Space Mono',monospace;line-height:1;">0</div>
-          <div style="font-size:10.5px;color:var(--muted);margin-top:10px;font-weight:600;padding-top:10px;border-top:1px solid rgba(124,58,237,.12);">marcas com defeitos ativos</div>
+          <div style="font-size:10.5px;color:var(--muted);margin-top:10px;font-weight:600;padding-top:10px;border-top:1px solid rgba(124,58,237,.12);">marcas no histórico (todos os status)</div>
         </div>
         <div class="stat-card marca-stat-card">
           <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:14px;">
@@ -2905,7 +2970,15 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
             <div class="stat-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
           </div>
           <div id="marcaStatPares" class="stat-value" style="font-size:36px;font-weight:900;font-family:'Space Mono',monospace;line-height:1;">0</div>
-          <div style="font-size:10.5px;color:var(--muted);margin-top:10px;font-weight:600;padding-top:10px;border-top:1px solid rgba(124,58,237,.12);">pares com defeito (ativos)</div>
+          <div style="font-size:10.5px;color:var(--muted);margin-top:10px;font-weight:600;padding-top:10px;border-top:1px solid rgba(124,58,237,.12);">pares no histórico (total, inclui resolvidos)</div>
+        </div>
+        <div class="stat-card marca-stat-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:14px;">
+            <div class="stat-label">Pares em Aberto</div>
+            <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          </div>
+          <div id="marcaStatParesAberto" class="stat-value" style="font-size:36px;font-weight:900;font-family:'Space Mono',monospace;line-height:1;">0</div>
+          <div style="font-size:10.5px;color:var(--muted);margin-top:10px;font-weight:600;padding-top:10px;border-top:1px solid rgba(124,58,237,.12);">pendentes + em análise (subtotal)</div>
         </div>
         <div class="stat-card marca-stat-card">
           <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:14px;">
@@ -2922,7 +2995,7 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
           <div>
             <div class="section-label mb-1">Consolidado</div>
-            <div class="section-title" style="font-size:18px;">Marcas com Defeitos Ativos</div>
+            <div class="section-title" style="font-size:18px;">Histórico de Marcas (todos os status)</div>
           </div>
           <div style="position:relative;display:flex;align-items:center;">
             <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:10px;font-size:11px;color:#7c3aed;pointer-events:none;opacity:.7;"></i>
@@ -2957,9 +3030,9 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
             <thead>
               <tr>
                 <th><div class="th-inner"><span class="th-label">Marca</span></div></th>
-                <th style="text-align:center;"><div class="th-inner" style="justify-content:center;"><span class="th-label">Pares c/ Defeito</span></div></th>
-                <th style="text-align:center;"><div class="th-inner" style="justify-content:center;"><span class="th-label">Itens</span></div></th>
-                <th style="text-align:center;"><div class="th-inner" style="justify-content:center;"><span class="th-label">Status</span></div></th>
+                <th style="text-align:center;"><div class="th-inner" style="justify-content:center;"><span class="th-label">Total de Pares (histórico)</span></div></th>
+                <th style="text-align:center;"><div class="th-inner" style="justify-content:center;"><span class="th-label">Registros</span></div></th>
+                <th style="text-align:center;"><div class="th-inner" style="justify-content:center;"><span class="th-label">Status (pares)</span></div></th>
                 <th><div class="th-inner"><span class="th-label">CNPJs Vinculados</span></div></th>
                 <th style="text-align:right;"><div class="th-inner" style="justify-content:flex-end;"><span class="th-label">Valor Total</span></div></th>
                 <th style="text-align:center;"><div class="th-inner" style="justify-content:center;"><span class="th-label">Ações</span></div></th>
@@ -2971,6 +3044,150 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
       </div>
 
     </div><!-- /section-marcas -->
+
+    <!-- ═══════════════ CAIXAS (módulo local/independente de Lotes das Lojas) ═══════════════ -->
+    <div id="section-caixas" style="display:none;animation:fade .22s ease;">
+
+      <!-- HEADER -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
+        <div>
+          <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(180,83,9,.10);border:1px solid rgba(180,83,9,.22);border-radius:6px;padding:3px 10px;margin-bottom:6px;">
+            <i class="fa-solid fa-box" style="font-size:9px;color:#b45309;"></i>
+            <span style="font-size:9px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:#b45309;">Controle Interno</span>
+          </div>
+          <h1 style="font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;line-height:1;">Caixas</h1>
+        </div>
+        <button class="btn-primary" style="background:#b45309;border-color:#b45309;" onclick="abrirModalCaixa()"><i class="fa-solid fa-plus"></i> Nova Caixa</button>
+      </div>
+
+      <!-- LISTA DE CAIXAS -->
+      <div id="caixasListView">
+        <!-- STAT CARDS -->
+        <div class="grid caixa-stats-grid gap-3 mb-4">
+          <div class="stat-card caixa-stat-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:14px;">
+              <div class="stat-label">Total de Caixas</div>
+              <div class="stat-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+            </div>
+            <div id="caixaStatTotal" class="stat-value" style="font-size:36px;font-weight:900;font-family:'Space Mono',monospace;line-height:1;">0</div>
+          </div>
+          <div class="stat-card caixa-stat-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:14px;">
+              <div class="stat-label">Abertas</div>
+              <div class="stat-icon"><i class="fa-solid fa-box-open"></i></div>
+            </div>
+            <div id="caixaStatAbertas" class="stat-value" style="font-size:36px;font-weight:900;font-family:'Space Mono',monospace;line-height:1;">0</div>
+          </div>
+          <div class="stat-card caixa-stat-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:14px;">
+              <div class="stat-label">Fechadas</div>
+              <div class="stat-icon"><i class="fa-solid fa-lock"></i></div>
+            </div>
+            <div id="caixaStatFechadas" class="stat-value" style="font-size:36px;font-weight:900;font-family:'Space Mono',monospace;line-height:1;">0</div>
+          </div>
+          <div class="stat-card caixa-stat-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:14px;">
+              <div class="stat-label">Total de Pares</div>
+              <div class="stat-icon"><i class="fa-solid fa-shoe-prints"></i></div>
+            </div>
+            <div id="caixaStatPares" class="stat-value" style="font-size:36px;font-weight:900;font-family:'Space Mono',monospace;line-height:1;">0</div>
+          </div>
+        </div>
+
+        <div class="card p-5">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+            <div class="section-title" style="font-size:18px;">Todas as Caixas</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <select id="caixaFiltroStatus" onchange="renderCaixas()" class="input" style="padding:7px 10px;font-size:12px;">
+                <option value="">Todos os status</option>
+                <option value="aberta">Abertas</option>
+                <option value="fechada">Fechadas</option>
+              </select>
+              <div style="position:relative;display:flex;align-items:center;">
+                <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:10px;font-size:11px;color:#b45309;pointer-events:none;opacity:.7;"></i>
+                <input id="caixaSearchInput" type="text" placeholder="Buscar por código ou nome..." oninput="renderCaixas()" style="padding:7px 10px 7px 30px;border:1px solid rgba(180,83,9,.30);border-radius:8px;background:rgba(180,83,9,.05);color:var(--text);font-size:12px;width:220px;">
+              </div>
+            </div>
+          </div>
+          <div id="caixasListGrid"></div>
+        </div>
+      </div>
+
+      <!-- DETALHE DE UMA CAIXA -->
+      <div id="caixaDetalheView" style="display:none;">
+        <button class="btn-ghost" style="margin-bottom:14px;" onclick="fecharCaixaDetalhe()"><i class="fa-solid fa-arrow-left"></i> Voltar para Caixas</button>
+
+        <div class="card p-5" style="margin-bottom:16px;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                <span id="caixaDetCodigo" style="font-family:'Space Mono',monospace;font-weight:900;font-size:18px;color:#b45309;"></span>
+                <span id="caixaDetStatusBadge"></span>
+              </div>
+              <div id="caixaDetNome" style="font-size:14px;font-weight:700;"></div>
+              <div id="caixaDetDescricao" style="font-size:12px;color:var(--muted);margin-top:2px;max-width:520px;white-space:pre-line;"></div>
+              <div id="caixaDetMeta" style="font-size:11px;color:var(--muted);margin-top:6px;"></div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn-ghost" onclick="abrirModalCaixa(_caixaAtualId)"><i class="fa-solid fa-pen"></i> Editar</button>
+              <button id="caixaDetToggleBtn" class="btn-ghost" onclick="toggleCaixaStatus(_caixaAtualId)"></button>
+              <button class="btn-ghost" style="color:var(--accent2);" onclick="confirmarExcluirCaixa(_caixaAtualId)"><i class="fa-solid fa-trash"></i> Excluir</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+            <div><div style="font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Registros</div><div id="caixaDetRegistros" style="font-size:20px;font-weight:900;font-family:'Space Mono',monospace;color:#b45309;"></div></div>
+            <div><div style="font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Total de Pares</div><div id="caixaDetPares" style="font-size:20px;font-weight:900;font-family:'Space Mono',monospace;color:#b45309;"></div></div>
+            <div><div style="font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Valor Total</div><div id="caixaDetValor" style="font-size:20px;font-weight:900;font-family:'Space Mono',monospace;color:#b45309;"></div></div>
+          </div>
+        </div>
+
+        <div class="card p-5">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+            <div class="section-title" style="font-size:15px;">Itens desta caixa</div>
+            <div style="position:relative;display:flex;align-items:center;">
+              <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:10px;font-size:11px;color:#b45309;pointer-events:none;opacity:.7;"></i>
+              <input id="caixaItemSearchInput" type="text" placeholder="Buscar por marca, referência, código, loja, numeração, defeito..." oninput="renderCaixaDetalheItens()" style="padding:7px 10px 7px 30px;border:1px solid rgba(180,83,9,.30);border-radius:8px;background:rgba(180,83,9,.05);color:var(--text);font-size:12px;width:320px;max-width:100%;">
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table style="min-width:900px;">
+              <thead><tr>
+                <th>Data</th><th>Loja</th><th>Marca</th><th>Código</th><th>Referência</th><th>Cor</th><th>Num.</th>
+                <th style="text-align:center;">Qtd.</th><th style="text-align:right;">Custo Unit.</th><th style="text-align:right;">Total</th>
+                <th>Defeito</th><th>Nota Origem</th><th>NF-e</th><th>Fornecedor/CNPJ</th><th>Status</th><th style="text-align:center;">Ações</th>
+              </tr></thead>
+              <tbody id="caixaDetItensBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /section-caixas -->
+
+    <!-- ══════════════════════════════════════════════
+         CENTRAL DE INCONSISTÊNCIAS (seção 9)
+         Apenas localiza e ajuda a corrigir problemas de dados — nunca altera nada
+         automaticamente sem confirmação explícita do usuário.
+    ══════════════════════════════════════════════ -->
+    <div id="section-inconsistencias" style="display:none;animation:fade .22s ease;">
+
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
+        <div>
+          <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(220,38,38,.10);border:1px solid rgba(220,38,38,.22);border-radius:6px;padding:3px 10px;margin-bottom:6px;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size:9px;color:var(--danger);"></i>
+            <span style="font-size:9px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--danger);">Auditoria de dados</span>
+          </div>
+          <h1 style="font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;line-height:1;">Central de Inconsistências</h1>
+          <p style="font-size:12px;color:var(--muted);margin-top:6px;max-width:520px;">Localiza problemas de vínculo e de dados. Nada é alterado automaticamente — toda correção pede confirmação.</p>
+        </div>
+        <button class="btn-ghost" onclick="renderInconsistencias()" style="padding:9px 16px;"><i class="fa-solid fa-arrows-rotate"></i> Recalcular</button>
+      </div>
+
+      <div id="inconsistCardsGrid" class="grid caixa-stats-grid gap-3 mb-4"></div>
+
+      <div id="inconsistDetalhes" class="space-y-3"></div>
+
+    </div><!-- /section-inconsistencias -->
 
   </main>
 </div>
@@ -3284,17 +3501,21 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
       <div><label class="section-label block mb-1">Nota de Origem</label><input id="editNotaOrigem" type="text" placeholder="Ex: NF-e 123456" class="input w-full" style="padding:9px 12px;"></div>
       <div><label class="section-label block mb-1">Data Emissão NF-e</label><input id="editDataEmissaoNfe" type="date" class="input w-full" style="padding:9px 12px;"></div>
       <div>
-        <label class="section-label block mb-1">Fornecedor / Fábrica</label>
+        <label class="section-label block mb-1">Fornecedor / Fábrica <span style="color:var(--accent);font-weight:800;">*</span></label>
         <div style="position:relative;">
-          <input id="editFornecedorInput" type="text" placeholder="Buscar fornecedor ou marca..." class="input w-full" style="padding:9px 12px;" autocomplete="off" oninput="showFornecedorSuggestions(this.value,'editFornecedorSuggestions','editFornecedorId')" onblur="setTimeout(()=>{const s=document.getElementById('editFornecedorSuggestions');if(s)s.style.display='none'},180)">
+          <input id="editFornecedorInput" type="text" placeholder="Buscar por marca, razão social ou CNPJ..." class="input w-full" style="padding:9px 12px;" autocomplete="off"
+            oninput="onFornecedorInputChange(this.value,'editFornecedorSuggestions','editFornecedorId','editFornecedorInput','editCnpj')"
+            onfocus="showFornecedorSuggestions(this.value,'editFornecedorSuggestions','editFornecedorId','editFornecedorInput','editCnpj')"
+            onblur="setTimeout(()=>{const s=document.getElementById('editFornecedorSuggestions');if(s)s.style.display='none'},180)">
           <input type="hidden" id="editFornecedorId" value="">
-          <div id="editFornecedorSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--accent-border);border-radius:10px;z-index:300;max-height:160px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:3px;"></div>
+          <div id="editFornecedorSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--accent-border);border-radius:10px;z-index:300;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:3px;"></div>
+          <div id="editFornecedorInputMsg" style="font-size:11px;color:var(--muted);margin-top:4px;"></div>
         </div>
       </div>
       <div style="border-top:1px solid var(--border);padding-top:12px;">
         <div class="section-label mb-3" style="display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-file-invoice" style="color:var(--accent);font-size:10px;"></i>Dados para Exportação</div>
         <div class="space-y-3">
-          <div><label class="section-label block mb-1">CNPJ Fornecedor</label><input id="editCnpj" type="text" placeholder="00.000.000/0000-00" maxlength="18" class="input w-full" style="padding:9px 12px;" oninput="mascaraCnpj(this)"></div>
+          <div><label class="section-label block mb-1">CNPJ Fornecedor <span style="font-weight:500;color:var(--muted);">(preenchido automaticamente ao selecionar o fornecedor acima)</span></label><input id="editCnpj" type="text" placeholder="00.000.000/0000-00" maxlength="18" class="input w-full" style="padding:9px 12px;" readonly></div>
           <div><label class="section-label block mb-1">Chave XML / NF-e</label><input id="editXml" type="text" placeholder="Chave de acesso da NF-e (44 dígitos)" maxlength="44" class="input w-full" style="padding:9px 12px;"></div>
         </div>
       </div>
@@ -3304,6 +3525,15 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
           <textarea id="editObs" rows="2" placeholder="Anotações livres..." class="input w-full" style="padding:9px 12px;resize:vertical;min-height:62px;font-family:'DM Sans',sans-serif;" maxlength="400" oninput="document.getElementById('editObsCount').textContent=this.value.length"></textarea>
           <span id="editObsCount" style="position:absolute;bottom:6px;right:10px;font-size:10px;color:var(--muted);">0</span>
         </div>
+      </div>
+      <!-- Histórico de movimentações (seção 7) — só aparece ao editar um item já existente -->
+      <div id="editHistoricoWrap" style="display:none;border-top:1px solid var(--border);padding-top:12px;">
+        <div class="section-label mb-2" style="display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="toggleEditHistorico()">
+          <i class="fa-solid fa-clock-rotate-left" style="color:var(--accent);font-size:10px;"></i>
+          Histórico de movimentações
+          <i id="editHistoricoChevron" class="fa-solid fa-chevron-down" style="font-size:9px;margin-left:auto;transition:.15s;"></i>
+        </div>
+        <div id="editHistoricoBox" style="display:none;max-height:220px;overflow-y:auto;flex-direction:column;gap:6px;"></div>
       </div>
       <div class="flex gap-2 pt-2">
         <button id="editSaveBtn" onclick="saveEdit()" class="btn-primary flex-1 justify-center" style="padding:10px;">
@@ -3324,6 +3554,27 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
     <div class="flex gap-2 justify-center">
       <button id="confirmOkBtn" class="btn-primary" style="padding:10px 24px;">Confirmar</button>
       <button onclick="document.getElementById('confirmModal').style.display='none'" class="btn-ghost" style="padding:10px 24px;">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL AVISO DE POSSÍVEL DUPLICADO (seção 8)
+     Não bloqueia definitivamente o cadastro — apenas avisa e deixa o usuário decidir.
+═══════════════════════════════════════════════════════ -->
+<div id="duplicadoModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:560px;">
+    <div class="modal-title">
+      <div style="width:28px;height:28px;border-radius:8px;background:rgba(234,179,8,.14);border:1px solid rgba(234,179,8,.3);display:flex;align-items:center;justify-content:center;color:#ca8a04;font-size:12px;">
+        <i class="fa-solid fa-copy"></i>
+      </div>
+      <span>Possível item duplicado</span>
+    </div>
+    <p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;line-height:1.5;">Encontramos registro(s) parecido(s) com o que você está cadastrando. Confira antes de continuar — dois pares diferentes podem ter os mesmos dados, então isto não bloqueia o cadastro.</p>
+    <div id="duplicadoLista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;max-height:280px;overflow-y:auto;"></div>
+    <div class="flex gap-2" style="flex-wrap:wrap;">
+      <button onclick="duplicadoVoltarCorrigir()" class="btn-ghost" style="flex:1;justify-content:center;padding:10px;min-width:140px;"><i class="fa-solid fa-pen"></i> Voltar e corrigir</button>
+      <button onclick="duplicadoCadastrarMesmoAssim()" class="btn-primary" style="flex:1;justify-content:center;padding:10px;min-width:140px;background:#ca8a04;border-color:#ca8a04;"><i class="fa-solid fa-check"></i> Cadastrar mesmo assim</button>
     </div>
   </div>
 </div>
@@ -3598,11 +3849,15 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
         <div><label class="section-label block mb-1">Estado (UF)</label><input id="fornEstado" type="text" placeholder="SP" maxlength="2" class="input w-full" style="padding:9px 12px;text-transform:uppercase;"></div>
       </div>
       <div>
-        <label class="section-label block mb-1" style="display:flex;align-items:center;gap:6px;">
-          <i class="fa-solid fa-truck-fast" style="color:#0369a1;font-size:10px;"></i>
-          Procedimento de Devolução
-        </label>
-        <textarea id="fornProcedimento" rows="5" placeholder="Descreva o procedimento completo de devolução:&#10;&#10;• Transportadora utilizada&#10;• Como emitir a NF de devolução&#10;• Contato do representante&#10;• Prazo de retorno&#10;• Coleta reversa: sim/não&#10;• E-mail específico para devolução&#10;• Outros detalhes importantes..." class="input w-full" style="padding:10px 12px;resize:vertical;min-height:130px;font-family:'DM Sans',sans-serif;line-height:1.6;font-size:13px;"></textarea>
+        <label class="section-label block mb-1">Status do fornecedor</label>
+        <select id="fornAtivoSelect" class="input w-full" style="padding:9px 12px;">
+          <option value="1">Ativo</option>
+          <option value="0">Inativo (não aparece nas buscas de vínculo, mas o histórico é preservado)</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:rgba(3,105,161,.06);border:1px solid rgba(3,105,161,.18);border-radius:9px;font-size:12px;color:var(--muted);line-height:1.5;">
+        <i class="fa-solid fa-circle-info" style="color:#0369a1;margin-top:1px;"></i>
+        <span>O <strong>Procedimento de Devolução</strong> agora fica na ficha da <strong>marca</strong> (não no fornecedor individual), já que várias fábricas/CNPJs de uma marca costumam seguir o mesmo processo. Cadastre-o em <strong>Marcas → informações da marca</strong>.</span>
       </div>
       <div>
         <label class="section-label block mb-1">Observações</label>
@@ -3614,6 +3869,70 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
         </button>
         <button onclick="fecharModalFornecedor()" class="btn-ghost" style="padding:10px 16px;">Cancelar</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL NOVA/EDITAR CAIXA
+═══════════════════════════════════════════════════════ -->
+<div id="caixaModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)fecharModalCaixa()">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:440px;">
+    <div class="modal-title">
+      <div style="width:28px;height:28px;border-radius:8px;background:rgba(180,83,9,.12);border:1px solid rgba(180,83,9,.22);display:flex;align-items:center;justify-content:center;color:#b45309;font-size:12px;">
+        <i class="fa-solid fa-box"></i>
+      </div>
+      <span id="caixaModalTitle">Nova Caixa</span>
+    </div>
+    <div class="space-y-3">
+      <input type="hidden" id="caixaId">
+      <div>
+        <label class="section-label block mb-1">Código</label>
+        <input id="caixaCodigoDisplay" type="text" class="input w-full" style="padding:9px 12px;font-family:'Space Mono',monospace;" disabled placeholder="Gerado automaticamente ao salvar">
+      </div>
+      <div><label class="section-label block mb-1">Nome (opcional)</label><input id="caixaNome" type="text" placeholder="Ex: Devolução Mizuno Agosto" class="input w-full" style="padding:9px 12px;"></div>
+      <div><label class="section-label block mb-1">Observações</label><textarea id="caixaDescricao" rows="3" placeholder="Anotações sobre esta caixa..." class="input w-full" style="padding:9px 12px;resize:vertical;"></textarea></div>
+      <div>
+        <label class="section-label block mb-1">Status</label>
+        <select id="caixaStatusSelect" class="input w-full" style="padding:9px 12px;">
+          <option value="aberta">Aberta</option>
+          <option value="fechada">Fechada</option>
+        </select>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button class="btn-primary flex-1 justify-center" style="padding:10px;background:#b45309;border-color:#b45309;" onclick="salvarCaixa()"><i class="fa-solid fa-floppy-disk"></i> Salvar</button>
+        <button class="btn-ghost" style="padding:10px 16px;" onclick="fecharModalCaixa()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL "ADICIONAR À CAIXA" (ação em massa da lista de defeitos)
+═══════════════════════════════════════════════════════ -->
+<div id="addACaixaModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)fecharAddACaixaModal()">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:440px;">
+    <div class="modal-title">
+      <div style="width:28px;height:28px;border-radius:8px;background:rgba(180,83,9,.12);border:1px solid rgba(180,83,9,.22);display:flex;align-items:center;justify-content:center;color:#b45309;font-size:12px;">
+        <i class="fa-solid fa-box"></i>
+      </div>
+      <span>Adicionar à Caixa</span>
+    </div>
+    <p id="addACaixaResumo" style="font-size:12.5px;color:var(--muted);margin-bottom:14px;"></p>
+    <div style="margin-bottom:12px;">
+      <label class="section-label block mb-1">Caixa aberta existente</label>
+      <select id="addACaixaSelect" class="input w-full" style="padding:9px 12px;">
+        <option value="">Selecione uma caixa...</option>
+      </select>
+    </div>
+    <div style="text-align:center;font-size:11px;color:var(--muted);margin:10px 0;">— ou —</div>
+    <div style="margin-bottom:16px;">
+      <label class="section-label block mb-1">Criar nova caixa</label>
+      <input id="addACaixaNovoNome" type="text" placeholder="Nome da nova caixa (opcional)" class="input w-full" style="padding:9px 12px;">
+    </div>
+    <div class="flex gap-2">
+      <button class="btn-primary flex-1 justify-center" style="padding:10px;background:#b45309;border-color:#b45309;" onclick="confirmarAdicaoACaixa()"><i class="fa-solid fa-check"></i> Confirmar</button>
+      <button class="btn-ghost" style="padding:10px 16px;" onclick="fecharAddACaixaModal()">Cancelar</button>
     </div>
   </div>
 </div>
@@ -3640,6 +3959,48 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════
+     MODAL EXCLUSÃO DE FORNECEDOR COM HISTÓRICO (seção 6)
+     Impede a perda de dados: fornecedores com defeitos/NF-es vinculados nunca são
+     apagados diretamente — o usuário escolhe inativar (mantém tudo, some das buscas
+     de vínculo) ou transferir os vínculos para outro fornecedor antes de excluir.
+═══════════════════════════════════════════════════════ -->
+<div id="fornExclusaoModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)fecharFornExclusaoModal()">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:480px;">
+    <div class="modal-title">
+      <div style="width:28px;height:28px;border-radius:8px;background:rgba(220,38,38,.10);border:1px solid rgba(220,38,38,.22);display:flex;align-items:center;justify-content:center;color:var(--danger);font-size:12px;">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <span>Este fornecedor tem histórico</span>
+    </div>
+    <p id="fornExclusaoResumo" style="font-size:12.5px;color:var(--muted);margin-bottom:14px;line-height:1.5;"></p>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+      <button onclick="inativarFornecedorDoModal()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;border:1px solid rgba(180,83,9,.28);background:rgba(180,83,9,.07);cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif;">
+        <i class="fa-solid fa-eye-slash" style="color:#b45309;font-size:15px;"></i>
+        <span>
+          <div style="font-weight:700;font-size:12.5px;color:var(--text);">Marcar como inativo</div>
+          <div style="font-size:11px;color:var(--muted);">Some das buscas de vínculo, mas todo o histórico e cadastro são mantidos. Pode reativar depois.</div>
+        </span>
+      </button>
+      <button onclick="mostrarTransferenciaFornecedor()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;border:1px solid rgba(3,105,161,.28);background:rgba(3,105,161,.07);cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif;">
+        <i class="fa-solid fa-right-left" style="color:#0369a1;font-size:15px;"></i>
+        <span>
+          <div style="font-weight:700;font-size:12.5px;color:var(--text);">Transferir vínculos e excluir</div>
+          <div style="font-size:11px;color:var(--muted);">Move todos os defeitos e NF-es para outro fornecedor cadastrado, depois exclui este registro.</div>
+        </span>
+      </button>
+    </div>
+    <div id="fornTransferenciaBox" style="display:none;margin-bottom:14px;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);">
+      <label class="section-label block mb-1">Transferir vínculos para</label>
+      <select id="fornTransferenciaSelect" class="input w-full" style="padding:9px 12px;margin-bottom:10px;">
+        <option value="">Selecione o fornecedor de destino...</option>
+      </select>
+      <button class="btn-primary w-full justify-center" style="padding:9px;background:#0369a1;border-color:#0369a1;" onclick="confirmarTransferenciaEExclusao()"><i class="fa-solid fa-right-left"></i> Transferir e excluir</button>
+    </div>
+    <button onclick="fecharFornExclusaoModal()" class="btn-ghost w-full justify-center" style="padding:9px;">Cancelar</button>
+  </div>
+</div>
+
 <script>
 
 // ───── CONSTANTES ─────
@@ -3661,19 +4022,28 @@ let nfes = [];
 let fornecedores = []; // ← FORNECEDORES
 let marcasInfo = {};   // ← dados extras por marca (prazo, cnpjs das fábricas, obs)
 let formOpened = true;
+// Filtro específico de fornecedor aplicado na tabela de defeitos (ver "ver tabela" na
+// aba Fornecedores). Guarda o objeto do fornecedor inteiro para reutilizar a mesma
+// regra de vínculo (defeitoPertenceAoFornecedor) usada nos totais e cards.
+let _filtroFornecedorAtivo = null;
 let currentPage = 1;
 let sortField = "data";
 let sortDir = "desc"; // asc | desc
 let pageSize = Number(localStorage.getItem("shoemix_pagesize")) || 50;
+// ── Caixas (seção 4): módulo local/independente de "Lotes das Lojas" (Firebase) ──
+let caixas = [];
 
 // ───── INDEXEDDB ─────
 const DB_NAME    = "shoemixDB";
-const DB_VERSION = 2;
+// v2 → v3: adiciona o object store "caixas" (controle interno de caixas/lotes
+// físicos). Não apaga nem recria "defeitos", "nfes" ou "config". DB_VERSION é usada
+// de forma consistente também no número passado a indexedDB.open() abaixo.
+const DB_VERSION = 3;
 let db = null;
 
 function openDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 2);
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = (e) => {
       const database = e.target.result;
       if (!database.objectStoreNames.contains("defeitos")) {
@@ -3684,6 +4054,9 @@ function openDB() {
       }
       if (!database.objectStoreNames.contains("nfes")) {
         database.createObjectStore("nfes", { keyPath: "id" });
+      }
+      if (!database.objectStoreNames.contains("caixas")) {
+        database.createObjectStore("caixas", { keyPath: "id" });
       }
     };
     req.onsuccess = (e) => { db = e.target.result; resolve(db); };
@@ -3788,6 +4161,13 @@ async function loadFromDB() {
     nfes = nfeRows || [];
   } catch(e) { nfes = []; }
 
+  // Carregar caixas (seção 4) — backups/bancos antigos sem esse store continuam
+  // funcionando normalmente, assumindo lista vazia.
+  try {
+    const caixaRows = await dbGetAll("caixas");
+    caixas = caixaRows || [];
+  } catch(e) { caixas = []; }
+
   // Carregar fornecedores (localStorage)
   try {
     const rawForn = localStorage.getItem("fornecedores");
@@ -3815,6 +4195,33 @@ async function loadFromDB() {
   } else {
     LOJAS = LOJAS_PADRAO.map(l => ({...l}));
   }
+
+  await loadCaixaSeqCounter();
+}
+
+// ── Contador sequencial de código de caixa (CX-0001, CX-0002, ...). Persistido no
+// object store "config" para nunca repetir um código, mesmo que a caixa mais alta
+// seja excluída depois. ──
+let _caixaSeqCounter = 0;
+
+async function loadCaixaSeqCounter() {
+  try {
+    const cfgAll = await dbGetAll("config");
+    const entry = cfgAll.find(c => c.key === "shoemix_caixa_seq");
+    _caixaSeqCounter = entry ? (Number(entry.value) || 0) : 0;
+  } catch(e) { _caixaSeqCounter = 0; }
+  // Rede de segurança: nunca deixa o contador ficar atrás do maior código já
+  // existente (ex.: backup restaurado sem o valor do contador em "config").
+  caixas.forEach(c => {
+    const n = parseInt(String(c.codigo || "").replace(/\D/g, ""), 10);
+    if(Number.isFinite(n) && n > _caixaSeqCounter) _caixaSeqCounter = n;
+  });
+}
+
+async function proximoCodigoCaixa() {
+  _caixaSeqCounter += 1;
+  try { await dbPut("config", { key: "shoemix_caixa_seq", value: _caixaSeqCounter }); } catch(e) { console.error("Erro ao persistir contador de caixas:", e); }
+  return "CX-" + String(_caixaSeqCounter).padStart(4, "0");
 }
 
 // ───── REFS ─────
@@ -3839,6 +4246,8 @@ window.onload = async () => {
     console.error("Erro ao carregar IndexedDB:", e);
     showToast("Erro ao carregar banco de dados local.", "error", 5000);
   }
+  // Migração segura e idempotente: procedimento de devolução do fornecedor → marca.
+  try { migrarTodosProcedimentosDevolucao(); } catch(e) { console.error("Migração de procedimento de devolução falhou:", e); }
   populateLojaSelects();
   const fc = document.getElementById("formContainer");
   fc.style.maxHeight = "480px";
@@ -4019,6 +4428,14 @@ form.addEventListener("submit", (e) => {
     return;
   }
 
+  // Exige um fornecedor cadastrado selecionado (não apenas texto digitado) — seção 2.3.
+  if(!validarFornecedorSelecionado("fornecedorId", "fornecedorInput")) {
+    showToast("Selecione um fornecedor cadastrado antes de salvar (ou cadastre um novo pelo campo).", "error");
+    document.getElementById("fornecedorInput")?.focus();
+    document.getElementById("fornecedorInput")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
   // Guarda loja e marca para persistir após reset
   const lojaAtual  = document.getElementById("loja").value;
   const marcaAtual = document.getElementById("marca").value.trim().toUpperCase();
@@ -4043,17 +4460,23 @@ form.addEventListener("submit", (e) => {
     fornecedorId: document.getElementById("fornecedorId")?.value || "",
     status: "pendente"
   };
+
+  // Aviso de possível duplicado (seção 8) — não bloqueia, apenas confirma antes de salvar.
+  const possiveisDup = detectarPossivelDuplicado(item, null);
+  abrirAvisoDuplicado(possiveisDup, () => _finalizarCadastroNovoDefeito(item, lojaAtual, marcaAtual, !!possiveisDup.length), 'cadastro');
+});
+
+function _finalizarCadastroNovoDefeito(item, lojaAtual, marcaAtual, alertaConfirmado) {
   defeitos.unshift(item);
+  registrarHistoricoItem(item, 'criacao', 'Item cadastrado.');
+  if(alertaConfirmado) registrarHistoricoItem(item, 'duplicado_confirmado', 'Aviso de possível duplicado confirmado pelo usuário — cadastrado mesmo assim.');
   saveData();
 
   // Reset seletivo — mantém loja, marca e data
   const dataAtual = document.getElementById("data").value;
   form.reset();
-  // Limpa campos fornecedor
-  const fiEl = document.getElementById("fornecedorInput");
-  const fiHidden = document.getElementById("fornecedorId");
-  if(fiEl) fiEl.value = "";
-  if(fiHidden) fiHidden.value = "";
+  // Limpa campos fornecedor (texto, id oculto e CNPJ espelhado)
+  limparFornecedorSelecionado("fornecedorId", "fornecedorInput", "cnpj");
   populateLojaSelects();
   document.getElementById("loja").value  = lojaAtual;
   document.getElementById("marca").value = marcaAtual;
@@ -4063,7 +4486,7 @@ form.addEventListener("submit", (e) => {
   currentPage = 1;
   render();
   showToast("Defeito cadastrado com sucesso!");
-});
+}
 
 // ───── ORDENAÇÃO ─────
 function sortBy(field) {
@@ -4759,6 +5182,7 @@ async function saveData() {
   try {
     await dbClearAndPutAll("defeitos", defeitos);
     await dbClearAndPutAll("nfes", nfes);
+    await dbClearAndPutAll("caixas", caixas);
     autoSave.markDirty();
   } catch(e) {
     console.error("Erro ao salvar no IndexedDB:", e);
@@ -4791,6 +5215,7 @@ const autoSave = (() => {
     const payload = { defeitos, nfes, fornecedores };
     try { if(typeof LOJAS !== "undefined" && Array.isArray(LOJAS)) payload.lojas = LOJAS; } catch(_) {}
     try { if(typeof marcasInfo !== "undefined") payload.marcasInfo = marcasInfo; } catch(_) {}
+    try { if(typeof caixas !== "undefined" && Array.isArray(caixas)) payload.caixas = caixas; } catch(_) {}
     payload.exportedAt = new Date().toISOString();
     return JSON.stringify(payload, null, 2);
   }
@@ -5357,6 +5782,9 @@ function aplicarBackupDrive(raw) {
     if(dataForn.length) { fornecedores = dataForn; saveFornecedores(); }
     if(dataLojas.length) { LOJAS = dataLojas; try { saveLojas(); } catch(_){} }
     if(preparado.marcasInfo && Object.keys(preparado.marcasInfo).length) { marcasInfo = preparado.marcasInfo; saveMarcasInfo(); }
+    // Restauração total também substitui caixas (backups antigos sem o campo mantêm []).
+    caixas = Array.isArray(preparado.caixas) ? preparado.caixas : [];
+    loadCaixaSeqCounter();
     saveData(); render();
     if(document.getElementById('nfeList')) renderNfeTable();
     document.body.removeChild(overlay);
@@ -5469,6 +5897,166 @@ function getQtdItem(item) {
   return Number.isFinite(qtd) && qtd > 0 ? qtd : 1;
 }
 
+// ── Histórico de movimentações por item (seção 7) ──
+// Cada defeito ganha uma coleção `historico` (array), compatível com itens antigos
+// que não a possuem (assume array vazio). Nunca sobrescreve eventos existentes.
+function registrarHistoricoItem(item, tipo, descricao, alteracoes) {
+  if(!item) return;
+  if(!Array.isArray(item.historico)) item.historico = [];
+  item.historico.push({
+    id: Date.now() + Math.random(),
+    dataHora: new Date().toISOString(),
+    tipo: tipo,
+    descricao: descricao,
+    alteracoes: alteracoes || null,
+  });
+}
+
+// Rótulos legíveis dos campos de um defeito, usados no diff de edição (seção 7.3).
+const _CAMPOS_HISTORICO_LABEL = {
+  loja: 'Loja', marca: 'Marca', codigoBarras: 'Código de Barras', referencia: 'Referência',
+  cor: 'Cor', numeracao: 'Numeração', quantidade: 'Quantidade', custoUnitario: 'Custo Unitário',
+  defeito: 'Defeito', data: 'Data', notaOrigem: 'Nota de Origem', dataEmissaoNfe: 'Data Emissão NF-e',
+  cnpj: 'CNPJ', fornecedorId: 'Fornecedor', obs: 'Observações',
+};
+
+function _valorLegivelHistorico(key, val) {
+  if(key === 'fornecedorId') {
+    if(!val) return '(nenhum)';
+    const f = fornecedores.find(x => Number(x.id) === Number(val));
+    return f ? (f.marca || f.razaoSocial || ('#' + val)) : ('#' + val);
+  }
+  if(val === undefined || val === null || val === '') return '(vazio)';
+  return String(val);
+}
+
+// Compara os campos relevantes de `before` (snapshot antes da edição) com o estado
+// atual de `item` e registra UM evento de edição contendo apenas os campos que
+// realmente mudaram. Não cria evento nenhum se nada mudou (requisito 7.4).
+function _registrarDiffCampos(item, before) {
+  if(!item || !before) return false;
+  const alteracoes = {};
+  let mudou = false;
+  Object.keys(_CAMPOS_HISTORICO_LABEL).forEach(key => {
+    const vAntes  = before[key] === undefined ? '' : before[key];
+    const vDepois = item[key]   === undefined ? '' : item[key];
+    if(String(vAntes) !== String(vDepois)) {
+      mudou = true;
+      alteracoes[_CAMPOS_HISTORICO_LABEL[key]] = { de: _valorLegivelHistorico(key, vAntes), para: _valorLegivelHistorico(key, vDepois) };
+    }
+  });
+  if(mudou) {
+    registrarHistoricoItem(item, 'edicao', 'Dados do item editados.', alteracoes);
+  }
+  return mudou;
+}
+
+// ── Detecção de possíveis duplicados (seção 8) ──
+// Função única e reutilizável, usada no cadastro comum, na duplicação manual e na
+// aprovação de itens de Lotes das Lojas. Nunca marca como duplicado apenas por
+// compartilhar marca ou fornecedor — exige combinações específicas envolvendo
+// código de barras e/ou nota de origem junto com loja, referência ou numeração.
+function _normTextoDup(v) {
+  return String(v == null ? '' : v).trim().toUpperCase().replace(/\s+/g, ' ');
+}
+function _normCodigoBarrasDup(v) {
+  // Remove pontuação/espaços do código de barras antes de comparar.
+  return String(v == null ? '' : v).trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+function detectarPossivelDuplicado(candidato, excludeId) {
+  if(!candidato) return [];
+  const cb   = _normCodigoBarrasDup(candidato.codigoBarras);
+  const loja = _normTextoDup(normalizeLoja(candidato.loja));
+  const ref  = _normTextoDup(candidato.referencia);
+  const num  = _normTextoDup(candidato.numeracao);
+  const nota = _normTextoDup(candidato.notaOrigem);
+
+  return defeitos.filter(d => {
+    if(excludeId != null && Number(d.id) === Number(excludeId)) return false;
+    const dCb   = _normCodigoBarrasDup(d.codigoBarras);
+    const dLoja = _normTextoDup(normalizeLoja(d.loja));
+    const dRef  = _normTextoDup(d.referencia);
+    const dNum  = _normTextoDup(d.numeracao);
+    const dNota = _normTextoDup(d.notaOrigem);
+
+    // Regra A: mesmo código de barras (não vazio) + pelo menos loja, referência ou numeração batendo.
+    const regraCodigoBarras = cb && dCb && cb === dCb && (
+      (loja && loja === dLoja) || (ref && ref === dRef) || (num && num === dNum)
+    );
+    // Regra B: mesma nota de origem (não vazia) + loja igual + (referência ou numeração igual).
+    const regraNotaOrigem = nota && dNota && nota === dNota && loja && loja === dLoja && (
+      (ref && ref === dRef) || (num && num === dNum)
+    );
+    return regraCodigoBarras || regraNotaOrigem;
+  }).map(d => ({ item: d, arquivado: !!d.arquivado }));
+}
+
+// ── UI do aviso de possível duplicado (seção 8) ──
+// `onConfirm` é chamado apenas se o usuário escolher "Cadastrar mesmo assim".
+// `contexto` é um texto livre (ex.: "cadastro", "duplicação", "aprovação de lote")
+// usado só para compor a descrição do evento de histórico quando confirmado.
+let _duplicadoOnConfirm = null;
+let _duplicadoContexto = '';
+
+function abrirAvisoDuplicado(matches, onConfirm, contexto) {
+  if(!matches || !matches.length) { if(onConfirm) onConfirm(); return; }
+  _duplicadoOnConfirm = onConfirm;
+  _duplicadoContexto = contexto || '';
+  const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const lista = document.getElementById('duplicadoLista');
+  lista.innerHTML = matches.map(({ item: d, arquivado }) => `
+    <div style="padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+        <div style="font-weight:800;font-size:12.5px;color:var(--text);flex:1;">${esc(d.marca)} · ${esc(d.referencia)} ${d.numeracao ? '(nº ' + esc(d.numeracao) + ')' : ''}</div>
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:5px;padding:2px 7px;background:rgba(0,0,0,.06);color:var(--muted);">${defeitoStatusLabel(d.status)}${arquivado ? ' · ARQUIVADO' : ''}</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5;">
+        Loja: ${esc(d.loja) || '—'} · Cód. barras: ${esc(d.codigoBarras) || '—'} · Nota origem: ${esc(d.notaOrigem) || '—'} · Data: ${d.data ? formatDate(d.data) : '—'}
+      </div>
+      <button onclick="duplicadoRevisarExistente(${d.id})" style="margin-top:6px;font-size:10.5px;color:#0369a1;background:none;border:none;cursor:pointer;padding:0;font-weight:700;"><i class="fa-solid fa-arrow-up-right-from-square" style="font-size:9px;"></i> Revisar registro existente</button>
+    </div>
+  `).join('');
+  document.getElementById('duplicadoModal').style.display = 'flex';
+}
+
+function fecharAvisoDuplicado() {
+  document.getElementById('duplicadoModal').style.display = 'none';
+}
+
+// "Voltar e corrigir" — só fecha o aviso; os dados digitados no formulário continuam lá.
+function duplicadoVoltarCorrigir() {
+  _duplicadoOnConfirm = null;
+  fecharAvisoDuplicado();
+}
+
+// Abre o registro existente para revisão (fora do formulário atual, sem perdê-lo).
+function duplicadoRevisarExistente(id) {
+  fecharAvisoDuplicado();
+  _duplicadoOnConfirm = null;
+  navTo('defeitos');
+  setTimeout(() => openEdit(id), 150);
+}
+
+function duplicadoCadastrarMesmoAssim() {
+  const cb = _duplicadoOnConfirm;
+  fecharAvisoDuplicado();
+  _duplicadoOnConfirm = null;
+  if(cb) cb();
+}
+
+// Rótulo legível para o status de um defeito. Usado nas exportações para não
+// achatar tudo em "Pendente"/"Resolvido" (perdendo análise/sem solução/outros).
+function defeitoStatusLabel(status) {
+  switch(String(status || "").toLowerCase()) {
+    case "pendente":     return "Pendente";
+    case "analise":      return "Em Análise";
+    case "resolvido":    return "Resolvido";
+    case "sem_solucao":  return "Sem Solução";
+    default:             return status ? String(status) : "Pendente";
+  }
+}
+
 function sumQtdItens(lista) {
   return (lista || []).reduce((total, item) => total + getQtdItem(item), 0);
 }
@@ -5519,11 +6107,11 @@ function buildPreviewChips(bodyId) {
   return '';
 }
 
-function render() { renderCards(); renderCharts(); renderLojas(); renderAlerts(); renderFilters(); renderTable(); updateSortHeaders(); renderNfeCards(); renderNfeSidebarBadge(); populateFilterNfeVinculada(); renderMarcasVencidas(); renderVencidosSidebarBadge(); renderSemSolucao(); renderSemSolucaoBadge(); renderFornecedoresCards(); renderMarcasTab(); }
+function render() { renderCards(); renderCharts(); renderLojas(); renderAlerts(); renderFilters(); renderTable(); updateSortHeaders(); renderNfeCards(); renderNfeSidebarBadge(); populateFilterNfeVinculada(); renderMarcasVencidas(); renderVencidosSidebarBadge(); renderSemSolucao(); renderSemSolucaoBadge(); renderFornecedoresCards(); renderMarcasTab(); atualizarBadgeInconsistencias(); }
 
 // Render leve: atualiza tabela, cards e sidebar sem recalcular gráficos
 // Usar quando só um registro foi editado/adicionado/removido
-function renderLight() { renderCards(); renderLojas(); renderAlerts(); renderFilters(); renderTable(); updateSortHeaders(); renderNfeCards(); renderNfeSidebarBadge(); populateFilterNfeVinculada(); renderMarcasVencidas(); renderVencidosSidebarBadge(); renderSemSolucao(); renderSemSolucaoBadge(); renderFornecedoresCards(); renderMarcasTab(); }
+function renderLight() { renderCards(); renderLojas(); renderAlerts(); renderFilters(); renderTable(); updateSortHeaders(); renderNfeCards(); renderNfeSidebarBadge(); populateFilterNfeVinculada(); renderMarcasVencidas(); renderVencidosSidebarBadge(); renderSemSolucao(); renderSemSolucaoBadge(); renderFornecedoresCards(); renderMarcasTab(); atualizarBadgeInconsistencias(); }
 
 function renderCards() {
   const ativos     = defeitos.filter(i => i.status !== "resolvido");
@@ -5859,6 +6447,7 @@ function getFilteredAndSorted() {
   const coletaAte         = (document.getElementById('filterColetaAte')?.value         || '');
   const statusResFilter   = (document.getElementById('filterStatusResolucao')?.value   || '');
   const nfeResolvidoFilter = (document.getElementById('filterNfeResolvido')?.value || '');
+  const arquivadoFilter = (document.getElementById('filterArquivado')?.value || 'ativos');
 
   const _hojeVenc = new Date(); _hojeVenc.setHours(0,0,0,0);
   function _isNfeVencida(i) {
@@ -5898,6 +6487,14 @@ function getFilteredAndSorted() {
       if(coletaDe && (nfeLinked?.dataColeta||'') < coletaDe) return false;
       if(coletaAte && (nfeLinked?.dataColeta||'') > coletaAte) return false;
     }
+    // Filtro específico de fornecedor (usado por "ver tabela" na aba Fornecedores).
+    // Usa exatamente a mesma regra de vínculo (fornecedorId → fallback CNPJ exato),
+    // nunca por nome de marca — assim itens de outros CNPJs da mesma marca não aparecem.
+    if(_filtroFornecedorAtivo && !defeitoPertenceAoFornecedor(i, _filtroFornecedorAtivo)) return false;
+    // Filtro de arquivamento (seção 5): por padrão só mostra itens ativos (não arquivados).
+    if(arquivadoFilter === 'ativos' && i.arquivado) return false;
+    if(arquivadoFilter === 'arquivados' && !i.arquivado) return false;
+    // 'todos' não filtra por arquivado
     return true;
   });
 
@@ -6016,6 +6613,8 @@ function renderTable() {
       if(!resolvido && !analise && !isSemSol) menuItens.push({ icon:'fa-ban', cor:'#0f766e', label:'Sem solução', fn:`marcarSemSolucao(${i.id})` });
       if(analise) { menuItens.push({ icon:'fa-ban', cor:'#0f766e', label:'Sem solução', fn:`marcarSemSolucao(${i.id})` }); if(!nfeConcluida) menuItens.push({ icon:'fa-rotate-left', cor:'#475569', label:'Reabrir pendente', fn:`voltarPendente(${i.id})` }); }
       if(resolvido && !nfeConcluida) menuItens.push({ icon:'fa-rotate-left', cor:'#475569', label:'Reabrir pendente', fn:`voltarPendente(${i.id})` });
+      // Arquivamento (seção 5) — restaurar item arquivado para a lista ativa
+      if(i.arquivado) menuItens.push({ icon:'fa-box-open', cor:'#b45309', label:'Restaurar (arquivado)', fn:`restaurarItem(${i.id})` });
       if(isSemSol) {
         menuItens.push({ icon: !i.destino?'fa-hourglass-half':i.destino==='doacao'?'fa-hand-holding-heart':'fa-tag', cor: !i.destino?'#6b7280':i.destino==='doacao'?'#2563eb':'#ea580c', label:'Definir destino', fn:`abrirDestinoModal(${i.id})` });
         menuItens.push({ icon:'fa-rotate-left', cor:'#475569', label:'Reabrir pendente', fn:`voltarPendente(${i.id})` });
@@ -6026,6 +6625,11 @@ function renderTable() {
         : { icon:'fa-file-invoice', cor:'#93c5fd', label:'Vincular NF-e de devolução', fn:`openNfeVincular(${i.id})` });
       // Fornecedor (só se vinculado)
       if(fornVinc) menuItens.push({ icon:'fa-building', cor:'#0369a1', label:'Ver fornecedor: '+(fornVinc.marca||''), fn:`verFornecedor(${Number(fornVinc.id)})` });
+      // Caixas (seção 4) — ver a caixa atual ou adicionar este item individualmente
+      const caixaVinc = i.caixaId ? getCaixaById(i.caixaId) : null;
+      menuItens.push(caixaVinc
+        ? { icon:'fa-box', cor:'#b45309', label:'Ver caixa: '+(caixaVinc.codigo||''), fn:`verCaixaDoItem(${i.id})` }
+        : { icon:'fa-box', cor:'#b45309', label:'Adicionar à caixa', fn:`adicionarItemIndividualACaixa(${i.id})` });
 
       const menuId = `rowMenu_${i.id}`;
       const menuHtml = menuItens.map(m =>
@@ -6054,7 +6658,7 @@ function renderTable() {
           <td class="cb-cell"><input type="checkbox" class="row-cb" data-id="${i.id}" onchange="toggleRowSelect(${i.id},this.checked)" ${selectedIds.has(i.id)?'checked':''}></td>
           <td>${formatDate(i.data)}</td>
           <td><span class="chip">${i.loja}</span></td>
-          <td style="font-weight:700;">${i.marca}</td>
+          <td style="font-weight:700;">${i.marca}${i.arquivado ? ` <span title="Item arquivado — não aparece na lista ativa por padrão" style="display:inline-flex;align-items:center;gap:3px;background:rgba(180,83,9,.12);border:1px solid rgba(180,83,9,.25);border-radius:5px;padding:1px 6px;font-size:9px;font-weight:800;letter-spacing:.4px;color:#b45309;vertical-align:middle;margin-left:4px;"><i class="fa-solid fa-box-archive" style="font-size:8px;"></i> ARQUIVADO</span>` : ''}</td>
           <td style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);">${i.codigoBarras}</td>
           <td>${i.referencia}</td>
           <td style="color:var(--muted);font-size:11px;">${i.cor || "-"}</td>
@@ -6109,13 +6713,14 @@ function renderTable() {
         <div class="defect-card fade" style="${resolvido ? 'opacity:.65;' : ''}">
           <div class="defect-card-header">
             <div>
-              <div style="font-weight:800;font-size:14px;">${i.marca}</div>
+              <div style="font-weight:800;font-size:14px;">${i.marca}${i.arquivado ? ` <span title="Item arquivado" style="display:inline-flex;align-items:center;gap:3px;background:rgba(180,83,9,.12);border:1px solid rgba(180,83,9,.25);border-radius:5px;padding:1px 6px;font-size:9px;font-weight:800;letter-spacing:.4px;color:#b45309;vertical-align:middle;margin-left:4px;"><i class="fa-solid fa-box-archive" style="font-size:8px;"></i> ARQUIVADO</span>` : ''}</div>
               <div style="font-size:11px;color:var(--muted);margin-top:2px;">${formatDate(i.data)} · <span class="chip">${i.loja}</span></div>
             </div>
             <div style="display:flex;gap:5px;">
               <button onclick="openEdit(${i.id})" class="btn-edit" title="Editar"><i class="fa-solid fa-pen"></i></button>
               <button onclick="duplicarDefeito(${i.id})" class="btn-edit" title="Duplicar (novo tamanho)" style="color:#7c3aed;"><i class="fa-solid fa-copy"></i></button>
               ${!resolvido ? `<button onclick="resolverItem(${i.id})" class="btn-success" title="Resolver"><i class="fa-solid fa-check"></i></button>` : ''}
+              ${i.arquivado ? `<button onclick="restaurarItem(${i.id})" class="btn-edit" title="Restaurar" style="color:#b45309;"><i class="fa-solid fa-box-open"></i></button>` : ''}
               <button onclick="openConfirm('Excluir este item?','danger',()=>removeItem(${i.id}),'Esta ação não pode ser desfeita.')" class="btn-danger"><i class="fa-solid fa-trash"></i></button>
             </div>
           </div>
@@ -6209,6 +6814,8 @@ function corrigirItensInconsistentes(nfeId) {
       d.status = 'pendente';
       d.dataResolucao = undefined;
       d._resolvidoPorNfe = undefined;
+      registrarHistoricoItem(d, 'status', 'Status alterado para Pendente (correção de inconsistência com NF-e em aberto).');
+      _autoRestaurarSeArquivado(d, 'correção de inconsistência com NF-e em aberto');
       revertidos++;
     }
   });
@@ -6236,6 +6843,7 @@ function resolverItem(id) {
       () => {
         item.status = "resolvido";
         item.dataResolucao = new Date().toISOString();
+        registrarHistoricoItem(item, 'status', 'Status alterado para Resolvido.');
         saveData(); renderLight();
         showToast("Item marcado como resolvido!", "success");
       },
@@ -6246,6 +6854,7 @@ function resolverItem(id) {
 
   item.status = "resolvido";
   item.dataResolucao = new Date().toISOString();
+  registrarHistoricoItem(item, 'status', 'Status alterado para Resolvido.');
   saveData(); renderLight();
   showToast("Item marcado como resolvido!", "success");
 }
@@ -6261,15 +6870,61 @@ function removeItem(id) {
   showToast("Item excluído.", "info");
 }
 
-function clearResolved() {
-  const removedIds = new Set(defeitos.filter(i => i.status === "resolvido").map(i => i.id));
-  defeitos = defeitos.filter(i => i.status !== "resolvido");
-  // Remove produtos resolvidos das NF-es
-  nfes.forEach(n => {
-    n.produtosRelacionados = (n.produtosRelacionados || []).filter(pid => !removedIds.has(pid));
+// ───── ARQUIVAMENTO DE RESOLVIDOS (seção 5) ─────
+// Substitui a antiga "Limpar Resolvidos" (que apagava definitivamente os registros).
+// Arquivar apenas marca o item com `arquivado:true` — ele nunca é removido de `defeitos`,
+// continua contando nos totais históricos de marcas/fornecedores e nos backups, e pode
+// ser restaurado a qualquer momento.
+function abrirConfirmacaoArquivarResolvidos() {
+  const resolvidosNaoArquivados = defeitos.filter(i => i.status === 'resolvido' && !i.arquivado);
+  if(!resolvidosNaoArquivados.length) {
+    showToast('Não há itens resolvidos para arquivar.', 'info');
+    return;
+  }
+  const pares = resolvidosNaoArquivados.reduce((s,i) => s + (Number(i.quantidade) || 0), 0);
+  openConfirm(
+    `Arquivar ${resolvidosNaoArquivados.length} registro(s) resolvido(s) (${pares} par(es))?`,
+    'warn',
+    arquivarResolvidos,
+    'Os itens saem da lista ativa, mas continuam nos totais históricos de marcas/fornecedores, nos backups, e podem ser restaurados a qualquer momento.'
+  );
+}
+
+function arquivarResolvidos() {
+  const agora = new Date().toISOString();
+  let count = 0;
+  defeitos.forEach(i => {
+    if(i.status === 'resolvido' && !i.arquivado) {
+      i.arquivado = true;
+      i.arquivadoEm = agora;
+      registrarHistoricoItem(i, 'arquivado', 'Item arquivado (resolvido).');
+      count++;
+    }
   });
   saveData(); renderLight();
-  showToast("Itens resolvidos removidos.", "info");
+  showToast(`${count} item(ns) arquivado(s).`, 'success');
+}
+
+// Restaura um item arquivado de volta à lista ativa, sem alterar seu status.
+function restaurarItem(id) {
+  const item = defeitos.find(i => i.id === id);
+  if(!item || !item.arquivado) return;
+  item.arquivado = false;
+  delete item.arquivadoEm;
+  registrarHistoricoItem(item, 'restaurado', 'Item restaurado da lista de arquivados.');
+  saveData(); renderLight();
+  showToast('Item restaurado para a lista ativa.', 'success');
+}
+
+// Se um item arquivado tiver o status alterado para algo diferente de "resolvido"
+// (reaberto, em análise, sem solução), ele é automaticamente restaurado à lista ativa
+// e a ação é registrada no histórico (requisito 5.8 do prompt de melhorias).
+function _autoRestaurarSeArquivado(item, motivo) {
+  if(item && item.arquivado) {
+    item.arquivado = false;
+    delete item.arquivadoEm;
+    registrarHistoricoItem(item, 'restaurado', `Restaurado automaticamente: ${motivo}`);
+  }
 }
 
 // ───── MODAL EDIÇÃO ─────
@@ -6575,7 +7230,7 @@ function ampliarFoto(url) {
 // converte um item do lote em objeto defeito da base
 function _itemLoteParaDefeito(it, loja, loteNumero) {
   const obsLote = loteNumero ? ("Lote loja: " + loteNumero) : "";
-  return {
+  const novo = {
     id: Date.now() + Math.floor(Math.random()*10000),
     loja: loja || it.loja || "",
     marca: (it.marca||"").toUpperCase(),
@@ -6596,6 +7251,8 @@ function _itemLoteParaDefeito(it, loja, loteNumero) {
     fornecedorId: "",
     status: "pendente"
   };
+  registrarHistoricoItem(novo, 'criacao', 'Item cadastrado (aprovado a partir de Lotes das Lojas).');
+  return novo;
 }
 
 // Revisar/editar um item antes de aprovar — reaproveita o modal de edição
@@ -6624,8 +7281,8 @@ function editarItemLote(loteId, itemId) {
   set("editCnpj","");
   set("editXml","");
   set("editObs","");
-  const fh=document.getElementById("editFornecedorId"); if(fh) fh.value="";
-  const fi=document.getElementById("editFornecedorInput"); if(fi) fi.value="";
+  limparFornecedorSelecionado("editFornecedorId", "editFornecedorInput", "editCnpj");
+  renderEditHistorico(null); // item ainda não existe na base de defeitos
   const tEl=document.getElementById("editModalTitle"); if(tEl) tEl.textContent="Revisar item da loja";
   const bEl=document.getElementById("editSaveBtn"); if(bEl) bEl.innerHTML='<i class="fa-solid fa-check"></i>Aprovar e adicionar';
   _modoItemLote = { loteId, itemId, fotos: it.fotos||[], numero: lote.numero||"" };
@@ -6638,7 +7295,13 @@ async function aprovarItemLote(loteId, itemId) {
   const it = lote && (lote._itens||[]).find(x => x.id === itemId);
   if(!it) return;
   const novo = _itemLoteParaDefeito(it, lote.loja, lote.numero);
+  const possiveisDup = detectarPossivelDuplicado(novo, null);
+  abrirAvisoDuplicado(possiveisDup, () => _finalizarAprovarItemLote(novo, it, itemId, !!possiveisDup.length), 'aprovação de lote');
+}
+
+function _finalizarAprovarItemLote(novo, it, itemId, alertaConfirmado) {
   defeitos.unshift(novo);
+  if(alertaConfirmado) registrarHistoricoItem(novo, 'duplicado_confirmado', 'Aviso de possível duplicado confirmado pelo usuário — cadastrado mesmo assim.');
   saveData(); renderLight();
   // remove visualmente o item do modal
   const card = document.getElementById("itemRev_"+itemId);
@@ -6687,6 +7350,39 @@ document.addEventListener('click', (e) => {
   if(!e.target.closest('.row-menu') && !e.target.closest('.action-btn')) closeRowMenus();
 });
 
+// Preenche os campos do componente unificado de fornecedor no #editModal a partir de
+// um item existente: vínculo direto (fornecedorId válido), ou tentativa de resolução
+// automática por CNPJ para registros legados (seção 2.3, item 12).
+function popularFornecedorNoModal(item, hiddenId, inputId, cnpjMirrorId) {
+  const hidden = document.getElementById(hiddenId);
+  const input  = document.getElementById(inputId);
+  if(!hidden || !input) return;
+  const fVinc = item.fornecedorId ? fornecedores.find(f => Number(f.id) === Number(item.fornecedorId)) : null;
+  if(fVinc) {
+    hidden.value = fVinc.id;
+    input.value  = fornecedorLabelCompleto(fVinc);
+    window._fornecedorSelecionadoTexto[inputId] = input.value;
+    mostrarMsgFornecedor(inputId, "");
+  } else if(item.fornecedorId && !fVinc) {
+    // fornecedorId aponta para um fornecedor que não existe mais — não assume nada.
+    hidden.value = "";
+    input.value = "";
+    delete window._fornecedorSelecionadoTexto[inputId];
+    mostrarMsgFornecedor(inputId, "O fornecedor vinculado a este registro não existe mais. Selecione outro.");
+  } else if(item.cnpj) {
+    // Registro legado (só CNPJ): tenta resolver automaticamente, sem apagar o CNPJ.
+    hidden.value = "";
+    input.value = "";
+    delete window._fornecedorSelecionadoTexto[inputId];
+    resolverFornecedorLegado(item, hiddenId, inputId, cnpjMirrorId);
+  } else {
+    hidden.value = "";
+    input.value = "";
+    delete window._fornecedorSelecionadoTexto[inputId];
+    mostrarMsgFornecedor(inputId, "");
+  }
+}
+
 function duplicarDefeito(id) {
   const item = defeitos.find(i => i.id === id);
   if(!item) return;
@@ -6710,16 +7406,10 @@ function duplicarDefeito(id) {
   document.getElementById("editObs").value           = item.obs || "";
   const obsCount = document.getElementById("editObsCount");
   if(obsCount) obsCount.textContent = (item.obs || "").length;
-  // Fornecedor
-  const editFiHidden = document.getElementById("editFornecedorId");
-  const editFiInput  = document.getElementById("editFornecedorInput");
-  if(editFiHidden) editFiHidden.value = item.fornecedorId || "";
-  if(editFiInput) {
-    if(item.fornecedorId) {
-      const fVinc = fornecedores.find(f => f.id === Number(item.fornecedorId));
-      editFiInput.value = fVinc ? fVinc.marca + (fVinc.razaoSocial ? " — " + fVinc.razaoSocial : "") : "";
-    } else { editFiInput.value = ""; }
-  }
+  // Fornecedor — o item duplicado herda o mesmo fornecedor do original (ou tenta
+  // resolver por CNPJ se for um registro legado); usuário pode trocar se precisar.
+  popularFornecedorNoModal(item, "editFornecedorId", "editFornecedorInput", "editCnpj");
+  renderEditHistorico(null); // duplicação sempre cria um item novo — sem histórico próprio ainda
   _duplicando = true;  // sinaliza que saveEdit deve CRIAR um novo registro
   const tEl = document.getElementById("editModalTitle");
   const bEl = document.getElementById("editSaveBtn");
@@ -6761,27 +7451,82 @@ function openEdit(id) {
   document.getElementById("editXml").value           = item.xml || "";
   document.getElementById("editObs").value           = item.obs || "";
   document.getElementById("editObsCount").textContent = (item.obs || "").length;
-  // Fornecedor
-  const editFiHidden = document.getElementById("editFornecedorId");
-  const editFiInput  = document.getElementById("editFornecedorInput");
-  if(editFiHidden) editFiHidden.value = item.fornecedorId || "";
-  if(editFiInput) {
-    if(item.fornecedorId) {
-      const fVinc = fornecedores.find(f => f.id === Number(item.fornecedorId));
-      editFiInput.value = fVinc ? fVinc.marca + (fVinc.razaoSocial ? " — " + fVinc.razaoSocial : "") : "";
-    } else {
-      editFiInput.value = "";
-    }
-  }
+  // Fornecedor — vínculo direto, ou tentativa de resolução automática por CNPJ
+  // para registros legados (seção 2.3, item 12).
+  popularFornecedorNoModal(item, "editFornecedorId", "editFornecedorInput", "editCnpj");
+  renderEditHistorico(item);
   document.getElementById("editModal").style.display = "flex";
 }
 
+// ── Timeline de histórico dentro do modal de edição (seção 7) ──
+// Só é exibida ao editar um item já existente (nunca em cadastro novo/duplicação/lote).
+function renderEditHistorico(item) {
+  const wrap = document.getElementById('editHistoricoWrap');
+  const box  = document.getElementById('editHistoricoBox');
+  if(!wrap || !box) return;
+  if(!item) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  box.style.display = 'none';
+  const chevron = document.getElementById('editHistoricoChevron');
+  if(chevron) chevron.style.transform = '';
+  const eventos = Array.isArray(item.historico) ? [...item.historico] : [];
+  // Mais recente primeiro (requisito 7.5)
+  eventos.sort((a,b) => new Date(b.dataHora) - new Date(a.dataHora));
+  const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const iconePorTipo = {
+    criacao: 'fa-plus', status: 'fa-flag', edicao: 'fa-pen', arquivado: 'fa-box-archive',
+    restaurado: 'fa-box-open', caixa: 'fa-box', nfe: 'fa-file-invoice',
+    transferencia_fornecedor: 'fa-right-left', duplicado_confirmado: 'fa-copy',
+  };
+  if(!eventos.length) {
+    box.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:11.5px;padding:10px;">Nenhum evento registrado ainda (itens antigos podem não ter histórico anterior a esta atualização).</div>`;
+    return;
+  }
+  box.innerHTML = eventos.map(ev => {
+    const dt = ev.dataHora ? new Date(ev.dataHora) : null;
+    const dtLabel = dt ? dt.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
+    let alteracoesHtml = '';
+    if(ev.alteracoes && typeof ev.alteracoes === 'object') {
+      alteracoesHtml = '<div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;">' +
+        Object.keys(ev.alteracoes).map(campo => {
+          const c = ev.alteracoes[campo];
+          return `<div style="font-size:10.5px;color:var(--muted);"><strong style="color:var(--text);">${esc(campo)}:</strong> ${esc(c.de)} → <strong>${esc(c.para)}</strong></div>`;
+        }).join('') + '</div>';
+    }
+    return `<div style="display:flex;gap:8px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;">
+      <div style="width:24px;height:24px;border-radius:7px;background:rgba(59,130,246,.10);color:#2563eb;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;"><i class="fa-solid ${iconePorTipo[ev.tipo] || 'fa-circle-info'}"></i></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:11.5px;font-weight:600;color:var(--text);">${esc(ev.descricao)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:1px;">${dtLabel}</div>
+        ${alteracoesHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleEditHistorico() {
+  const box = document.getElementById('editHistoricoBox');
+  const chevron = document.getElementById('editHistoricoChevron');
+  if(!box) return;
+  const aberto = box.style.display === 'flex';
+  box.style.display = aberto ? 'none' : 'flex';
+  if(chevron) chevron.style.transform = aberto ? '' : 'rotate(180deg)';
+}
+
 function saveEdit() {
+  // Exige um fornecedor cadastrado selecionado (não apenas texto digitado) antes de
+  // salvar — vale para edição, duplicação e aprovação de item de lote (seção 2.3).
+  if(!validarFornecedorSelecionado("editFornecedorId", "editFornecedorInput")) {
+    showToast("Selecione um fornecedor cadastrado antes de salvar.", "error");
+    document.getElementById("editFornecedorInput")?.focus();
+    return;
+  }
   if(_modoItemLote) { salvarItemLoteEditado(); return; }
   if(_duplicando) { salvarDuplicado(); return; }
   const id = Number(document.getElementById("editId").value);
   const item = defeitos.find(i => i.id === id);
   if(!item) return;
+  const _antesEdicao = { ...item };
   item.loja          = document.getElementById("editLoja").value;
   item.marca         = document.getElementById("editMarca").value.trim().toUpperCase();
   item.codigoBarras  = document.getElementById("editCodigoBarras").value;
@@ -6798,6 +7543,7 @@ function saveEdit() {
   item.xml           = document.getElementById("editXml").value.trim();
   item.obs           = document.getElementById("editObs").value.trim();
   item.fornecedorId  = document.getElementById("editFornecedorId")?.value || "";
+  _registrarDiffCampos(item, _antesEdicao);
   saveData(); renderLight();
   document.getElementById("editModal").style.display = "none";
   showToast("Alterações salvas!");
@@ -6839,7 +7585,17 @@ function salvarDuplicado() {
     fornecedorId: document.getElementById("editFornecedorId")?.value || "",
     status: "pendente"
   };
+  // Exclui o registro original (que gerou a duplicação) da checagem — ele naturalmente
+  // compartilha loja/referência/nota de origem, o que geraria um falso alerta reflexivo.
+  const origemId = Number(document.getElementById("editId").value) || null;
+  const possiveisDup = detectarPossivelDuplicado(novo, origemId);
+  abrirAvisoDuplicado(possiveisDup, () => _finalizarSalvarDuplicado(novo, numeracao, !!possiveisDup.length), 'duplicação');
+}
+
+function _finalizarSalvarDuplicado(novo, numeracao, alertaConfirmado) {
   defeitos.unshift(novo);
+  registrarHistoricoItem(novo, 'criacao', `Item cadastrado (duplicado do registro #${document.getElementById("editId").value || ''}).`);
+  if(alertaConfirmado) registrarHistoricoItem(novo, 'duplicado_confirmado', 'Aviso de possível duplicado confirmado pelo usuário — cadastrado mesmo assim.');
   saveData(); renderLight();
   _duplicando = false;
   document.getElementById("editModal").style.display = "none";
@@ -6869,13 +7625,21 @@ function salvarItemLoteEditado() {
     fornecedorId: document.getElementById("editFornecedorId")?.value || "",
     status: "pendente"
   };
+  const modoItemLoteAtual = _modoItemLote;
+  const possiveisDup = detectarPossivelDuplicado(novo, null);
+  abrirAvisoDuplicado(possiveisDup, () => _finalizarSalvarItemLoteEditado(novo, modoItemLoteAtual, !!possiveisDup.length), 'aprovação de lote');
+}
+
+function _finalizarSalvarItemLoteEditado(novo, modoItemLoteAtual, alertaConfirmado) {
   defeitos.unshift(novo);
+  registrarHistoricoItem(novo, 'criacao', 'Item cadastrado (aprovado a partir de Lotes das Lojas).');
+  if(alertaConfirmado) registrarHistoricoItem(novo, 'duplicado_confirmado', 'Aviso de possível duplicado confirmado pelo usuário — cadastrado mesmo assim.');
   saveData(); renderLight();
   // marca o item como aprovado no cache do lote e atualiza visual
-  const lote = _lotesCache.find(l => l.id === _modoItemLote.loteId);
-  const it = lote && (lote._itens||[]).find(x => x.id === _modoItemLote.itemId);
+  const lote = _lotesCache.find(l => l.id === modoItemLoteAtual.loteId);
+  const it = lote && (lote._itens||[]).find(x => x.id === modoItemLoteAtual.itemId);
   if(it) it._aprovado = true;
-  const card = document.getElementById("itemRev_"+(_modoItemLote.itemId||""));
+  const card = document.getElementById("itemRev_"+(modoItemLoteAtual.itemId||""));
   if(card) { card.style.opacity=".5"; card.innerHTML = `<div style="text-align:center;color:var(--success);font-size:13px;font-weight:700;padding:8px;"><i class="fa-solid fa-circle-check"></i> Revisado e adicionado à base</div>`; }
   _modoItemLote = null;
   document.getElementById("editModal").style.display = "none";
@@ -6959,7 +7723,16 @@ function padronizarLojas() {
 }
 
 function exportBackup() {
-  const json = JSON.stringify({ defeitos, nfes, fornecedores, marcasInfo }, null, 2);
+  if(!defeitos.length && !nfes.length && !fornecedores.length) {
+    showToast("Não há dados para exportar no backup.", "error");
+    return;
+  }
+  // Reutiliza o mesmo builder do auto-save/Drive para que o backup manual sempre
+  // contenha exatamente os mesmos dados (defeitos, nfes, fornecedores, lojas,
+  // marcasInfo, caixas, etc.) — evita divergência entre os fluxos de backup.
+  const json = (typeof autoSave !== "undefined" && autoSave.buildBackupCompleto)
+    ? autoSave.buildBackupCompleto()
+    : JSON.stringify({ defeitos, nfes, fornecedores, marcasInfo }, null, 2);
   const blob = new Blob([json], { type: "application/json" });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement("a");
@@ -7073,8 +7846,26 @@ function prepararBackupImportacao(raw) {
     lojas: Array.isArray(raw) ? [] : (raw.lojas || []),
     fornecedores: Array.isArray(raw) ? [] : (raw.fornecedores || []),
     marcasInfo: Array.isArray(raw) ? {} : (raw.marcasInfo || {}),
+    // Backups antigos sem "caixas" continuam funcionando — assume lista vazia.
+    caixas: Array.isArray(raw) ? [] : (raw.caixas || []),
     meta: { formato: Array.isArray(raw) ? 'array_defeitos' : 'sistema_atual' }
   };
+}
+
+// Mescla caixas importadas por ID sem duplicar, preservando vínculos válidos dos
+// defeitos (usado tanto na importação por mesclagem quanto na restauração do Drive).
+function mesclarCaixasImportadas(caixasImportadas) {
+  if(!Array.isArray(caixasImportadas) || !caixasImportadas.length) return 0;
+  const existentesIds = new Set(caixas.map(c => Number(c.id)));
+  let adicionadas = 0;
+  caixasImportadas.forEach(c => {
+    if(!c || c.id == null) return;
+    if(existentesIds.has(Number(c.id))) return; // já existe — não duplica
+    caixas.push(c);
+    existentesIds.add(Number(c.id));
+    adicionadas++;
+  });
+  return adicionadas;
 }
 
 function mesclarLojasImportadas(lojasImportadas) {
@@ -7165,10 +7956,14 @@ function importBackup(event) {
           Object.keys(preparado.marcasInfo).forEach(k => { if(!marcasInfo[k]) marcasInfo[k] = preparado.marcasInfo[k]; });
           saveMarcasInfo();
         }
+        // Mesclar caixas por ID, sem duplicar — preserva os vínculos (caixaId) já
+        // existentes nos defeitos mesclados acima.
+        const caixasAdd = mesclarCaixasImportadas(preparado.caixas);
+        loadCaixaSeqCounter();
         saveData(); render();
         if(document.getElementById('nfeList')) renderNfeTable();
         document.body.removeChild(overlay);
-        showToast(isAntigo ? `${novasNfes.length} NF-e(s) importada(s)!` : `${novos.length} novo(s) registro(s) mesclado(s)!${novasNfes.length ? ' ' + novasNfes.length + ' NF-e(s).' : ''}${lojasAdd ? ' ' + lojasAdd + ' loja(s).' : ''}`);
+        showToast(isAntigo ? `${novasNfes.length} NF-e(s) importada(s)!` : `${novos.length} novo(s) registro(s) mesclado(s)!${novasNfes.length ? ' ' + novasNfes.length + ' NF-e(s).' : ''}${lojasAdd ? ' ' + lojasAdd + ' loja(s).' : ''}${caixasAdd ? ' ' + caixasAdd + ' caixa(s).' : ''}`);
       };
       overlay.querySelector("#btnSubstituir").onclick = () => {
         defeitos = data;
@@ -7178,6 +7973,9 @@ function importBackup(event) {
         if(dataForn.length) { fornecedores = dataForn; saveFornecedores(); }
         if(dataLojas.length) { LOJAS = dataLojas; saveLojas(); }
         if(preparado.marcasInfo && Object.keys(preparado.marcasInfo).length) { marcasInfo = preparado.marcasInfo; saveMarcasInfo(); }
+        // Substituição total também troca caixas (backups antigos sem o campo → []).
+        caixas = Array.isArray(preparado.caixas) ? preparado.caixas : [];
+        loadCaixaSeqCounter();
         saveData(); render();
         if(document.getElementById('nfeList')) renderNfeTable();
         document.body.removeChild(overlay);
@@ -7598,18 +8396,22 @@ function updateFilterIndicators() {
   // Badge de contagem de filtros ativos
   const searchAtivo = (globalSearch.value || "").trim() ? 1 : 0;
   const nfeResAtivo = document.getElementById('filterNfeResolvido')?.value ? 1 : 0;
-  const count = searchAtivo + Object.values(map).filter(Boolean).length + (hasNfeFilter ? 1 : 0) + nfeResAtivo;
+  const fornAtivo = _filtroFornecedorAtivo ? 1 : 0;
+  const count = searchAtivo + Object.values(map).filter(Boolean).length + (hasNfeFilter ? 1 : 0) + nfeResAtivo + fornAtivo;
   const bar   = document.getElementById("filterCountBar");
   const badge = document.getElementById("filterCountBadge");
   const label = document.getElementById("filterCountLabel");
   if(bar && badge && label) {
     bar.style.display = count ? "inline-flex" : "none";
     badge.textContent = count;
-    label.textContent = count === 1 ? "1 filtro ativo" : `${count} filtros ativos`;
+    label.textContent = _filtroFornecedorAtivo
+      ? `Fornecedor: ${_filtroFornecedorAtivo.marca || _filtroFornecedorAtivo.razaoSocial || '—'} (clique para limpar)`
+      : (count === 1 ? "1 filtro ativo" : `${count} filtros ativos`);
   }
 }
 
 function limparFiltrosTabela() {
+  _filtroFornecedorAtivo = null;
   globalSearch.value = "";
   filterDataDe.value = "";
   filterDataAte.value = "";
@@ -8085,7 +8887,9 @@ function openPdfModal(modo) {
     : '<i class="fa-solid fa-file-pdf"></i> Gerar PDF';
   btnOk.style.background    = isExcel ? "#16a34a" : "var(--accent)";
   btnOk.style.borderColor   = isExcel ? "#16a34a" : "var(--accent)";
-  btnOk.onclick = isExcel ? exportExcelPorMarca : gerarPDF;
+  // Nunca atribuir a função diretamente ao onclick: o navegador passaria o MouseEvent
+  // do clique como primeiro argumento, contaminando `itensForcados` em gerarPDF().
+  btnOk.onclick = isExcel ? () => exportExcelPorMarca() : () => gerarPDF();
 
   document.getElementById("pdfModal").style.display = "flex";
 }
@@ -8292,7 +9096,7 @@ function exportExcelPorMarca() {
       CNPJ: i.cnpj || "",
       Chave_XML: i.xml || "",
       ...(isVencidoXls  ? { NFe_Status: "Vencida" } : {}),
-      ...(incluirResolvidos ? { Status: i.status === "resolvido" ? "Resolvido" : "Pendente" } : {})
+      ...(incluirResolvidos ? { Status: defeitoStatusLabel(i.status) } : {})
     }))
   );
 
@@ -8403,7 +9207,12 @@ function gerarPdfSelecao() {
 function gerarPDF(itensForcados) {
   let marcasFinais, agrupado, isVencidoPdf;
 
-  if(itensForcados) {
+  // Só entra no modo de seleção manual se o argumento for realmente uma lista de itens.
+  // Isso evita que um MouseEvent (passado automaticamente pelo navegador quando a função
+  // é atribuída direto a um onclick) seja tratado como lista de itens forçados.
+  const modoSelecaoManual = Array.isArray(itensForcados);
+
+  if(modoSelecaoManual) {
     // Modo seleção manual — ignora filtros do modal
     agrupado = {};
     itensForcados.forEach(i => {
@@ -8861,7 +9670,7 @@ function exportFiltrados() {
     CNPJ_Fornecedor:  i.cnpj || "",
     Chave_XML:        i.xml || "",
     Observacoes:      i.obs || "",
-    Status:           i.status === "resolvido" ? "Resolvido" : "Pendente"
+    Status:           defeitoStatusLabel(i.status)
   })));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Filtrados");
@@ -8908,7 +9717,7 @@ function scrollToTop() {
 })();
 
 // ───── NAVEGAÇÃO SIDEBAR ─────
-const _navSections = ['dashboard','cadastro','defeitos','nfes','lotes','vencidos','semsolucao','fornecedores','marcas'];
+const _navSections = ['dashboard','cadastro','defeitos','nfes','lotes','vencidos','semsolucao','fornecedores','marcas','caixas','inconsistencias'];
 
 function navTo(section) {
   // Seções exclusivas (ocupam a tela inteira, escondem o restante)
@@ -8917,6 +9726,10 @@ function navTo(section) {
 
   // Garante que a seção de lotes só apareça na própria aba
   if(section !== 'lotes') { const lt = document.getElementById('section-lotes'); if(lt) lt.style.display = 'none'; }
+  // Garante que a seção de caixas só apareça na própria aba
+  if(section !== 'caixas') { const cx = document.getElementById('section-caixas'); if(cx) cx.style.display = 'none'; }
+  // Garante que a Central de Inconsistências só apareça na própria aba
+  if(section !== 'inconsistencias') { const ic = document.getElementById('section-inconsistencias'); if(ic) ic.style.display = 'none'; }
 
   if(section === 'nfes') {
     mainSections.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
@@ -8987,10 +9800,30 @@ function navTo(section) {
 
   if(section === 'lotes') {
     mainSections.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
-    ['section-nfes','section-vencidos','section-semsolucao','section-fornecedores','section-marcas'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
+    ['section-nfes','section-vencidos','section-semsolucao','section-fornecedores','section-marcas','section-caixas'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
     document.getElementById('section-lotes').style.display = 'block';
     setNavActive('lotes');
     renderLotesPage();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+
+  if(section === 'caixas') {
+    mainSections.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
+    ['section-nfes','section-vencidos','section-semsolucao','section-fornecedores','section-marcas','section-lotes'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
+    document.getElementById('section-caixas').style.display = 'block';
+    setNavActive('caixas');
+    renderCaixas();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+
+  if(section === 'inconsistencias') {
+    mainSections.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
+    ['section-nfes','section-vencidos','section-semsolucao','section-fornecedores','section-marcas','section-lotes','section-caixas'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
+    document.getElementById('section-inconsistencias').style.display = 'block';
+    setNavActive('inconsistencias');
+    renderInconsistencias();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
@@ -9002,6 +9835,8 @@ function navTo(section) {
   document.getElementById('section-fornecedores').style.display = 'none';
   document.getElementById('section-marcas').style.display = 'none';
   { const lt = document.getElementById('section-lotes'); if(lt) lt.style.display = 'none'; }
+  { const cx = document.getElementById('section-caixas'); if(cx) cx.style.display = 'none'; }
+  { const ic = document.getElementById('section-inconsistencias'); if(ic) ic.style.display = 'none'; }
   mainSections.filter(id => id !== 'section-cadastro').forEach(id => {
     const el = document.getElementById(id); if(el) el.style.display = '';
   });
@@ -9036,18 +9871,22 @@ function setNavActive(section) {
     const fornSec = document.getElementById('section-fornecedores');
     const marcasSec = document.getElementById('section-marcas');
     const lotesSec = document.getElementById('section-lotes');
+    const caixasSec = document.getElementById('section-caixas');
+    const inconsistSec = document.getElementById('section-inconsistencias');
     if(nfeSec && nfeSec.style.display !== 'none' && nfeSec.style.display !== '') return;
     if(vencSec && vencSec.style.display !== 'none' && vencSec.style.display !== '') return;
     if(semSolSec && semSolSec.style.display !== 'none' && semSolSec.style.display !== '') return;
     if(fornSec && fornSec.style.display !== 'none' && fornSec.style.display !== '') return;
     if(marcasSec && marcasSec.style.display !== 'none' && marcasSec.style.display !== '') return;
     if(lotesSec && lotesSec.style.display !== 'none' && lotesSec.style.display !== '') return;
+    if(caixasSec && caixasSec.style.display !== 'none' && caixasSec.style.display !== '') return;
+    if(inconsistSec && inconsistSec.style.display !== 'none' && inconsistSec.style.display !== '') return;
 
     const main = document.querySelector('main');
     const scrollTop = (main && main.scrollTop > 0) ? main.scrollTop : window.scrollY;
     let current = 'dashboard';
     _navSections.forEach(s => {
-      if(s === 'nfes' || s === 'vencidos' || s === 'semsolucao' || s === 'fornecedores' || s === 'marcas' || s === 'lotes') return;
+      if(s === 'nfes' || s === 'vencidos' || s === 'semsolucao' || s === 'fornecedores' || s === 'marcas' || s === 'lotes' || s === 'caixas' || s === 'inconsistencias') return;
       const el = document.getElementById('section-' + s);
       if(el && el.getBoundingClientRect().top <= 80) current = s;
     });
@@ -9227,6 +10066,7 @@ function renderSemSolucao() {
 }
 
 let _semSolMarcasSelecionadas = new Set();
+let _semSolDestinoFiltro = null; // corrige ReferenceError ao abrir a aba antes de qualquer filtro de destino ser aplicado
 
 function semSolToggleAll(checked) {
   const checkboxes = document.querySelectorAll('.semSolMarcaCheck');
@@ -9678,6 +10518,7 @@ function bulkResolver() {
         if(item && item.status !== 'resolvido') {
           item.status = 'resolvido';
           item.dataResolucao = new Date().toISOString();
+          registrarHistoricoItem(item, 'status', 'Status alterado para Resolvido (ação em lote).');
         }
       });
       saveData(); renderLight(); clearSelection();
@@ -9691,7 +10532,11 @@ function bulkAnalise() {
   if(!selectedIds.size) return;
   selectedIds.forEach(id => {
     const item = defeitos.find(i => i.id === id);
-    if(item) item.status = 'analise';
+    if(item) {
+      item.status = 'analise';
+      registrarHistoricoItem(item, 'status', 'Status alterado para Em análise (ação em lote).');
+      _autoRestaurarSeArquivado(item, 'status alterado para Em análise (ação em lote)');
+    }
   });
   saveData(); renderLight(); clearSelection();
   showToast(`${selectedIds.size} item(s) marcados como "Em análise"!`, 'info');
@@ -9716,6 +10561,8 @@ function marcarAnalise(id) {
   const item = defeitos.find(i => i.id === id);
   if(!item) return;
   item.status = 'analise';
+  registrarHistoricoItem(item, 'status', 'Status alterado para Em análise.');
+  _autoRestaurarSeArquivado(item, 'status alterado para Em análise');
   saveData(); renderLight();
   showToast('Item marcado como "Em análise"!', 'info');
 }
@@ -9733,6 +10580,8 @@ function voltarPendente(id) {
   }
   item.status = 'pendente';
   delete item.dataResolucao;
+  registrarHistoricoItem(item, 'status', 'Status alterado para Pendente (reaberto).');
+  _autoRestaurarSeArquivado(item, 'item reaberto como pendente');
   saveData(); renderLight();
   showToast('Item reaberto como pendente.', 'info');
 }
@@ -9741,6 +10590,8 @@ function marcarSemSolucao(id) {
   const item = defeitos.find(i => i.id === id);
   if(!item) return;
   item.status = 'sem_solucao';
+  registrarHistoricoItem(item, 'status', 'Status alterado para Sem Solução.');
+  _autoRestaurarSeArquivado(item, 'status alterado para Sem Solução');
   saveData(); renderLight();
   showToast('Item marcado como "Sem Solução".', 'info');
 }
@@ -9843,7 +10694,7 @@ function exportarPorPeriodo() {
     CNPJ_Fornecedor: i.cnpj || '',
     Chave_XML:       i.xml || '',
     Observacoes:     i.obs || '',
-    Status:          i.status === 'resolvido' ? 'Resolvido' : i.status === 'analise' ? 'Em Análise' : 'Pendente'
+    Status:          defeitoStatusLabel(i.status)
   })));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Período');
@@ -10792,6 +11643,7 @@ async function saveNfe() {
         d.status = 'resolvido';
         d.dataResolucao = agora;
         d._resolvidoPorNfe = nfeIdFinal;
+        registrarHistoricoItem(d, 'status', `Status alterado para Resolvido (NF-e ${nfeFinal?.numeroNfe || nfeIdFinal} concluída).`);
       }
     });
   }
@@ -10991,6 +11843,7 @@ async function updateNfeStatus(nfeId, status) {
         d.status = 'resolvido';
         d.dataResolucao = agora;
         d._resolvidoPorNfe = nfeId; // marca que foi esta NF-e que resolveu
+        registrarHistoricoItem(d, 'status', `Status alterado para Resolvido (NF-e ${nfe.numeroNfe || nfeId} concluída).`);
       }
     });
     showToast(`Status atualizado: ${nfeStatusLabel(status)}${vinculados.length > 0 ? ` · ${vinculados.length} defeito(s) resolvido(s)` : ''}`, 'success');
@@ -11003,6 +11856,8 @@ async function updateNfeStatus(nfeId, status) {
         d.status = 'pendente';
         d.dataResolucao = undefined;
         d._resolvidoPorNfe = undefined;
+        registrarHistoricoItem(d, 'status', `Status alterado para Pendente (NF-e ${nfe.numeroNfe || nfeId} reaberta).`);
+        _autoRestaurarSeArquivado(d, `NF-e ${nfe.numeroNfe || nfeId} reaberta`);
         reabertos++;
       }
     });
@@ -11016,8 +11871,11 @@ async function updateNfeStatus(nfeId, status) {
 
 function desvincularProdutoNfe(prodId, nfeId) {
   const d = defeitos.find(d => d.id === prodId);
-  if(d) d.nfeId = undefined;
   const nfe = nfes.find(n => n.id === nfeId);
+  if(d) {
+    d.nfeId = undefined;
+    registrarHistoricoItem(d, 'nfe', `Desvinculado da NF-e ${nfe?.numeroNfe || nfeId}.`);
+  }
   if(nfe) nfe.produtosRelacionados = (nfe.produtosRelacionados || []).filter(p => p !== prodId);
   saveData(); renderLight();
   if(document.getElementById('nfeList')) renderNfeTable();
@@ -11082,6 +11940,7 @@ function vincularProdutoRapido(prodId, nfeId) {
     if(!nfe.produtosRelacionados) nfe.produtosRelacionados = [];
     if(!nfe.produtosRelacionados.some(p => Number(p) === prodIdN)) nfe.produtosRelacionados.push(prodIdN);
   }
+  if(d) registrarHistoricoItem(d, 'nfe', `Vinculado à NF-e ${nfe?.numeroNfe || nfeId}.`);
   saveData(); renderLight();
   if(document.getElementById('nfeList')) renderNfeTable();
   document.getElementById('nfeVincularModal').style.display = 'none';
@@ -11692,18 +12551,19 @@ function saveMarcasInfo() {
 
 function getMarcaInfo(nome) {
   const key = (nome||"").trim().toUpperCase();
-  return marcasInfo[key] || { prazo: "", cnpjsFabrica: [], obs: "" };
+  return marcasInfo[key] || { prazo: "", cnpjsFabrica: [], obs: "", procedimentoDevolucao: "" };
 }
 
 function abrirInfoMarca(nome) {
   const key = (nome||"").trim().toUpperCase();
+  migrarProcedimentoDevolucaoDaMarca(key); // garante migração idempotente antes de exibir
   const info = getMarcaInfo(nome);
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
   overlay.id = "infoMarcaModal";
   overlay.style.cssText = "display:flex;z-index:9998;";
   overlay.innerHTML = `
-    <div class="modal-box" onclick="event.stopPropagation()" style="max-width:460px;">
+    <div class="modal-box" onclick="event.stopPropagation()" style="max-width:460px;max-height:88vh;overflow-y:auto;">
       <div class="modal-title">
         <div style="width:28px;height:28px;border-radius:8px;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.2);display:flex;align-items:center;justify-content:center;color:#7c3aed;font-size:12px;"><i class="fa-solid fa-tag"></i></div>
         ${key}
@@ -11718,6 +12578,11 @@ function abrirInfoMarca(nome) {
       <div style="margin-bottom:13px;">
         <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:5px;">CNPJs das fábricas (um por linha)</label>
         <textarea id="miCnpjs" placeholder="Ex:&#10;12.345.678/0001-90&#10;98.765.432/0001-10" style="width:100%;min-height:70px;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface2);color:var(--text);font-size:13px;font-family:'Space Mono',monospace;resize:vertical;">${(info.cnpjsFabrica||[]).join("\n")}</textarea>
+      </div>
+
+      <div style="margin-bottom:13px;">
+        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:5px;"><i class="fa-solid fa-truck-fast" style="margin-right:4px;"></i>Procedimento de Devolução</label>
+        <textarea id="miProcedimento" placeholder="Descreva o procedimento completo de devolução desta marca:&#10;&#10;• Transportadora utilizada&#10;• Como emitir a NF de devolução&#10;• Contato do representante&#10;• Prazo de retorno&#10;• Coleta reversa: sim/não&#10;• Outros detalhes importantes..." style="width:100%;min-height:120px;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface2);color:var(--text);font-size:13px;line-height:1.6;resize:vertical;">${(info.procedimentoDevolucao||"").replace(/</g,"&lt;")}</textarea>
       </div>
 
       <div style="margin-bottom:18px;">
@@ -11737,8 +12602,9 @@ function abrirInfoMarca(nome) {
 function salvarInfoMarca(key) {
   const prazo = document.getElementById("miPrazo").value.trim();
   const cnpjs = document.getElementById("miCnpjs").value.split("\n").map(c => c.trim()).filter(Boolean);
+  const procedimentoDevolucao = document.getElementById("miProcedimento")?.value.trim() || "";
   const obs = document.getElementById("miObs").value.trim();
-  marcasInfo[key] = { prazo: prazo, cnpjsFabrica: cnpjs, obs: obs };
+  marcasInfo[key] = { ...(marcasInfo[key]||{}), prazo: prazo, cnpjsFabrica: cnpjs, procedimentoDevolucao: procedimentoDevolucao, obs: obs };
   saveMarcasInfo();
   if(typeof autoSave !== "undefined" && autoSave.markDirty) autoSave.markDirty();
   const m = document.getElementById("infoMarcaModal");
@@ -11747,22 +12613,112 @@ function salvarInfoMarca(key) {
   showToast("Informações da marca salvas!", "success");
 }
 
+// ── Migração idempotente: copia fornecedor.procedimento_devolucao (campo legado) para
+// marcasInfo[MARCA].procedimentoDevolucao quando o campo da marca ainda estiver vazio.
+// Se houver textos diferentes entre fornecedores da mesma marca, preserva todos,
+// identificando a origem por CNPJ/razão social — nunca sobrescreve nem perde informação.
+// Marca com flag interna para não duplicar o texto em execuções futuras (idempotente).
+function migrarProcedimentoDevolucaoDaMarca(marcaKeyRaw) {
+  const key = (marcaKeyRaw || "").trim().toUpperCase();
+  if(!key) return;
+  const atual = marcasInfo[key];
+  if(atual && atual._procedimentoMigrado) return; // já migrado — não duplica
+
+  const fornsDaMarca = fornecedores.filter(f => (f.marca||"").trim().toUpperCase() === key && (f.procedimento_devolucao||"").trim());
+  if(!fornsDaMarca.length) {
+    // Nada a migrar, mas marca como já verificado para não reprocessar sempre.
+    marcasInfo[key] = { prazo:"", cnpjsFabrica:[], obs:"", procedimentoDevolucao:"", ...(atual||{}), _procedimentoMigrado:true };
+    saveMarcasInfo();
+    return;
+  }
+
+  const jaTemTexto = !!(atual && (atual.procedimentoDevolucao||"").trim());
+  let textoFinal = atual?.procedimentoDevolucao || "";
+
+  if(!jaTemTexto && fornsDaMarca.length === 1) {
+    // Único fornecedor com procedimento cadastrado: copia direto, sem cabeçalho.
+    textoFinal = fornsDaMarca[0].procedimento_devolucao.trim();
+  } else if(!jaTemTexto && fornsDaMarca.length > 1) {
+    // Vários fornecedores com textos possivelmente diferentes: preserva todos,
+    // identificando a origem por razão social/CNPJ.
+    textoFinal = fornsDaMarca.map(f => {
+      const origem = [f.razaoSocial, f.cnpj].filter(Boolean).join(" — ") || "fornecedor sem identificação";
+      return `[${origem}]\n${f.procedimento_devolucao.trim()}`;
+    }).join("\n\n");
+  }
+  // Se a marca já tinha texto próprio (jaTemTexto), não mexe — só marca como migrado.
+
+  marcasInfo[key] = { prazo:"", cnpjsFabrica:[], obs:"", ...(atual||{}), procedimentoDevolucao: textoFinal, _procedimentoMigrado: true };
+  saveMarcasInfo();
+}
+
+// Roda a migração para todas as marcas conhecidas (fornecedores + defeitos) uma vez,
+// de forma segura e idempotente — chamada após carregar os dados do banco.
+function migrarTodosProcedimentosDevolucao() {
+  const marcas = new Set();
+  fornecedores.forEach(f => { if((f.marca||"").trim()) marcas.add(f.marca.trim().toUpperCase()); });
+  defeitos.forEach(d => { if((d.marca||"").trim()) marcas.add(d.marca.trim().toUpperCase()); });
+  marcas.forEach(m => migrarProcedimentoDevolucaoDaMarca(m));
+}
+
+// Regra de "vencido" reutilizada (mesma usada em renderMarcasVencidas/filtro de tabela):
+// item não resolvido, não sem_solucao, com NF-e emitida há mais de 1 ano e cuja NF-e
+// vinculada (se houver) não esteja com status "devolvido".
+function _marcaItemVencido(i) {
+  if(i.status === 'resolvido' || i.status === 'sem_solucao' || !i.dataEmissaoNfe) return false;
+  const nfeVinc = i.nfeId ? nfes.find(n => n.id === i.nfeId) : null;
+  if(nfeVinc && nfeVinc.status === 'devolvido') return false;
+  const [ay, am, ad] = i.dataEmissaoNfe.split('-').map(Number);
+  const venc = new Date(ay, am - 1, ad);
+  venc.setFullYear(venc.getFullYear() + 1);
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  return venc < hoje;
+}
+
 function renderMarcasTab() {
-  // Agrupa defeitos ativos por marca
-  const ativos = defeitos.filter(d => d.status !== 'resolvido');
+  // Consolidado HISTÓRICO por marca: considera TODOS os registros de `defeitos`,
+  // inclusive os resolvidos. Resolver um item nunca deve diminuir o total histórico
+  // da marca nem fazer a marca desaparecer da aba.
+  const arquivadosIncluidos = defeitos; // arquivamento (seção 5) não remove do histórico
   const marcaMap = {};
-  ativos.forEach(d => {
+  arquivadosIncluidos.forEach(d => {
     const m = (d.marca || '').trim();
     if(!m) return;
     const key = m.toUpperCase();
-    if(!marcaMap[key]) marcaMap[key] = { nome: m, pares: 0, itens: 0, pendente: 0, analise: 0, vencido: 0, valor: 0 };
-    marcaMap[key].pares  += Number(d.quantidade) || 0;
-    marcaMap[key].itens  += 1;
-    marcaMap[key].valor  += (Number(d.custoUnitario) || 0) * (Number(d.quantidade) || 0);
+    if(!marcaMap[key]) {
+      marcaMap[key] = {
+        nome: m,
+        registros: 0, pares: 0, valor: 0,
+        pendenteRegistros: 0, pendentePares: 0,
+        analiseRegistros: 0, analisePares: 0,
+        resolvidoRegistros: 0, resolvidoPares: 0,
+        semSolucaoRegistros: 0, semSolucaoPares: 0,
+        vencidoRegistros: 0, vencidoPares: 0,
+      };
+    }
+    const qtd = Number(d.quantidade) || 0;
+    const mm = marcaMap[key];
+    mm.registros += 1;
+    mm.pares     += qtd;
+    mm.valor     += (Number(d.custoUnitario) || 0) * qtd;
+
+    // Cada status é contabilizado de forma explícita (nunca "cai" em análise por padrão).
     const st = (d.status || '').toLowerCase();
-    if(st === 'pendente')    marcaMap[key].pendente++;
-    else if(st === 'vencido') marcaMap[key].vencido++;
-    else                      marcaMap[key].analise++;
+    if(st === 'pendente')        { mm.pendenteRegistros++;    mm.pendentePares    += qtd; }
+    else if(st === 'analise')    { mm.analiseRegistros++;     mm.analisePares     += qtd; }
+    else if(st === 'resolvido')  { mm.resolvidoRegistros++;   mm.resolvidoPares   += qtd; }
+    else if(st === 'sem_solucao'){ mm.semSolucaoRegistros++;  mm.semSolucaoPares  += qtd; }
+    else                          { mm.analiseRegistros++;     mm.analisePares     += qtd; } // status desconhecido: trata como análise, mas de forma explícita
+
+    // "Vencido" é uma condição calculada (não um status salvo) — contabilizado à parte,
+    // sem remover o item das contagens de status acima.
+    if(_marcaItemVencido(d)) { mm.vencidoRegistros++; mm.vencidoPares += qtd; }
+  });
+
+  // Subtotal "em aberto" = pendente + análise (não inclui resolvidos nem sem solução)
+  Object.values(marcaMap).forEach(mm => {
+    mm.abertoRegistros = mm.pendenteRegistros + mm.analiseRegistros;
+    mm.abertoPares     = mm.pendentePares + mm.analisePares;
   });
 
   const marcas = Object.values(marcaMap).sort((a,b) => b.pares - a.pares);
@@ -11780,12 +12736,14 @@ function renderMarcasTab() {
   });
 
   // Atualiza stat cards
-  const elTotal = document.getElementById('marcaStatTotal');
-  const elPares = document.getElementById('marcaStatPares');
-  const elCnpjs = document.getElementById('marcaStatCnpjs');
-  if(elTotal) elTotal.textContent = marcas.length;
-  if(elPares) elPares.textContent = marcas.reduce((s,m) => s + m.pares, 0);
-  if(elCnpjs) elCnpjs.textContent = allCnpjs.size;
+  const elTotal  = document.getElementById('marcaStatTotal');
+  const elPares  = document.getElementById('marcaStatPares');
+  const elAberto = document.getElementById('marcaStatParesAberto');
+  const elCnpjs  = document.getElementById('marcaStatCnpjs');
+  if(elTotal)  elTotal.textContent  = marcas.length;
+  if(elPares)  elPares.textContent  = marcas.reduce((s,m) => s + m.pares, 0);
+  if(elAberto) elAberto.textContent = marcas.reduce((s,m) => s + m.abertoPares, 0);
+  if(elCnpjs)  elCnpjs.textContent  = allCnpjs.size;
 
   // Badge sidebar
   const badge = document.getElementById('sidebarMarcasBadge');
@@ -11812,7 +12770,7 @@ function renderMarcasTab() {
   if(marcasFiltradas.length === 0) {
     tbody.innerHTML = searchTerm
       ? `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted);font-size:13px;"><i class="fa-solid fa-magnifying-glass" style="margin-right:6px;opacity:.5;"></i>Nenhuma marca encontrada para "<strong>${searchTerm}</strong>"</td></tr>`
-      : '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted);font-size:13px;">Nenhuma marca com defeitos ativos</td></tr>';
+      : '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted);font-size:13px;">Nenhuma marca cadastrada no histórico de defeitos ainda.</td></tr>';
     return;
   }
 
@@ -11821,10 +12779,13 @@ function renderMarcasTab() {
       ? m.cnpjs.map(c => `<span style="display:inline-block;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.20);border-radius:5px;padding:1px 7px;font-size:10px;font-weight:700;color:#7c3aed;font-family:'Space Mono',monospace;margin:1px;">${formatarCNPJBasico(c)}</span>`).join(' ')
       : '<span style="color:var(--muted);font-size:12px;">—</span>';
 
+    // Cada status é contabilizado de forma explícita e separada (registros, não pares).
     const statusBadges = [
-      m.pendente > 0 ? `<span class="badge badge-warn" style="font-size:10px;">${m.pendente} pend.</span>` : '',
-      m.analise  > 0 ? `<span class="badge badge-info" style="font-size:10px;">${m.analise} anál.</span>` : '',
-      m.vencido  > 0 ? `<span class="badge badge-danger" style="font-size:10px;">${m.vencido} venc.</span>` : '',
+      m.pendenteRegistros    > 0 ? `<span class="badge badge-warn"   style="font-size:10px;" title="${m.pendentePares} par(es)">${m.pendenteRegistros} pend.</span>`   : '',
+      m.analiseRegistros     > 0 ? `<span class="badge badge-info"   style="font-size:10px;" title="${m.analisePares} par(es)">${m.analiseRegistros} anál.</span>`    : '',
+      m.resolvidoRegistros   > 0 ? `<span class="badge badge-success" style="font-size:10px;" title="${m.resolvidoPares} par(es)">${m.resolvidoRegistros} resolv.</span>` : '',
+      m.semSolucaoRegistros  > 0 ? `<span class="badge" style="font-size:10px;background:rgba(15,118,110,.12);color:#0f766e;border:1px solid rgba(15,118,110,.25);" title="${m.semSolucaoPares} par(es)">${m.semSolucaoRegistros} sem sol.</span>` : '',
+      m.vencidoRegistros     > 0 ? `<span class="badge badge-danger" style="font-size:10px;" title="${m.vencidoPares} par(es)">${m.vencidoRegistros} venc.</span>`     : '',
     ].filter(Boolean).join(' ') || '<span style="color:var(--muted);font-size:11px;">—</span>';
 
     const valorFmt = m.valor > 0
@@ -11840,9 +12801,10 @@ function renderMarcasTab() {
       </td>
       <td style="text-align:center;">
         <span style="font-family:'Space Mono',monospace;font-weight:800;font-size:15px;color:#7c3aed;">${m.pares}</span>
+        <div style="font-size:9.5px;color:var(--muted);font-weight:600;margin-top:1px;">${m.abertoPares} em aberto</div>
       </td>
       <td style="text-align:center;">
-        <span style="font-family:'Space Mono',monospace;font-weight:700;font-size:13px;">${m.itens}</span>
+        <span style="font-family:'Space Mono',monospace;font-weight:700;font-size:13px;">${m.registros}</span>
       </td>
       <td style="text-align:center;">
         <div style="display:flex;flex-wrap:wrap;gap:3px;justify-content:center;">${statusBadges}</div>
@@ -11904,35 +12866,53 @@ function renderFornecedoresDashCard() {
 
 // ── Renderizar tabela de fornecedores ──
 // ── Retorna defeitos vinculados a um fornecedor (por ID ou CNPJ) ──
-function getDefeitosFornecedor(f) {
-  const cnpjForn = (f.cnpj || "").replace(/\D/g,"");
-  const fIdNum = Number(f.id);
-  return defeitos.filter(d => {
-    if(d.fornecedorId && Number(d.fornecedorId) === fIdNum) return true;
-    if(cnpjForn && d.cnpj && d.cnpj.replace(/\D/g,"") === cnpjForn) return true;
-    return false;
-  });
+// ── Regra ÚNICA de vínculo defeito → fornecedor, reutilizada em cards, tabela,
+// modal de detalhes, totais e "ver tabela". Nunca usa o nome da marca como fallback:
+// um defeito sem fornecedorId e sem CNPJ compatível fica SEM fornecedor vinculado. ──
+function defeitoPertenceAoFornecedor(d, f) {
+  if(!d || !f) return false;
+  if(d.fornecedorId) return Number(d.fornecedorId) === Number(f.id);
+  const cnpjItem = normalizarCNPJ(d.cnpj);
+  const cnpjForn = normalizarCNPJ(f.cnpj);
+  return !!(cnpjItem && cnpjForn && cnpjItem === cnpjForn);
 }
 
-// ── Retorna NF-es vinculadas a um fornecedor (CNPJ tem prioridade; marca é fallback) ──
+function getDefeitosFornecedor(f) {
+  if(!f) return [];
+  return defeitos.filter(d => defeitoPertenceAoFornecedor(d, f));
+}
+
+// ── Total de PARES (soma de quantidade) de um fornecedor — nunca confundir com
+// a quantidade de REGISTROS (defeitosVinculados.length). ──
+function getParesFornecedor(f, defeitosVinc = getDefeitosFornecedor(f)) {
+  return defeitosVinc.reduce((s, d) => s + (Number(d.quantidade) || 0), 0);
+}
+
+// ── Retorna NF-es vinculadas a um fornecedor (fornecedorId e CNPJ têm prioridade;
+// marca só é usada como fallback quando ela tiver exatamente um fornecedor possível) ──
 function getNfesFornecedor(f, defeitosVinc = getDefeitosFornecedor(f)) {
+  if(!f) return [];
   const idsDefeitos = new Set(defeitosVinc.map(d => Number(d.id)));
   const cnpjForn = normalizarCNPJ(f.cnpj);
   const marcaForn = String(f.marca || '').trim().toLowerCase();
+  const fornecedoresDaMarca = marcaForn
+    ? fornecedores.filter(x => String(x.marca || '').trim().toLowerCase() === marcaForn)
+    : [];
+  const marcaTemFornecedorUnico = fornecedoresDaMarca.length === 1;
+
   return nfes.filter(n => {
-    // 1) Vínculo direto por ID do fornecedor
-    if(n.fornecedorId && Number(n.fornecedorId) === Number(f.id)) return true;
-    // 2) Se a NF-e TEM CNPJ, associa SOMENTE pelo CNPJ exato (não usa marca)
+    // 1) Vínculo direto por ID do fornecedor — decisivo, nunca cai para os fallbacks abaixo
+    if(n.fornecedorId) return Number(n.fornecedorId) === Number(f.id);
+    // 2) Se a NF-e TEM CNPJ, associa SOMENTE pelo CNPJ exato (nunca por marca)
     const cnpjNfe = normalizarCNPJ(n.fornecedorCnpj);
-    if(cnpjNfe) {
-      return cnpjForn && cnpjNfe === cnpjForn;
-    }
-    // 3) NF-e SEM CNPJ: aí sim usa a marca como fallback
-    if(marcaForn) {
+    if(cnpjNfe) return !!(cnpjForn && cnpjNfe === cnpjForn);
+    // 3) NF-e sem CNPJ e sem fornecedorId: só usa a marca quando ela for inequívoca
+    //    (marca com mais de um fornecedor cadastrado nunca é usada como fallback)
+    if(marcaForn && marcaTemFornecedorUnico) {
       const nfMarca = String(n.fornecedorMarca || n.fornecedor || '').trim().toLowerCase();
       if(nfMarca && (nfMarca === marcaForn || nfMarca.includes(marcaForn) || marcaForn.includes(nfMarca))) return true;
     }
-    // 4) Ou por produtos relacionados (defeitos daquele fornecedor)
+    // 4) Ou por produtos relacionados (defeitos já vinculados a este fornecedor pela regra única)
     return (n.produtosRelacionados || []).some(pid => idsDefeitos.has(Number(pid)));
   });
 }
@@ -11962,7 +12942,8 @@ function renderFornecedoresTable() {
   lista.forEach(function(f) {
     var defVinc    = getDefeitosFornecedor(f);
     var nfesVinc   = getNfesFornecedor(f, defVinc);
-    var qtdProds   = defVinc.length;
+    var qtdProds   = defVinc.length; // registros (não confundir com pares)
+    var qtdPares   = getParesFornecedor(f, defVinc);
     var qtdNfes    = nfesVinc.length;
     var valorTotal = defVinc.reduce(function(s,d){ return s + (d.custoUnitario ? Number(d.custoUnitario)*d.quantidade : 0); }, 0);
     var pendentes   = defVinc.filter(function(d){ return d.status==="pendente"||d.status==="analise"; }).length;
@@ -12001,8 +12982,15 @@ function renderFornecedoresTable() {
     divProds.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:3px;";
     var numProds = document.createElement("div");
     numProds.style.cssText = "font-size:20px;font-weight:900;font-family:'Space Mono',monospace;line-height:1;color:" + (qtdProds>0?"var(--accent2)":"var(--muted)") + ";";
-    numProds.textContent = qtdProds;
+    numProds.textContent = qtdPares;
+    numProds.title = qtdPares + " par(es)";
     divProds.appendChild(numProds);
+    if(qtdProds > 0) {
+      var regDiv = document.createElement("div");
+      regDiv.style.cssText = "font-size:9px;color:var(--muted);font-weight:700;";
+      regDiv.textContent = qtdProds + " registro" + (qtdProds !== 1 ? "s" : "");
+      divProds.appendChild(regDiv);
+    }
     if(qtdProds > 0) {
       if(pendentes || resolvidos) {
         var badgeDiv = document.createElement("div");
@@ -12088,25 +13076,59 @@ function renderFornecedoresTable() {
     btnDel.className = "action-btn ab-delete";
     btnDel.title = "Excluir";
     btnDel.innerHTML = "<i class='fa-solid fa-trash' style='font-size:11px;'></i>";
-    (function(id, marca){ btnDel.addEventListener("click", function(e){ e.stopPropagation(); openConfirm("Excluir fornecedor " + marca + "?", "danger", function(){ excluirFornecedor(id); }, "Esta ação não pode ser desfeita."); }); })(fId, f.marca || "este fornecedor");
+    (function(id){ btnDel.addEventListener("click", function(e){ e.stopPropagation(); confirmarExcluirFornecedor(id); }); })(fId);
     divAcoes.appendChild(btnDel);
+
+    // Botão ativar/inativar (seção 6) — nunca apaga dados, apenas alterna visibilidade
+    // nas buscas de vínculo (novos defeitos/NF-es não poderão selecionar um inativo).
+    var inativo = f.ativo === false;
+    var btnToggleAtivo = document.createElement("button");
+    btnToggleAtivo.className = "action-btn";
+    btnToggleAtivo.title = inativo ? "Reativar fornecedor" : "Marcar como inativo";
+    btnToggleAtivo.style.color = inativo ? "#16a34a" : "#b45309";
+    btnToggleAtivo.innerHTML = "<i class='fa-solid " + (inativo ? "fa-toggle-off" : "fa-toggle-on") + "' style='font-size:13px;'></i>";
+    (function(id){ btnToggleAtivo.addEventListener("click", function(e){ e.stopPropagation(); toggleFornecedorAtivo(id); }); })(fId);
+    divAcoes.appendChild(btnToggleAtivo);
 
     tdAcoes.appendChild(divAcoes);
     tr.appendChild(tdAcoes);
+
+    if(inativo) {
+      tr.style.opacity = "0.6";
+      var tdMarcaInativa = tr.querySelector("td");
+      if(tdMarcaInativa) {
+        var badgeInativo = document.createElement("span");
+        badgeInativo.style.cssText = "display:inline-flex;align-items:center;gap:3px;background:rgba(180,83,9,.12);border:1px solid rgba(180,83,9,.25);border-radius:5px;padding:1px 6px;font-size:8.5px;font-weight:800;letter-spacing:.4px;color:#b45309;margin-left:6px;vertical-align:middle;";
+        badgeInativo.innerHTML = "<i class='fa-solid fa-eye-slash' style='font-size:7px;'></i> INATIVO";
+        tdMarcaInativa.querySelector("div").appendChild(badgeInativo);
+      }
+    }
 
     tbody.appendChild(tr);
   });
 }
 
 // ── Atalho: filtrar defeitos por fornecedor e ir para a aba ──
+// Usa um filtro específico (fornecedorId → fallback CNPJ exato, nunca por marca),
+// para que "ver tabela" de um fornecedor não misture itens de outros CNPJs da
+// mesma marca (ex.: Mizuno CNPJ A vs. Mizuno CNPJ B).
 function filtrarDefeitosPorFornecedor(fornId) {
   const f = fornecedores.find(x => Number(x.id) === Number(fornId));
   if(!f) return;
+  // Limpa os demais filtros de texto para não combinar com o filtro de fornecedor
+  // de forma confusa, mas preserva o filtro de status atual.
+  if(globalSearch) globalSearch.value = "";
+  if(filterMarca)  filterMarca.value  = "";
+  _filtroFornecedorAtivo = f;
   navTo('defeitos');
   setTimeout(() => {
-    // Limpa filtros e usa busca global pela marca
-    const gs = document.getElementById("globalSearch");
-    if(gs) { gs.value = f.marca; gs.dispatchEvent(new Event('input')); }
+    renderFilters();
+    currentPage = 1;
+    renderTable();
+    updateFilterIndicators();
+    const tabelaEl = document.getElementById("section-defeitos");
+    if(tabelaEl) tabelaEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    showToast(`Filtrando itens do fornecedor ${f.marca || f.razaoSocial || ''}`, "info", 2500);
   }, 80);
 }
 
@@ -12127,23 +13149,29 @@ function filtrarNfesPorFornecedor(fornId) {
 }
 
 // ── Abrir modal de cadastro/edição ──
-function abrirModalFornecedor(id) {
+// `prefill` (opcional) = { marca, cnpj } — usado quando o cadastro é aberto a partir
+// do campo unificado de fornecedor no formulário de defeito (seção 2.3).
+function abrirModalFornecedor(id, prefill) {
   const idNum = id ? Number(id) : null;
   document.getElementById("fornModalTitle").textContent = idNum ? "Editar Fornecedor" : "Novo Fornecedor";
   document.getElementById("fornId").value = idNum || "";
   const f = idNum ? fornecedores.find(x => Number(x.id) === idNum) : null;
-  document.getElementById("fornMarca").value            = f?.marca               || "";
+  document.getElementById("fornMarca").value            = f?.marca               || prefill?.marca || "";
   document.getElementById("fornRazaoSocial").value      = f?.razaoSocial         || "";
-  document.getElementById("fornCnpj").value             = f?.cnpj                || "";
+  document.getElementById("fornCnpj").value             = f?.cnpj                || prefill?.cnpj || "";
   document.getElementById("fornRepresentante").value    = f?.representante       || "";
   document.getElementById("fornTelefone").value         = f?.telefone            || "";
   document.getElementById("fornWhatsapp").value         = f?.whatsapp            || "";
   document.getElementById("fornEmail").value            = f?.email               || "";
   document.getElementById("fornCidade").value           = f?.cidade              || "";
   document.getElementById("fornEstado").value           = f?.estado              || "";
-  document.getElementById("fornProcedimento").value     = f?.procedimento_devolucao || "";
   document.getElementById("fornObs").value              = f?.observacoes         || "";
+  document.getElementById("fornAtivoSelect").value      = (f && f.ativo === false) ? "0" : "1";
   document.getElementById("fornModal").style.display    = "flex";
+  setTimeout(() => {
+    const focoEl = document.getElementById(prefill?.marca ? "fornRazaoSocial" : "fornMarca");
+    if(focoEl) focoEl.focus();
+  }, 50);
 }
 
 function fecharModalFornecedor() {
@@ -12170,11 +13198,15 @@ function salvarFornecedor() {
     email:                document.getElementById("fornEmail").value.trim(),
     cidade:               document.getElementById("fornCidade").value.trim(),
     estado:               document.getElementById("fornEstado").value.trim().toUpperCase(),
-    procedimento_devolucao: document.getElementById("fornProcedimento").value.trim(),
+    // Campo legado preservado apenas para compatibilidade com dados antigos — não é
+    // mais editável aqui. O procedimento de devolução agora vive em marcasInfo (seção 2.2).
+    procedimento_devolucao: id ? (fornecedores.find(x => x.id === id)?.procedimento_devolucao || "") : "",
     observacoes:          document.getElementById("fornObs").value.trim(),
+    ativo:                document.getElementById("fornAtivoSelect").value !== "0",
     dataCadastro:         id ? (fornecedores.find(x=>x.id===id)?.dataCadastro || new Date().toISOString()) : new Date().toISOString(),
   };
 
+  const criandoNovo = !id;
   if(id) {
     const idx = fornecedores.findIndex(x => x.id === id);
     if(idx !== -1) fornecedores[idx] = obj;
@@ -12188,6 +13220,14 @@ function salvarFornecedor() {
   fecharModalFornecedor();
   renderFornecedoresCards();
   renderFornecedoresTable();
+
+  // Se o cadastro foi aberto a partir do campo unificado de fornecedor de um defeito,
+  // volta e seleciona automaticamente o fornecedor recém-criado, sem obrigar nova busca.
+  if(criandoNovo && _fornecedorReturnContext) {
+    const ctx = _fornecedorReturnContext;
+    _fornecedorReturnContext = null;
+    selecionarFornecedor(obj.id, ctx.suggId, ctx.hiddenId, ctx.inputId, ctx.cnpjHiddenId);
+  }
 }
 
 // ── Editar fornecedor ──
@@ -12195,16 +13235,134 @@ function editarFornecedor(id) {
   abrirModalFornecedor(id);
 }
 
-// ── Excluir fornecedor ──
+// ── Excluir fornecedor (hard delete) ──
+// Só deve ser chamada quando o fornecedor NÃO tem nenhum histórico vinculado
+// (nenhum defeito e nenhuma NF-e) — ou logo após uma transferência de vínculos,
+// quando o histórico já foi movido para outro fornecedor. Ver confirmarExcluirFornecedor
+// (seção 6) para o fluxo seguro que decide entre inativar/transferir/excluir.
 function excluirFornecedor(id) {
   const idNum = Number(id);
   fornecedores = fornecedores.filter(f => Number(f.id) !== idNum);
   defeitos.forEach(d => { if(Number(d.fornecedorId) === idNum) { d.fornecedorId = ""; } });
+  nfes.forEach(n => { if(Number(n.fornecedorId) === idNum) { n.fornecedorId = ""; } });
   saveData();
   saveFornecedores();
   renderFornecedoresCards();
   renderFornecedoresTable();
   showToast("Fornecedor excluído.", "info");
+}
+
+// ───── EXCLUSÃO SEGURA DE FORNECEDOR (seção 6) ─────
+// Impede a exclusão destrutiva de fornecedores com histórico. Se o fornecedor não
+// tem nenhum defeito/NF-e vinculado, exclui direto (como antes). Se tem histórico,
+// abre um modal oferecendo inativar (não-destrutivo) ou transferir vínculos + excluir.
+let _fornExclusaoAlvo = null;
+
+function confirmarExcluirFornecedor(id) {
+  const idNum = Number(id);
+  const f = fornecedores.find(x => Number(x.id) === idNum);
+  if(!f) return;
+  const defVinc  = getDefeitosFornecedor(f);
+  const nfesVinc = getNfesFornecedor(f, defVinc);
+  if(!defVinc.length && !nfesVinc.length) {
+    // Sem histórico: exclusão direta continua segura, como antes.
+    openConfirm(
+      `Excluir fornecedor ${f.marca || ''}?`,
+      'danger',
+      () => excluirFornecedor(idNum),
+      'Este fornecedor não tem defeitos nem NF-es vinculados. Esta ação não pode ser desfeita.'
+    );
+    return;
+  }
+  abrirFornExclusaoModal(idNum, defVinc, nfesVinc);
+}
+
+function abrirFornExclusaoModal(idNum, defVinc, nfesVinc) {
+  const f = fornecedores.find(x => Number(x.id) === idNum);
+  if(!f) return;
+  _fornExclusaoAlvo = idNum;
+  const pares = defVinc.reduce((s,d) => s + (Number(d.quantidade)||0), 0);
+  document.getElementById('fornExclusaoResumo').textContent =
+    `O fornecedor "${f.marca || f.razaoSocial || ''}" tem ${defVinc.length} registro(s) de defeito (${pares} par(es)) e ${nfesVinc.length} NF-e(s) vinculada(s). Para não perder esse histórico, ele não pode ser excluído diretamente — escolha uma das opções abaixo.`;
+  document.getElementById('fornTransferenciaBox').style.display = 'none';
+  const sel = document.getElementById('fornTransferenciaSelect');
+  sel.innerHTML = '<option value="">Selecione o fornecedor de destino...</option>' +
+    fornecedores
+      .filter(x => Number(x.id) !== idNum && x.ativo !== false)
+      .map(x => `<option value="${x.id}">${(x.marca||'').replace(/</g,'&lt;')}${x.razaoSocial ? ' — ' + x.razaoSocial.replace(/</g,'&lt;') : ''}</option>`)
+      .join('');
+  document.getElementById('fornExclusaoModal').style.display = 'flex';
+}
+
+function fecharFornExclusaoModal() {
+  document.getElementById('fornExclusaoModal').style.display = 'none';
+  document.getElementById('fornTransferenciaBox').style.display = 'none';
+  _fornExclusaoAlvo = null;
+}
+
+function inativarFornecedorDoModal() {
+  if(!_fornExclusaoAlvo) return;
+  const id = _fornExclusaoAlvo;
+  fecharFornExclusaoModal();
+  toggleFornecedorAtivo(id, true);
+}
+
+function mostrarTransferenciaFornecedor() {
+  const box = document.getElementById('fornTransferenciaBox');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+function confirmarTransferenciaEExclusao() {
+  if(!_fornExclusaoAlvo) return;
+  const destinoId = Number(document.getElementById('fornTransferenciaSelect').value) || null;
+  if(!destinoId) {
+    showToast('Selecione o fornecedor de destino.', 'error');
+    return;
+  }
+  const origemId = _fornExclusaoAlvo;
+  const origem  = fornecedores.find(x => Number(x.id) === origemId);
+  const destino = fornecedores.find(x => Number(x.id) === destinoId);
+  if(!origem || !destino) return;
+  openConfirm(
+    `Transferir todos os vínculos de "${origem.marca||''}" para "${destino.marca||''}" e excluir "${origem.marca||''}"?`,
+    'warn',
+    () => {
+      transferirVinculosFornecedor(origemId, destinoId);
+      excluirFornecedor(origemId);
+      fecharFornExclusaoModal();
+      showToast('Vínculos transferidos e fornecedor excluído.', 'success');
+    },
+    'Os defeitos e NF-es passam a apontar para o fornecedor de destino. Esta ação não pode ser desfeita.'
+  );
+}
+
+// Move todos os defeitos e NF-es vinculados ao fornecedor de origem para o de destino,
+// preservando o histórico (nada é apagado, apenas o vínculo é reapontado).
+function transferirVinculosFornecedor(origemId, destinoId) {
+  const origem  = fornecedores.find(x => Number(x.id) === Number(origemId));
+  const destino = fornecedores.find(x => Number(x.id) === Number(destinoId));
+  if(!origem || !destino) return { defeitos: 0, nfes: 0 };
+  const defVinc  = getDefeitosFornecedor(origem);
+  const nfesVinc = getNfesFornecedor(origem, defVinc);
+  defVinc.forEach(d => {
+    d.fornecedorId = destino.id;
+    registrarHistoricoItem(d, 'transferencia_fornecedor', `Vínculo de fornecedor transferido de "${origem.marca||''}" para "${destino.marca||''}".`);
+  });
+  nfesVinc.forEach(n => { n.fornecedorId = destino.id; });
+  saveData();
+  return { defeitos: defVinc.length, nfes: nfesVinc.length };
+}
+
+// Alterna o status ativo/inativo de um fornecedor sem apagar nada.
+function toggleFornecedorAtivo(id, forcarInativo) {
+  const f = fornecedores.find(x => Number(x.id) === Number(id));
+  if(!f) return;
+  const novoAtivo = forcarInativo ? false : (f.ativo === false);
+  f.ativo = novoAtivo;
+  saveFornecedores();
+  renderFornecedoresCards();
+  renderFornecedoresTable();
+  showToast(novoAtivo ? 'Fornecedor reativado.' : 'Fornecedor marcado como inativo. O histórico foi preservado.', 'info');
 }
 
 // ── Visualizar detalhes do fornecedor (modal) ──
@@ -12213,13 +13371,15 @@ function verFornecedor(id) {
   const f = fornecedores.find(x => Number(x.id) === idNum);
   if(!f) return;
 
-  document.getElementById("fornViewTitulo").textContent    = f.marca || "Fornecedor";
+  document.getElementById("fornViewTitulo").innerHTML = (f.marca || "Fornecedor").replace(/</g,'&lt;') +
+    (f.ativo === false ? ' <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(180,83,9,.12);border:1px solid rgba(180,83,9,.25);border-radius:5px;padding:1px 7px;font-size:9px;font-weight:800;letter-spacing:.4px;color:#b45309;vertical-align:middle;"><i class="fa-solid fa-eye-slash" style="font-size:8px;"></i> INATIVO</span>' : '');
   document.getElementById("fornViewSubtitulo").textContent = f.razaoSocial || "";
 
   // Contagens
   const defVinc  = getDefeitosFornecedor(f);
   const nfesVinc = getNfesFornecedor(f, defVinc);
-  const qtdProds = defVinc.length;
+  const qtdProds = defVinc.length; // registros
+  const qtdPares = getParesFornecedor(f, defVinc);
   const qtdNfes  = nfesVinc.length;
   const valorTotal = defVinc.reduce((s,d) =>
     s + (d.custoUnitario ? Number(d.custoUnitario) * d.quantidade : 0), 0);
@@ -12261,8 +13421,8 @@ function verFornecedor(id) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <!-- Produtos -->
         <div onclick="document.getElementById('fornViewModal').style.display='none';filtrarDefeitosPorFornecedor(Number('${f.id}'))" style="padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:.15s;" onmouseover="this.style.borderColor='rgba(220,38,38,.3)'" onmouseout="this.style.borderColor='var(--border)'">
-          <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Produtos</div>
-          <div style="font-size:22px;font-weight:900;font-family:'Space Mono',monospace;color:var(--accent2);line-height:1;">${qtdProds}</div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Pares (registros)</div>
+          <div style="font-size:22px;font-weight:900;font-family:'Space Mono',monospace;color:var(--accent2);line-height:1;">${qtdPares} <span style="font-size:12px;color:var(--muted);font-weight:700;">(${qtdProds})</span></div>
           <div style="font-size:10px;color:var(--muted);margin-top:4px;">
             ${pendentes ? `<span style="color:var(--accent2);">${pendentes} pendente${pendentes!==1?'s':''}</span>` : ''}
             ${resolvidos ? `${pendentes?' · ':''}<span style="color:#16a34a;">${resolvidos} resolvido${resolvidos!==1?'s':''}</span>` : ''}
@@ -12287,10 +13447,14 @@ function verFornecedor(id) {
 
     ${f.procedimento_devolucao ? `<div style="padding:10px 12px;background:rgba(3,105,161,.06);border:1px solid rgba(3,105,161,.18);border-radius:9px;">
       <div style="font-size:9.5px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#0369a1;margin-bottom:8px;display:flex;align-items:center;gap:5px;">
-        <i class="fa-solid fa-truck-fast"></i>Procedimento de Devolução
+        <i class="fa-solid fa-truck-fast"></i>Procedimento de Devolução (cadastro antigo deste fornecedor)
       </div>
       <div style="font-size:12.5px;color:var(--text);line-height:1.7;white-space:pre-line;">${f.procedimento_devolucao}</div>
     </div>` : ""}
+    <div onclick="document.getElementById('fornViewModal').style.display='none';abrirInfoMarca('${(f.marca||'').replace(/'/g,"\\'")}')" style="padding:10px 12px;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.18);border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:8px;" onmouseover="this.style.borderColor='rgba(124,58,237,.35)'" onmouseout="this.style.borderColor='rgba(124,58,237,.18)'">
+      <i class="fa-solid fa-tag" style="color:#7c3aed;"></i>
+      <div style="font-size:12px;color:var(--text);"><strong>Procedimento de devolução atual</strong> fica na ficha da marca ${(f.marca||"").replace(/</g,"&lt;")} — clique para ver/editar.</div>
+    </div>
     ${row("fa-note-sticky","#b45309","Observações", f.observacoes)}
   `;
 
@@ -12302,46 +13466,159 @@ function verFornecedor(id) {
   document.getElementById("fornViewModal").style.display = "flex";
 }
 
-// ── Autocomplete de fornecedor nos formulários de defeito ──
-function showFornecedorSuggestions(value, suggId, hiddenId) {
+// ═══════════════════════════════════════════════════════════════════════════
+// ── COMPONENTE ÚNICO "Fornecedor / Fábrica" ──
+// Reutilizado no cadastro, edição, duplicação e aprovação de itens de lote
+// (todos passam pelo mesmo #editModal). Substitui os antigos campos separados
+// "Vincular fornecedor cadastrado" + "CNPJ avulso".
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Guarda, por inputId, o texto que corresponde à última seleção válida — usado
+// para detectar quando o usuário digita algo diferente depois de selecionar.
+window._fornecedorSelecionadoTexto = window._fornecedorSelecionadoTexto || {};
+// Contexto de retorno quando o usuário cadastra um novo fornecedor a partir do
+// campo de busca (para reabrir e selecionar automaticamente depois de salvar).
+let _fornecedorReturnContext = null;
+
+function fornecedorLabelCompleto(f) {
+  return [f.marca, f.razaoSocial].filter(Boolean).join(" — ");
+}
+
+// Busca unificada por marca, razão social ou CNPJ (com ou sem máscara). Fornecedores
+// inativos (seção 6) não aparecem como opção normal em novos vínculos.
+function buscarFornecedoresUnificado(q) {
+  const termo = (q || "").trim().toLowerCase();
+  if(!termo) return [];
+  const termoDigits = termo.replace(/\D/g, "");
+  return fornecedores.filter(f => {
+    if(f.ativo === false) return false;
+    if((f.marca || "").toLowerCase().includes(termo)) return true;
+    if((f.razaoSocial || "").toLowerCase().includes(termo)) return true;
+    if(f.cnpj) {
+      if(f.cnpj.toLowerCase().includes(termo)) return true;
+      if(termoDigits && normalizarCNPJ(f.cnpj).includes(termoDigits)) return true;
+    }
+    return false;
+  }).slice(0, 8);
+}
+
+// Renderiza as sugestões (com CNPJ visível para diferenciar fornecedores da mesma
+// marca) e sempre oferece a ação "Cadastrar novo fornecedor" quando há texto digitado.
+function showFornecedorSuggestions(value, suggId, hiddenId, inputId, cnpjHiddenId) {
   const box = document.getElementById(suggId);
   if(!box) return;
-  const q = value.trim().toLowerCase();
-  if(!q || fornecedores.length === 0) { box.style.display = "none"; return; }
+  const q = (value || "").trim();
+  if(!q) { box.style.display = "none"; return; }
 
-  const matches = fornecedores.filter(f =>
-    (f.marca || "").toLowerCase().includes(q) ||
-    (f.razaoSocial || "").toLowerCase().includes(q) ||
-    (f.cnpj || "").includes(q)
-  ).slice(0, 8);
-
-  if(!matches.length) { box.style.display = "none"; return; }
+  const matches = buscarFornecedoresUnificado(q);
+  const qEsc = q.replace(/'/g, "\\'").replace(/</g, "");
+  const cnpjArg = cnpjHiddenId || "";
+  const cadastrarHtml = `
+    <div class="autocomplete-item" style="border-top:${matches.length ? "1px solid var(--border)" : "none"};color:#7c3aed;font-weight:700;cursor:pointer;"
+      onmousedown="abrirCadastroFornecedorAPartirDeCampo('${suggId}','${hiddenId}','${inputId}','${cnpjArg}')">
+      <i class="fa-solid fa-circle-plus" style="margin-right:6px;"></i>Cadastrar novo fornecedor${q ? ' "' + qEsc + '"' : ""}
+    </div>`;
 
   box.style.display = "block";
   box.innerHTML = matches.map(f => `
-    <div class="autocomplete-item" onmousedown="selecionarFornecedor(${f.id},'${f.marca.replace(/'/g,"\\'")}','${suggId}','${hiddenId}')">
-      <div style="font-weight:700;font-size:13px;">${f.marca}</div>
-      ${f.razaoSocial ? `<div style="font-size:11px;color:var(--muted);">${f.razaoSocial}${f.cnpj ? " · " + f.cnpj : ""}</div>` : ""}
+    <div class="autocomplete-item" onmousedown="selecionarFornecedor(${f.id},'${suggId}','${hiddenId}','${inputId}','${cnpjArg}')">
+      <div style="font-weight:700;font-size:13px;">${(f.marca||"").replace(/</g,"&lt;")}</div>
+      <div style="font-size:11px;color:var(--muted);">${[f.razaoSocial, f.cnpj].filter(Boolean).join(" · ").replace(/</g,"&lt;") || "sem razão social/CNPJ cadastrados"}</div>
     </div>
-  `).join("");
+  `).join("") + cadastrarHtml;
 }
 
-function selecionarFornecedor(id, marca, suggId, hiddenId) {
+// Chamado a cada digitação: se o texto deixou de corresponder à última seleção
+// válida, limpa IMEDIATAMENTE o fornecedorId oculto (e o CNPJ espelhado) para não
+// salvar um ID antigo associado a um texto diferente.
+function onFornecedorInputChange(value, suggId, hiddenId, inputId, cnpjHiddenId) {
+  const textoSelecionado = window._fornecedorSelecionadoTexto[inputId];
+  if(textoSelecionado !== undefined && value !== textoSelecionado) {
+    const hidden = document.getElementById(hiddenId);
+    if(hidden) hidden.value = "";
+    if(cnpjHiddenId) { const c = document.getElementById(cnpjHiddenId); if(c) c.value = ""; }
+    delete window._fornecedorSelecionadoTexto[inputId];
+  }
+  mostrarMsgFornecedor(inputId, "");
+  showFornecedorSuggestions(value, suggId, hiddenId, inputId, cnpjHiddenId);
+}
+
+function selecionarFornecedor(id, suggId, hiddenId, inputId, cnpjHiddenId) {
   const f = fornecedores.find(x => Number(x.id) === Number(id));
   if(!f) return;
-  // Preenche o campo de texto pelo suggId (inferindo o input anterior)
-  const box = document.getElementById(suggId);
-  if(box) {
-    const input = box.previousElementSibling;
-    if(input && input.tagName === "INPUT") input.value = f.marca + (f.razaoSocial ? " — " + f.razaoSocial : "");
-    box.style.display = "none";
-  }
-  const hidden = document.getElementById(hiddenId);
-  if(hidden) hidden.value = id;
+  const label = fornecedorLabelCompleto(f);
+  const input = document.getElementById(inputId);
+  if(input) { input.value = label; input.style.borderColor = ""; }
+  window._fornecedorSelecionadoTexto[inputId] = label;
 
-  // Auto-preenche CNPJ se o campo estiver vazio
-  const cnpjEl = document.getElementById(hiddenId === "fornecedorId" ? "cnpj" : "editCnpj");
-  if(cnpjEl && !cnpjEl.value && f.cnpj) cnpjEl.value = f.cnpj;
+  const hidden = document.getElementById(hiddenId);
+  if(hidden) hidden.value = f.id;
+
+  // Sincroniza fornecedorId + texto + CNPJ de forma atômica.
+  if(cnpjHiddenId) {
+    const cnpjEl = document.getElementById(cnpjHiddenId);
+    if(cnpjEl) cnpjEl.value = f.cnpj || "";
+  }
+
+  const box = document.getElementById(suggId);
+  if(box) box.style.display = "none";
+  mostrarMsgFornecedor(inputId, "");
+}
+
+function limparFornecedorSelecionado(hiddenId, inputId, cnpjHiddenId) {
+  const hidden = document.getElementById(hiddenId); if(hidden) hidden.value = "";
+  if(cnpjHiddenId) { const c = document.getElementById(cnpjHiddenId); if(c) c.value = ""; }
+  const input = document.getElementById(inputId); if(input) input.value = "";
+  delete window._fornecedorSelecionadoTexto[inputId];
+}
+
+function mostrarMsgFornecedor(inputId, msg) {
+  const msgEl = document.getElementById(inputId + "Msg");
+  if(!msgEl) return;
+  msgEl.textContent = msg;
+  msgEl.style.color = msg ? "var(--accent2)" : "var(--muted)";
+}
+
+// Exige que um fornecedor real esteja selecionado (fornecedorId preenchido) antes de
+// salvar. Usado no submit do cadastro e na edição/duplicação/aprovação de lote.
+function validarFornecedorSelecionado(hiddenId, inputId) {
+  const hidden = document.getElementById(hiddenId);
+  const ok = !!(hidden && hidden.value);
+  const input = document.getElementById(inputId);
+  if(input) input.style.borderColor = ok ? "" : "rgba(220,38,38,.6)";
+  if(!ok) mostrarMsgFornecedor(inputId, "Selecione um fornecedor cadastrado na lista (ou cadastre um novo) antes de salvar.");
+  return ok;
+}
+
+// ── Abrir cadastro de novo fornecedor a partir do campo de busca (sem perder os
+// dados já preenchidos no formulário de defeito por trás do modal) ──
+function abrirCadastroFornecedorAPartirDeCampo(suggId, hiddenId, inputId, cnpjHiddenId) {
+  const inputEl = document.getElementById(inputId);
+  const termo = (inputEl?.value || "").trim();
+  const cnpjDigits = termo.replace(/\D/g, "");
+  const pareceCnpj = cnpjDigits.length === 14;
+  _fornecedorReturnContext = { suggId, hiddenId, inputId, cnpjHiddenId };
+  const box = document.getElementById(suggId);
+  if(box) box.style.display = "none";
+  abrirModalFornecedor(null, { marca: !pareceCnpj ? termo : "", cnpj: pareceCnpj ? termo : "" });
+}
+
+// ── Registro legado (só tem CNPJ, sem fornecedorId): tenta localizar automaticamente
+// um único fornecedor com o mesmo CNPJ normalizado. Nunca apaga o CNPJ legado. ──
+function resolverFornecedorLegado(item, hiddenId, inputId, cnpjHiddenId) {
+  const cnpjItem = normalizarCNPJ(item?.cnpj);
+  const input = document.getElementById(inputId);
+  const hidden = document.getElementById(hiddenId);
+  if(!cnpjItem) return;
+  const candidatos = fornecedores.filter(f => normalizarCNPJ(f.cnpj) === cnpjItem);
+  if(candidatos.length === 1) {
+    selecionarFornecedor(candidatos[0].id, inputId + "Suggestions", hiddenId, inputId, cnpjHiddenId);
+    mostrarMsgFornecedor(inputId, "Fornecedor vinculado automaticamente pelo CNPJ do registro legado.");
+  } else {
+    if(input) input.value = "";
+    if(hidden) hidden.value = "";
+    mostrarMsgFornecedor(inputId, `Fornecedor não cadastrado — CNPJ ${item.cnpj}. Busque acima ou cadastre um novo fornecedor com este CNPJ.`);
+  }
 }
 
 // ── Botão "ver fornecedor" na tabela de defeitos ──
@@ -12585,6 +13862,737 @@ function importarXmlNfe(input) {
   reader.readAsText(file, "UTF-8");
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ── CAIXAS (seção 4): controle interno de caixas/lotes físicos formados com
+// itens já existentes na lista de defeitos. Módulo LOCAL e INDEPENDENTE da aba
+// "Lotes das Lojas" (Firebase) — não reutiliza section-lotes, a coleção "lotes"
+// do Firebase nem _lotesCache. Persistido no object store "caixas" do IndexedDB. ──
+// ═══════════════════════════════════════════════════════════════════════════
+
+let _caixaAtualId = null; // caixa aberta na visão de detalhe
+
+function getCaixaById(id) {
+  return caixas.find(c => Number(c.id) === Number(id)) || null;
+}
+
+// Itens (defeitos) de uma caixa — sempre calculado ao vivo a partir de `defeitos`,
+// nunca copiado, para que alterações em quantidade/custo/status se reflitam
+// automaticamente nos totais e detalhes da caixa (seção 4.3, item 7).
+function getItensDaCaixa(caixaId) {
+  return defeitos.filter(d => d.caixaId && Number(d.caixaId) === Number(caixaId));
+}
+
+function getCaixaTotais(caixaId) {
+  const itens = getItensDaCaixa(caixaId);
+  const registros = itens.length;
+  const pares = itens.reduce((s,d) => s + (Number(d.quantidade) || 0), 0);
+  const valor = itens.reduce((s,d) => s + ((Number(d.custoUnitario) || 0) * (Number(d.quantidade) || 0)), 0);
+  return { registros, pares, valor, itens };
+}
+
+// ── Modal Nova/Editar Caixa ──
+function abrirModalCaixa(id) {
+  const idNum = id ? Number(id) : null;
+  const c = idNum ? getCaixaById(idNum) : null;
+  document.getElementById("caixaModalTitle").textContent = c ? "Editar Caixa" : "Nova Caixa";
+  document.getElementById("caixaId").value = c ? c.id : "";
+  document.getElementById("caixaCodigoDisplay").value = c ? c.codigo : "Será gerado automaticamente ao salvar";
+  document.getElementById("caixaNome").value = c?.nome || "";
+  document.getElementById("caixaDescricao").value = c?.descricao || "";
+  document.getElementById("caixaStatusSelect").value = c?.status || "aberta";
+  document.getElementById("caixaModal").style.display = "flex";
+}
+function fecharModalCaixa() { document.getElementById("caixaModal").style.display = "none"; }
+
+async function salvarCaixa() {
+  const idRaw = document.getElementById("caixaId").value;
+  const id = idRaw ? Number(idRaw) : null;
+  const nome = document.getElementById("caixaNome").value.trim();
+  const descricao = document.getElementById("caixaDescricao").value.trim();
+  const status = document.getElementById("caixaStatusSelect").value || "aberta";
+  const agora = new Date().toISOString();
+
+  if(id) {
+    const c = getCaixaById(id);
+    if(!c) return;
+    c.nome = nome; c.descricao = descricao; c.status = status; c.updatedAt = agora;
+    showToast("Caixa atualizada!", "success");
+  } else {
+    const codigo = await proximoCodigoCaixa();
+    caixas.unshift({ id: Date.now(), codigo, nome, descricao, status, createdAt: agora, updatedAt: agora });
+    showToast(`Caixa ${codigo} criada!`, "success");
+  }
+  saveData();
+  fecharModalCaixa();
+  renderCaixas();
+  if(_caixaAtualId) renderCaixaDetalhe(_caixaAtualId);
+}
+
+function confirmarExcluirCaixa(id) {
+  const c = getCaixaById(id);
+  if(!c) return;
+  const { registros, pares } = getCaixaTotais(id);
+  openConfirm(
+    `Excluir a caixa ${c.codigo}?`, "danger",
+    () => excluirCaixa(id),
+    registros ? `${registros} registro(s) / ${pares} par(es) serão desvinculados desta caixa. Os defeitos NÃO serão excluídos.` : "Esta ação não pode ser desfeita."
+  );
+}
+
+function excluirCaixa(id) {
+  const idNum = Number(id);
+  defeitos.forEach(d => { if(Number(d.caixaId) === idNum) d.caixaId = ""; });
+  caixas = caixas.filter(c => Number(c.id) !== idNum);
+  saveData();
+  showToast("Caixa excluída. Os defeitos vinculados foram preservados.", "info");
+  if(_caixaAtualId === idNum) fecharCaixaDetalhe(); else renderCaixas();
+}
+
+function toggleCaixaStatus(id) {
+  const c = getCaixaById(id);
+  if(!c) return;
+  c.status = c.status === "fechada" ? "aberta" : "fechada";
+  c.updatedAt = new Date().toISOString();
+  saveData();
+  showToast(c.status === "fechada" ? "Caixa fechada. Reabra para adicionar ou remover itens." : "Caixa reaberta.", "info");
+  renderCaixas();
+  if(_caixaAtualId === Number(id)) renderCaixaDetalhe(id);
+}
+
+// ── Lista de caixas ──
+function renderCaixas() {
+  const totalPares = caixas.reduce((s,c) => s + getCaixaTotais(c.id).pares, 0);
+  const abertas = caixas.filter(c => c.status !== "fechada").length;
+  const fechadas = caixas.length - abertas;
+  const elTotal = document.getElementById("caixaStatTotal"); if(elTotal) elTotal.textContent = caixas.length;
+  const elAbertas = document.getElementById("caixaStatAbertas"); if(elAbertas) elAbertas.textContent = abertas;
+  const elFechadas = document.getElementById("caixaStatFechadas"); if(elFechadas) elFechadas.textContent = fechadas;
+  const elPares = document.getElementById("caixaStatPares"); if(elPares) elPares.textContent = totalPares;
+
+  const badge = document.getElementById("sidebarCaixasBadge");
+  if(badge) { if(caixas.length) { badge.textContent = caixas.length; badge.style.display = ''; } else badge.style.display = 'none'; }
+
+  const grid = document.getElementById("caixasListGrid");
+  if(!grid) return;
+
+  const statusFiltro = document.getElementById("caixaFiltroStatus")?.value || "";
+  const termo = (document.getElementById("caixaSearchInput")?.value || "").trim().toLowerCase();
+  let lista = caixas;
+  if(statusFiltro) lista = lista.filter(c => (c.status || "aberta") === statusFiltro);
+  if(termo) lista = lista.filter(c => (c.codigo || "").toLowerCase().includes(termo) || (c.nome || "").toLowerCase().includes(termo));
+  lista = [...lista].sort((a,b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+
+  if(!lista.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-box-open"></i></div><div class="empty-state-title">Nenhuma caixa encontrada</div><div class="empty-state-sub">${caixas.length ? "Tente outro filtro ou termo de busca." : 'Clique em "Nova Caixa" para começar.'}</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = lista.map(c => {
+    const { registros, pares, valor } = getCaixaTotais(c.id);
+    const fechada = c.status === "fechada";
+    const nomeEsc = (c.nome || "(sem nome)").replace(/</g,"&lt;");
+    const descEsc = (c.descricao || "").replace(/</g,"&lt;");
+    return `<div class="caixa-card ${fechada ? "caixa-fechada" : ""}" onclick="abrirCaixaDetalhe(${c.id})">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span style="font-family:'Space Mono',monospace;font-weight:900;font-size:15px;color:#b45309;">${c.codigo}</span>
+        <span style="font-size:10px;font-weight:700;border-radius:20px;padding:2px 9px;${fechada ? 'background:rgba(100,116,139,.12);color:var(--muted);border:1px solid rgba(100,116,139,.25);' : 'background:rgba(22,163,74,.10);color:#16a34a;border:1px solid rgba(22,163,74,.25);'}">${fechada ? '<i class="fa-solid fa-lock"></i> Fechada' : '<i class="fa-solid fa-lock-open"></i> Aberta'}</span>
+      </div>
+      <div style="font-size:13.5px;font-weight:700;margin-bottom:2px;">${nomeEsc}</div>
+      ${descEsc ? `<div style="font-size:11px;color:var(--muted);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${descEsc}</div>` : '<div style="margin-bottom:8px;"></div>'}
+      <div style="display:flex;gap:14px;font-size:11px;color:var(--muted);margin-bottom:8px;">
+        <span><strong style="color:var(--text);font-family:'Space Mono',monospace;">${registros}</strong> registro${registros!==1?'s':''}</span>
+        <span><strong style="color:var(--text);font-family:'Space Mono',monospace;">${pares}</strong> par${pares!==1?'es':''}</span>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:#b45309;font-family:'Space Mono',monospace;">${valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:6px;">Criada em ${formatDate((c.createdAt||"").slice(0,10)) || "—"}</div>
+    </div>`;
+  }).join("");
+}
+
+// ── Detalhe de uma caixa ──
+function abrirCaixaDetalhe(id) {
+  _caixaAtualId = Number(id);
+  const listView = document.getElementById("caixasListView");
+  const detView  = document.getElementById("caixaDetalheView");
+  if(listView) listView.style.display = "none";
+  if(detView)  detView.style.display  = "block";
+  const search = document.getElementById("caixaItemSearchInput");
+  if(search) search.value = "";
+  renderCaixaDetalhe(id);
+}
+
+function fecharCaixaDetalhe() {
+  _caixaAtualId = null;
+  const listView = document.getElementById("caixasListView");
+  const detView  = document.getElementById("caixaDetalheView");
+  if(detView)  detView.style.display  = "none";
+  if(listView) listView.style.display = "block";
+  renderCaixas();
+}
+
+function renderCaixaDetalhe(id) {
+  const c = getCaixaById(id);
+  if(!c) { fecharCaixaDetalhe(); return; }
+  const { registros, pares, valor } = getCaixaTotais(id);
+  const fechada = c.status === "fechada";
+
+  document.getElementById("caixaDetCodigo").textContent = c.codigo;
+  document.getElementById("caixaDetStatusBadge").innerHTML = fechada
+    ? '<span style="font-size:10px;font-weight:700;border-radius:20px;padding:3px 10px;background:rgba(100,116,139,.12);color:var(--muted);border:1px solid rgba(100,116,139,.25);"><i class="fa-solid fa-lock"></i> Fechada</span>'
+    : '<span style="font-size:10px;font-weight:700;border-radius:20px;padding:3px 10px;background:rgba(22,163,74,.10);color:#16a34a;border:1px solid rgba(22,163,74,.25);"><i class="fa-solid fa-lock-open"></i> Aberta</span>';
+  document.getElementById("caixaDetNome").textContent = c.nome || "(sem nome)";
+  document.getElementById("caixaDetDescricao").textContent = c.descricao || "";
+  document.getElementById("caixaDetMeta").textContent = `Criada em ${formatDate((c.createdAt||"").slice(0,10)) || "—"} · Atualizada em ${formatDate((c.updatedAt||"").slice(0,10)) || "—"}`;
+  document.getElementById("caixaDetRegistros").textContent = registros;
+  document.getElementById("caixaDetPares").textContent = pares;
+  document.getElementById("caixaDetValor").textContent = valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+
+  const toggleBtn = document.getElementById("caixaDetToggleBtn");
+  if(toggleBtn) toggleBtn.innerHTML = fechada ? '<i class="fa-solid fa-lock-open"></i> Reabrir' : '<i class="fa-solid fa-lock"></i> Fechar';
+
+  renderCaixaDetalheItens();
+}
+
+function renderCaixaDetalheItens() {
+  const id = _caixaAtualId;
+  if(!id) return;
+  const c = getCaixaById(id);
+  if(!c) return;
+  const fechada = c.status === "fechada";
+  const termo = (document.getElementById("caixaItemSearchInput")?.value || "").trim().toLowerCase();
+  let itens = getItensDaCaixa(id);
+  if(termo) {
+    itens = itens.filter(d => [d.marca, d.referencia, d.codigoBarras, d.loja, d.numeracao, d.defeito]
+      .some(v => String(v || "").toLowerCase().includes(termo)));
+  }
+  itens = [...itens].sort((a,b) => (b.data || "").localeCompare(a.data || ""));
+
+  const tbody = document.getElementById("caixaDetItensBody");
+  if(!tbody) return;
+  if(!itens.length) {
+    tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;padding:28px;color:var(--muted);font-size:13px;">${termo ? "Nenhum item encontrado para esta busca." : "Nenhum item nesta caixa ainda."}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = itens.map(d => {
+    const nfeVinc = d.nfeId ? nfes.find(n => n.id === d.nfeId) : null;
+    const fornVinc = d.fornecedorId ? fornecedores.find(f => Number(f.id) === Number(d.fornecedorId)) : null;
+    const fornLabel = fornVinc ? ((fornVinc.marca||"") + (fornVinc.cnpj ? " · " + fornVinc.cnpj : "")) : (d.cnpj || "—");
+    const total = (Number(d.custoUnitario) || 0) * (Number(d.quantidade) || 0);
+    const esc = (s) => String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    return `<tr>
+      <td>${formatDate(d.data) || "—"}</td>
+      <td>${esc(d.loja) || "—"}</td>
+      <td style="font-weight:700;">${esc(d.marca) || "—"}</td>
+      <td style="font-family:'Space Mono',monospace;font-size:11px;">${esc(d.codigoBarras) || "—"}</td>
+      <td>${esc(d.referencia) || "—"}</td>
+      <td>${esc(d.cor) || "—"}</td>
+      <td>${esc(d.numeracao) || "—"}</td>
+      <td style="text-align:center;font-weight:700;">${d.quantidade || 0}</td>
+      <td style="text-align:right;">${d.custoUnitario ? Number(d.custoUnitario).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}) : "—"}</td>
+      <td style="text-align:right;font-weight:700;">${total ? total.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}) : "—"}</td>
+      <td>${esc(d.defeito) || "—"}</td>
+      <td>${esc(d.notaOrigem) || "—"}</td>
+      <td>${nfeVinc ? esc(nfeVinc.numeroNfe || "vinculada") : "—"}</td>
+      <td style="font-size:11px;">${esc(fornLabel)}</td>
+      <td>${defeitoStatusLabel(d.status)}</td>
+      <td style="text-align:center;white-space:nowrap;">
+        <button class="action-btn" title="Ver na tabela de defeitos" onclick="verItemNaTabelaDefeitos(${d.id})"><i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px;pointer-events:none;"></i></button>
+        ${!fechada ? `<button class="action-btn ab-delete" title="Remover da caixa (não exclui o defeito)" onclick="removerItemDaCaixa(${d.id})"><i class="fa-solid fa-box-open" style="font-size:11px;pointer-events:none;"></i></button>` : ''}
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+function removerItemDaCaixa(defeitoId) {
+  const d = defeitos.find(i => i.id === defeitoId);
+  if(!d) return;
+  openConfirm("Remover este item da caixa?", "warn", () => {
+    const caixaAnterior = d.caixaId ? getCaixaById(d.caixaId) : null;
+    d.caixaId = "";
+    registrarHistoricoItem(d, 'caixa', `Removido da caixa ${caixaAnterior ? caixaAnterior.codigo : ''}.`);
+    saveData();
+    renderCaixaDetalheItens();
+    if(_caixaAtualId) renderCaixaDetalhe(_caixaAtualId);
+    showToast("Item removido da caixa (o defeito continua no sistema).", "info");
+  }, "O registro do defeito NÃO será excluído.");
+}
+
+// ── Atalho: localizar um item específico na tabela de defeitos (a partir da caixa) ──
+function verItemNaTabelaDefeitos(defeitoId) {
+  const d = defeitos.find(i => i.id === defeitoId);
+  if(!d) return;
+  _filtroFornecedorAtivo = null;
+  if(globalSearch) globalSearch.value = d.codigoBarras || d.referencia || "";
+  if(filterStatus) filterStatus.value = "";
+  navTo('defeitos');
+  setTimeout(() => {
+    renderFilters();
+    syncStatusButtons();
+    currentPage = 1;
+    renderTable();
+    updateFilterIndicators();
+    if(globalSearch) globalSearch.dispatchEvent(new Event('input'));
+  }, 80);
+}
+
+// ── Ver a caixa atual de um item (usado no menu de ações da linha de defeitos) ──
+function verCaixaDoItem(defeitoId) {
+  const d = defeitos.find(i => i.id === defeitoId);
+  if(!d || !d.caixaId) { showToast("Este item não está em nenhuma caixa.", "info"); return; }
+  const c = getCaixaById(d.caixaId);
+  if(!c) { showToast("A caixa vinculada a este item não existe mais.", "error"); return; }
+  navTo('caixas');
+  setTimeout(() => abrirCaixaDetalhe(c.id), 80);
+}
+
+// Adiciona/remove UM item individualmente à(s) caixa(s) — usado no menu de ações da
+// linha de defeitos, sem precisar passar pela seleção em massa.
+function adicionarItemIndividualACaixa(defeitoId) {
+  selectedIds = new Set([defeitoId]);
+  abrirAddACaixaModal();
+}
+
+// ── "Adicionar à Caixa" — ação em massa a partir da seleção da lista de defeitos ──
+function abrirAddACaixaModal() {
+  if(!selectedIds.size) { showToast("Selecione ao menos um item.", "error"); return; }
+  const resumo = document.getElementById("addACaixaResumo");
+  const itensSel = defeitos.filter(d => selectedIds.has(d.id));
+  const pares = itensSel.reduce((s,d) => s + (Number(d.quantidade) || 0), 0);
+  if(resumo) resumo.textContent = `${itensSel.length} registro(s) selecionado(s) · ${pares} par(es)`;
+
+  const sel = document.getElementById("addACaixaSelect");
+  if(sel) {
+    const abertas = caixas.filter(c => c.status !== "fechada");
+    sel.innerHTML = '<option value="">Selecione uma caixa...</option>' + abertas.map(c => {
+      const { registros, pares: p } = getCaixaTotais(c.id);
+      return `<option value="${c.id}">${c.codigo}${c.nome ? " — " + c.nome.replace(/</g,"&lt;") : ""} (${registros} reg. / ${p} par.)</option>`;
+    }).join("");
+  }
+  const novoNomeEl = document.getElementById("addACaixaNovoNome");
+  if(novoNomeEl) novoNomeEl.value = "";
+  document.getElementById("addACaixaModal").style.display = "flex";
+}
+
+function fecharAddACaixaModal() {
+  document.getElementById("addACaixaModal").style.display = "none";
+}
+
+async function confirmarAdicaoACaixa() {
+  if(!selectedIds.size) { fecharAddACaixaModal(); return; }
+  const selectEl = document.getElementById("addACaixaSelect");
+  const novoNome = document.getElementById("addACaixaNovoNome")?.value.trim() || "";
+  let caixaId = selectEl && selectEl.value ? Number(selectEl.value) : null;
+
+  if(!caixaId) {
+    // Cria uma nova caixa sem perder a seleção atual dos defeitos.
+    const codigo = await proximoCodigoCaixa();
+    const agora = new Date().toISOString();
+    const nova = { id: Date.now(), codigo, nome: novoNome, descricao: "", status: "aberta", createdAt: agora, updatedAt: agora };
+    caixas.unshift(nova);
+    caixaId = nova.id;
+  }
+
+  const idsSelecionados = [...selectedIds];
+  const jaEmOutra = defeitos.filter(d => idsSelecionados.includes(d.id) && d.caixaId && Number(d.caixaId) !== Number(caixaId));
+
+  const aplicar = () => {
+    const itens = defeitos.filter(d => idsSelecionados.includes(d.id));
+    const caixaDestino = getCaixaById(caixaId);
+    itens.forEach(d => {
+      const caixaAnterior = d.caixaId && Number(d.caixaId) !== Number(caixaId) ? getCaixaById(d.caixaId) : null;
+      const tipoEvento = caixaAnterior ? 'caixa' : 'caixa';
+      const desc = caixaAnterior
+        ? `Movido da caixa ${caixaAnterior.codigo} para a caixa ${caixaDestino ? caixaDestino.codigo : ''}.`
+        : `Adicionado à caixa ${caixaDestino ? caixaDestino.codigo : ''}.`;
+      d.caixaId = caixaId;
+      registrarHistoricoItem(d, tipoEvento, desc);
+    });
+    saveData();
+    fecharAddACaixaModal();
+    clearSelection();
+    render();
+    renderCaixas();
+    showToast(`${itens.length} item(ns) adicionados à caixa ${caixaDestino ? caixaDestino.codigo : ''}!`, "success");
+  };
+
+  if(jaEmOutra.length) {
+    const nomesOrigem = [...new Set(jaEmOutra.map(d => { const co = getCaixaById(d.caixaId); return co ? co.codigo : '?'; }))].join(', ');
+    fecharAddACaixaModal();
+    openConfirm(
+      `${jaEmOutra.length} item(ns) já está(ão) em outra caixa (${nomesOrigem}). Mover para a caixa selecionada?`,
+      "warn", aplicar,
+      "Um registro só pode pertencer a uma caixa por vez."
+    );
+  } else {
+    aplicar();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// CENTRAL DE INCONSISTÊNCIAS (seção 9)
+// Só localiza e ajuda a corrigir — nunca altera dados sozinha. Toda correção,
+// individual ou em massa, exige confirmação explícita via openConfirm().
+// Calculada sob demanda a partir dos dados atuais; nada aqui é persistido em backup.
+// ═══════════════════════════════════════════════════════
+
+// Remove acentos/diacríticos para comparação de marcas "parecidas" (seção 9.1).
+function _semAcentos(s) {
+  return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+function _normMarcaSignature(s) {
+  return _semAcentos(s).trim().toUpperCase().replace(/\s+/g, ' ');
+}
+
+function calcularInconsistencias() {
+  const result = {
+    semFornecedor: [],
+    fornecedorIdInvalido: [],
+    cnpjDivergente: [],
+    fornecedoresDuplicados: [],
+    marcasDuplicadas: [],
+    quantidadeInvalida: [],
+    custoInvalido: [],
+    nfeQuebrada: [],
+    caixaOrfa: [],
+    caixasDuplicadas: [],
+  };
+
+  defeitos.forEach(d => {
+    // 1) Sem fornecedorId e sem CNPJ compatível com fornecedor cadastrado
+    if(!d.fornecedorId) {
+      const cnpjItem = normalizarCNPJ(d.cnpj);
+      const temCompativel = cnpjItem && fornecedores.some(f => normalizarCNPJ(f.cnpj) === cnpjItem);
+      if(!temCompativel) result.semFornecedor.push(d);
+    } else {
+      // 2) fornecedorId aponta para fornecedor inexistente
+      const f = fornecedores.find(x => Number(x.id) === Number(d.fornecedorId));
+      if(!f) {
+        result.fornecedorIdInvalido.push(d);
+      } else if(d.cnpj && f.cnpj && normalizarCNPJ(d.cnpj) !== normalizarCNPJ(f.cnpj)) {
+        // 3) CNPJ salvo no item diverge do CNPJ do fornecedor vinculado
+        result.cnpjDivergente.push({ item: d, fornecedor: f });
+      }
+    }
+
+    // 6) Quantidade vazia, zerada, negativa ou inválida
+    const qtd = Number(d.quantidade);
+    if(d.quantidade === '' || d.quantidade === undefined || d.quantidade === null || !Number.isFinite(qtd) || qtd <= 0) {
+      result.quantidadeInvalida.push(d);
+    }
+
+    // 7) Sem custo ou com custo inválido (negativo/NaN quando preenchido)
+    if(d.custoUnitario !== '' && d.custoUnitario !== undefined && d.custoUnitario !== null) {
+      const custo = Number(d.custoUnitario);
+      if(!Number.isFinite(custo) || custo < 0) result.custoInvalido.push(d);
+    }
+
+    // 8) Vínculo quebrado com NF-e (nfeId aponta para NF-e inexistente)
+    if(d.nfeId && !nfes.find(n => String(n.id) === String(d.nfeId))) {
+      result.nfeQuebrada.push(d);
+    }
+
+    // 9) caixaId apontando para caixa inexistente
+    if(d.caixaId && !getCaixaById(d.caixaId)) {
+      result.caixaOrfa.push(d);
+    }
+  });
+
+  // 4) Fornecedores possivelmente duplicados pelo mesmo CNPJ normalizado
+  { const porCnpj = {};
+    fornecedores.forEach(f => {
+      const c = normalizarCNPJ(f.cnpj);
+      if(!c) return;
+      (porCnpj[c] = porCnpj[c] || []).push(f);
+    });
+    Object.keys(porCnpj).forEach(c => { if(porCnpj[c].length > 1) result.fornecedoresDuplicados.push({ cnpj: c, fornecedores: porCnpj[c] }); });
+  }
+
+  // 5) Marcas possivelmente duplicadas por espaços/acentos/maiúsculas-minúsculas
+  { const porAssinatura = {};
+    const marcasVistas = new Set();
+    defeitos.forEach(d => { if(d.marca) marcasVistas.add(d.marca); });
+    Object.keys(marcasInfo || {}).forEach(k => marcasVistas.add(k));
+    [...marcasVistas].forEach(m => {
+      const sig = _normMarcaSignature(m);
+      if(!sig) return;
+      (porAssinatura[sig] = porAssinatura[sig] || new Set()).add(m);
+    });
+    Object.keys(porAssinatura).forEach(sig => {
+      const variantes = [...porAssinatura[sig]];
+      if(variantes.length > 1) result.marcasDuplicadas.push({ assinatura: sig, variantes });
+    });
+  }
+
+  // 10) Caixas com códigos duplicados
+  { const porCodigo = {};
+    caixas.forEach(c => { (porCodigo[c.codigo] = porCodigo[c.codigo] || []).push(c); });
+    Object.keys(porCodigo).forEach(cod => { if(porCodigo[cod].length > 1) result.caixasDuplicadas.push({ codigo: cod, caixas: porCodigo[cod] }); });
+  }
+
+  return result;
+}
+
+function _paresDe(lista) {
+  return lista.reduce((s, d) => s + (Number((d && d.item) ? d.item.quantidade : (d && d.quantidade)) || 0), 0);
+}
+
+// Atualiza só o badge da sidebar (leve — sem montar a lista detalhada em HTML).
+// Chamada a cada render() geral para manter o número sempre visível, sem o custo de
+// desenhar a Central inteira quando a aba não está aberta.
+function atualizarBadgeInconsistencias() {
+  const badge = document.getElementById('sidebarInconsistenciasBadge');
+  if(!badge) return;
+  const inc = calcularInconsistencias();
+  const total = Object.keys(inc).reduce((s,k) => s + inc[k].length, 0);
+  if(total > 0) { badge.textContent = total > 99 ? '99+' : total; badge.style.display = ''; }
+  else badge.style.display = 'none';
+}
+
+function renderInconsistencias() {
+  const inc = calcularInconsistencias();
+  const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  const categorias = [
+    { key:'semFornecedor', icon:'fa-building-circle-xmark', cor:'#dc2626', titulo:'Sem fornecedor vinculado', desc:'Itens sem fornecedorId e sem CNPJ compatível com fornecedor cadastrado.' },
+    { key:'fornecedorIdInvalido', icon:'fa-link-slash', cor:'#dc2626', titulo:'Fornecedor vinculado inexistente', desc:'O fornecedorId do item não corresponde a nenhum fornecedor cadastrado.' },
+    { key:'cnpjDivergente', icon:'fa-id-card', cor:'#ea580c', titulo:'CNPJ divergente do fornecedor', desc:'O CNPJ salvo no item é diferente do CNPJ do fornecedor vinculado.' },
+    { key:'quantidadeInvalida', icon:'fa-hashtag', cor:'#ea580c', titulo:'Quantidade inválida', desc:'Quantidade vazia, zerada, negativa ou não numérica.' },
+    { key:'custoInvalido', icon:'fa-sack-dollar', cor:'#ca8a04', titulo:'Custo inválido', desc:'Custo unitário preenchido, porém negativo ou não numérico.' },
+    { key:'nfeQuebrada', icon:'fa-file-circle-xmark', cor:'#dc2626', titulo:'Vínculo quebrado com NF-e', desc:'nfeId aponta para uma NF-e que não existe mais.' },
+    { key:'caixaOrfa', icon:'fa-box-open', cor:'#b45309', titulo:'Vínculo órfão de caixa', desc:'caixaId aponta para uma caixa que não existe mais.' },
+    { key:'fornecedoresDuplicados', icon:'fa-copy', cor:'#0369a1', titulo:'Fornecedores possivelmente duplicados', desc:'Mesmo CNPJ normalizado cadastrado em mais de um fornecedor.', grupo:true },
+    { key:'marcasDuplicadas', icon:'fa-tag', cor:'#7c3aed', titulo:'Marcas possivelmente duplicadas', desc:'Grafias diferentes (espaços, acentos, maiúsculas) que podem ser a mesma marca.', grupo:true },
+    { key:'caixasDuplicadas', icon:'fa-boxes-stacked', cor:'#b45309', titulo:'Caixas com código duplicado', desc:'Mais de uma caixa com o mesmo código.', grupo:true },
+  ];
+
+  // Cards de resumo
+  const grid = document.getElementById('inconsistCardsGrid');
+  const totalProblemas = categorias.reduce((s,c) => s + inc[c.key].length, 0);
+  grid.innerHTML = categorias.map(c => {
+    const lista = inc[c.key];
+    const pares = c.grupo ? '' : `<div style="font-size:9.5px;color:var(--muted);font-weight:700;margin-top:2px;">${_paresDe(lista)} par(es) afetado(s)</div>`;
+    return `<div class="stat-card caixa-stat-card" style="cursor:pointer;" onclick="document.getElementById('inconsist-${c.key}')?.scrollIntoView({behavior:'smooth',block:'start'})">
+      <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:10px;">
+        <div class="stat-label" style="font-size:10px;">${esc(c.titulo)}</div>
+        <div class="stat-icon" style="background:${c.cor}22;color:${c.cor};"><i class="fa-solid ${c.icon}"></i></div>
+      </div>
+      <div class="stat-value" style="font-size:30px;font-weight:900;font-family:'Space Mono',monospace;line-height:1;color:${lista.length ? c.cor : 'var(--muted)'};">${lista.length}</div>
+      ${pares}
+    </div>`;
+  }).join('') + `
+    <div class="stat-card caixa-stat-card" style="background:${totalProblemas ? 'rgba(220,38,38,.05)' : 'rgba(22,163,74,.05)'};">
+      <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:10px;">
+        <div class="stat-label" style="font-size:10px;">Total de categorias com problema</div>
+        <div class="stat-icon" style="background:${totalProblemas ? 'rgba(220,38,38,.12)' : 'rgba(22,163,74,.12)'};color:${totalProblemas ? 'var(--danger)' : 'var(--success)'};"><i class="fa-solid ${totalProblemas ? 'fa-triangle-exclamation' : 'fa-circle-check'}"></i></div>
+      </div>
+      <div class="stat-value" style="font-size:30px;font-weight:900;font-family:'Space Mono',monospace;line-height:1;">${categorias.filter(c=>inc[c.key].length).length}/${categorias.length}</div>
+    </div>`;
+
+  // Badge na sidebar
+  const badge = document.getElementById('sidebarInconsistenciasBadge');
+  if(badge) {
+    if(totalProblemas > 0) { badge.textContent = totalProblemas > 99 ? '99+' : totalProblemas; badge.style.display = ''; }
+    else badge.style.display = 'none';
+  }
+
+  // Listas detalhadas
+  const box = document.getElementById('inconsistDetalhes');
+  box.innerHTML = categorias.map(c => {
+    const lista = inc[c.key];
+    if(!lista.length) return `<div id="inconsist-${c.key}" class="card p-4" style="opacity:.55;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <i class="fa-solid fa-circle-check" style="color:var(--success);"></i>
+        <span style="font-weight:700;font-size:12.5px;">${esc(c.titulo)}</span>
+        <span style="font-size:11px;color:var(--muted);">— nenhum problema encontrado</span>
+      </div>
+    </div>`;
+    return `<div id="inconsist-${c.key}" class="card p-4">
+      <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;">
+        <div style="width:26px;height:26px;border-radius:7px;background:${c.cor}1f;color:${c.cor};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;"><i class="fa-solid ${c.icon}"></i></div>
+        <div>
+          <div style="font-weight:800;font-size:13px;">${esc(c.titulo)} <span style="font-weight:700;color:${c.cor};">(${lista.length})</span></div>
+          <div style="font-size:11px;color:var(--muted);">${esc(c.desc)}</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">${_renderInconsistLista(c.key, lista)}</div>
+      ${_renderInconsistAcaoMassa(c.key, lista)}
+    </div>`;
+  }).join('');
+}
+
+function _renderInconsistLista(key, lista) {
+  const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const linha = (conteudo) => `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;flex-wrap:wrap;">${conteudo}</div>`;
+
+  if(key === 'fornecedoresDuplicados') {
+    return lista.map(g => linha(`
+      <div style="font-size:11.5px;flex:1;min-width:180px;"><strong>CNPJ:</strong> ${esc(g.cnpj)} — ${g.fornecedores.map(f=>esc(f.marca||f.razaoSocial||('#'+f.id))).join(' · ')}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${g.fornecedores.map(f => `<button onclick="inconsistAbrirFornecedor(${f.id})" class="btn-ghost" style="font-size:10px;padding:4px 8px;">ver ${esc(f.marca||('#'+f.id))}</button>`).join('')}
+        <button onclick="inconsistMostrarMescla(${g.fornecedores[0].id},${g.fornecedores[1].id})" class="btn-primary" style="font-size:10px;padding:4px 8px;background:#0369a1;border-color:#0369a1;"><i class="fa-solid fa-right-left"></i> Transferir e mesclar</button>
+      </div>
+    `)).join('');
+  }
+  if(key === 'marcasDuplicadas') {
+    return lista.map(g => linha(`
+      <div style="font-size:11.5px;flex:1;min-width:180px;"><strong>Possível grupo:</strong> ${g.variantes.map(esc).join(' · ')}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${g.variantes.map(v => `<button onclick="filtrarPorMarcaNfe('${v.replace(/'/g,"\\'")}')" class="btn-ghost" style="font-size:10px;padding:4px 8px;">ver "${esc(v)}"</button>`).join('')}
+      </div>
+    `)).join('') + `<div style="font-size:10.5px;color:var(--muted);padding:2px 4px;"><i class="fa-solid fa-circle-info"></i> Marcas nunca são mescladas automaticamente. Ajuste manualmente editando os itens de uma das grafias.</div>`;
+  }
+  if(key === 'caixasDuplicadas') {
+    return lista.map(g => linha(`
+      <div style="font-size:11.5px;flex:1;min-width:180px;"><strong>Código:</strong> ${esc(g.codigo)} — ${g.caixas.length} caixas</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${g.caixas.map(c => `<button onclick="inconsistAbrirCaixa(${c.id})" class="btn-ghost" style="font-size:10px;padding:4px 8px;">ver ${esc(c.codigo)} (#${c.id})</button>`).join('')}
+      </div>
+    `)).join('');
+  }
+
+  // Categorias baseadas em itens de defeito (com ou sem contexto extra como fornecedor)
+  return lista.slice(0, 200).map(entry => {
+    const d = entry.item || entry;
+    const extra = entry.fornecedor ? ` · Fornecedor vinculado: ${esc(entry.fornecedor.marca||'')} (CNPJ ${esc(entry.fornecedor.cnpj||'—')})` : '';
+    let acoes = `<button onclick="inconsistAbrirItem(${d.id})" class="btn-ghost" style="font-size:10px;padding:4px 8px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir item</button>`;
+    if(key === 'semFornecedor' || key === 'fornecedorIdInvalido') {
+      acoes += `<button onclick="inconsistAbrirItem(${d.id})" class="btn-primary" style="font-size:10px;padding:4px 8px;background:#0369a1;border-color:#0369a1;">Vincular fornecedor</button>`;
+    }
+    if(key === 'cnpjDivergente') {
+      acoes += `<button onclick="inconsistSincronizarCnpj(${d.id},${entry.fornecedor.id})" class="btn-primary" style="font-size:10px;padding:4px 8px;background:#ea580c;border-color:#ea580c;">Sincronizar CNPJ</button>`;
+    }
+    if(key === 'quantidadeInvalida' || key === 'custoInvalido') {
+      acoes += `<button onclick="inconsistAbrirItem(${d.id})" class="btn-primary" style="font-size:10px;padding:4px 8px;background:#ca8a04;border-color:#ca8a04;">Corrigir</button>`;
+    }
+    if(key === 'nfeQuebrada') {
+      acoes += `<button onclick="inconsistRemoverVinculoNfe(${d.id})" class="btn-danger" style="font-size:10px;padding:4px 8px;">Remover vínculo</button>`;
+    }
+    if(key === 'caixaOrfa') {
+      acoes += `<button onclick="inconsistRemoverVinculoCaixa(${d.id})" class="btn-danger" style="font-size:10px;padding:4px 8px;">Remover vínculo</button>`;
+    }
+    return linha(`
+      <div style="font-size:11.5px;flex:1;min-width:220px;"><strong>${esc(d.marca)}</strong> · ${esc(d.referencia)||'—'} · ${esc(d.loja)||'—'} · qtd ${d.quantidade ?? '—'} · ${defeitoStatusLabel(d.status)}${entry.arquivado||d.arquivado?' · ARQUIVADO':''}${extra}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">${acoes}</div>
+    `);
+  }).join('') + (lista.length > 200 ? `<div style="font-size:10.5px;color:var(--muted);padding:4px;">... e mais ${lista.length-200} registro(s).</div>` : '');
+}
+
+function _renderInconsistAcaoMassa(key, lista) {
+  if(!lista.length) return '';
+  if(key === 'nfeQuebrada') {
+    return `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);"><button onclick="inconsistRemoverTodosVinculosNfe()" class="btn-danger" style="font-size:11px;padding:6px 12px;"><i class="fa-solid fa-broom"></i> Remover todos os ${lista.length} vínculos quebrados com NF-e</button></div>`;
+  }
+  if(key === 'caixaOrfa') {
+    return `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);"><button onclick="inconsistRemoverTodosVinculosCaixa()" class="btn-danger" style="font-size:11px;padding:6px 12px;"><i class="fa-solid fa-broom"></i> Remover todos os ${lista.length} vínculos órfãos de caixa</button></div>`;
+  }
+  return '';
+}
+
+// ── Ações da Central de Inconsistências (todas exigem confirmação) ──
+
+function inconsistAbrirItem(id) {
+  navTo('defeitos');
+  setTimeout(() => openEdit(id), 150);
+}
+
+function inconsistAbrirFornecedor(id) {
+  navTo('fornecedores');
+  setTimeout(() => verFornecedor(id), 150);
+}
+
+function inconsistAbrirCaixa(id) {
+  navTo('caixas');
+  setTimeout(() => abrirCaixaDetalhe(id), 150);
+}
+
+function inconsistSincronizarCnpj(defeitoId, fornecedorId) {
+  const d = defeitos.find(x => x.id === defeitoId);
+  const f = fornecedores.find(x => Number(x.id) === Number(fornecedorId));
+  if(!d || !f) return;
+  openConfirm(
+    `Sincronizar o CNPJ deste item com o do fornecedor "${f.marca||''}" (${f.cnpj})?`,
+    'warn',
+    () => {
+      const cnpjAntigo = d.cnpj;
+      d.cnpj = f.cnpj;
+      registrarHistoricoItem(d, 'edicao', 'CNPJ sincronizado com o fornecedor vinculado (Central de Inconsistências).', { 'CNPJ': { de: cnpjAntigo || '(vazio)', para: f.cnpj } });
+      saveData(); renderLight(); renderInconsistencias();
+      showToast('CNPJ sincronizado.', 'success');
+    },
+    'O CNPJ salvo no item passará a ser igual ao do fornecedor vinculado.'
+  );
+}
+
+function inconsistRemoverVinculoNfe(defeitoId) {
+  const d = defeitos.find(x => x.id === defeitoId);
+  if(!d) return;
+  openConfirm('Remover este vínculo quebrado com NF-e?', 'warn', () => {
+    d.nfeId = undefined;
+    registrarHistoricoItem(d, 'nfe', 'Vínculo quebrado com NF-e removido (Central de Inconsistências).');
+    saveData(); renderLight(); renderInconsistencias();
+    showToast('Vínculo removido. O defeito não foi excluído.', 'info');
+  }, 'O registro do defeito não será excluído — apenas o vínculo inválido com a NF-e.');
+}
+
+function inconsistRemoverTodosVinculosNfe() {
+  const inc = calcularInconsistencias();
+  const lista = inc.nfeQuebrada;
+  if(!lista.length) return;
+  openConfirm(`Remover ${lista.length} vínculo(s) quebrado(s) com NF-e?`, 'danger', () => {
+    lista.forEach(d => {
+      d.nfeId = undefined;
+      registrarHistoricoItem(d, 'nfe', 'Vínculo quebrado com NF-e removido (correção em massa — Central de Inconsistências).');
+    });
+    saveData(); renderLight(); renderInconsistencias();
+    showToast(`${lista.length} vínculo(s) removido(s).`, 'success');
+  }, 'Nenhum defeito é excluído — apenas os vínculos inválidos com NF-es inexistentes.');
+}
+
+function inconsistRemoverVinculoCaixa(defeitoId) {
+  const d = defeitos.find(x => x.id === defeitoId);
+  if(!d) return;
+  openConfirm('Remover este vínculo órfão de caixa?', 'warn', () => {
+    d.caixaId = '';
+    registrarHistoricoItem(d, 'caixa', 'Vínculo órfão de caixa removido (Central de Inconsistências).');
+    saveData(); renderLight(); renderInconsistencias();
+    showToast('Vínculo removido. O defeito não foi excluído.', 'info');
+  }, 'O registro do defeito não será excluído — apenas o vínculo com a caixa inexistente.');
+}
+
+function inconsistRemoverTodosVinculosCaixa() {
+  const inc = calcularInconsistencias();
+  const lista = inc.caixaOrfa;
+  if(!lista.length) return;
+  openConfirm(`Remover ${lista.length} vínculo(s) órfão(s) de caixa?`, 'danger', () => {
+    lista.forEach(d => {
+      d.caixaId = '';
+      registrarHistoricoItem(d, 'caixa', 'Vínculo órfão de caixa removido (correção em massa — Central de Inconsistências).');
+    });
+    saveData(); renderLight(); renderInconsistencias();
+    showToast(`${lista.length} vínculo(s) removido(s).`, 'success');
+  }, 'Nenhum defeito é excluído — apenas os vínculos inválidos com caixas inexistentes.');
+}
+
+// Mesclagem de fornecedores duplicados: reaproveita a mesma transferência segura de
+// vínculos usada na exclusão de fornecedor com histórico (seção 6). Nunca mescla
+// automaticamente — sempre exige confirmação explícita do usuário.
+function inconsistMostrarMescla(idA, idB) {
+  const fA = fornecedores.find(x => Number(x.id) === Number(idA));
+  const fB = fornecedores.find(x => Number(x.id) === Number(idB));
+  if(!fA || !fB) return;
+  openConfirm(
+    `Transferir todos os vínculos de "${fA.marca||fA.razaoSocial||''}" para "${fB.marca||fB.razaoSocial||''}" e excluir o registro duplicado?`,
+    'warn',
+    () => {
+      transferirVinculosFornecedor(idA, idB);
+      excluirFornecedor(idA);
+      renderInconsistencias();
+      showToast('Fornecedores mesclados com sucesso.', 'success');
+    },
+    'Todos os defeitos e NF-es vinculados ao primeiro fornecedor passam a apontar para o segundo. Esta ação não pode ser desfeita.'
+  );
+}
 </script>
 </body>
 </html>
