@@ -1736,6 +1736,18 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
               <div style="width:30px;height:30px;border-radius: 0;background:rgba(124,58,237,.10);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-calendar-days" style="color:#7c3aed;font-size:13px;"></i></div>
               <div style="text-align:left;"><div>Exportar por Período</div><div style="font-size:10.5px;font-weight:500;color:var(--muted);">Escolher intervalo de datas</div></div>
             </button>
+            <!-- ── Seção Caixas ── -->
+            <div style="height:1px;background:var(--border);margin:4px 12px 0;"></div>
+            <div style="padding:6px 14px 4px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);opacity:.7;">Caixas</div>
+            <button onclick="abrirExportCaixas('excel')" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 14px;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--text);transition:.15s;" onmouseover="this.style.background='rgba(22,163,74,.07)'" onmouseout="this.style.background='none'">
+              <div style="width:28px;height:28px;border-radius: 0;background:rgba(22,163,74,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-file-excel" style="color:#16a34a;font-size:12px;"></i></div>
+              <div style="text-align:left;"><div>Excel por Caixa</div><div style="font-size:10px;font-weight:500;color:var(--muted);">Uma aba por caixa</div></div>
+            </button>
+            <button onclick="abrirExportCaixas('pdf')" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 14px 11px;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--text);transition:.15s;" onmouseover="this.style.background='rgba(180,83,9,.07)'" onmouseout="this.style.background='none'">
+              <div style="width:28px;height:28px;border-radius: 0;background:rgba(180,83,9,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-file-pdf" style="color:#b45309;font-size:12px;"></i></div>
+              <div style="text-align:left;"><div>Relatório PDF por Caixa</div><div style="font-size:10px;font-weight:500;color:var(--muted);">Uma seção por caixa</div></div>
+            </button>
+
             <!-- ── Seção NF-es de Devolução ── -->
             <div style="height:1px;background:var(--border);margin:4px 12px 0;"></div>
             <div style="padding:6px 14px 4px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);opacity:.7;">NF-es de Devolução</div>
@@ -2345,6 +2357,7 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
                     </div>
                   </th>
                   <th><div class="th-inner"><span class="th-label">Nota Origem</span></div></th>
+                  <th><div class="th-inner"><span class="th-label">Caixa</span></div></th>
                   <th><div class="th-inner"><span class="th-label">NF-e / Data</span></div></th>
                   <th>
                     <div class="th-inner" onclick="toggleFilterPop(event,'pop-status')" title="Filtrar por status">
@@ -3149,13 +3162,39 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
         </div>
 
         <div class="card p-5">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
             <div class="section-title" style="font-size:15px;">Itens desta caixa</div>
             <div style="position:relative;display:flex;align-items:center;">
               <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:10px;font-size:11px;color:#b45309;pointer-events:none;opacity:.7;"></i>
               <input id="caixaItemSearchInput" type="text" placeholder="Buscar por marca, referência, código, loja, numeração, defeito..." oninput="renderCaixaDetalheItens()" style="padding:7px 10px 7px 30px;border:1px solid rgba(180,83,9,.30);border-radius: 0;background:rgba(180,83,9,.05);color:var(--text);font-size:12px;width:320px;max-width:100%;">
             </div>
           </div>
+
+          <!-- Filtros INTERNOS da caixa. São independentes dos filtros globais da
+               Lista de Defeitos (IDs próprios, estado próprio) para que uma aba
+               nunca interfira na outra. As opções saem apenas dos itens desta caixa. -->
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-bottom:12px;padding:10px 12px;background:rgba(180,83,9,.04);border:1px solid rgba(180,83,9,.18);">
+            <div style="flex:1;min-width:130px;">
+              <div style="font-size:9.5px;font-weight:800;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Loja</div>
+              <select id="caixaFiltroLoja" onchange="renderCaixaDetalheItens()" class="input" style="padding:6px 9px;font-size:12px;width:100%;"><option value="">Todas</option></select>
+            </div>
+            <div style="flex:1;min-width:130px;">
+              <div style="font-size:9.5px;font-weight:800;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Marca</div>
+              <select id="caixaFiltroMarca" onchange="renderCaixaDetalheItens()" class="input" style="padding:6px 9px;font-size:12px;width:100%;"><option value="">Todas</option></select>
+            </div>
+            <div style="flex:1;min-width:130px;">
+              <div style="font-size:9.5px;font-weight:800;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Código de barras</div>
+              <input id="caixaFiltroCodigo" type="text" placeholder="parcial..." oninput="renderCaixaDetalheItens()" class="input" style="padding:6px 9px;font-size:12px;width:100%;">
+            </div>
+            <div style="flex:1;min-width:130px;">
+              <div style="font-size:9.5px;font-weight:800;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Referência</div>
+              <input id="caixaFiltroReferencia" type="text" placeholder="parcial..." oninput="renderCaixaDetalheItens()" class="input" style="padding:6px 9px;font-size:12px;width:100%;" list="caixaFiltroRefLista">
+              <datalist id="caixaFiltroRefLista"></datalist>
+            </div>
+            <button onclick="limparFiltrosCaixa()" class="btn-ghost" style="padding:6px 12px;font-size:11.5px;white-space:nowrap;"><i class="fa-solid fa-filter-circle-xmark"></i> Limpar filtros</button>
+          </div>
+
+          <div id="caixaResultadoResumo" style="font-size:11.5px;color:var(--muted);margin-bottom:10px;"></div>
           <div style="overflow-x:auto;">
             <table style="min-width:900px;">
               <thead><tr>
@@ -4047,6 +4086,85 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
 </div>
 
 <!-- ══════════════════════════════════════════════════════
+     MODAL "EXPORTAR POR CAIXA" (Excel e PDF)
+     Estado próprio (_exportCaixasSel / _exportCaixasModo), independente das
+     exportações por marca e do PDF por Seleção — selecionar caixas aqui nunca
+     altera aquelas seleções.
+═══════════════════════════════════════════════════════ -->
+<div id="exportCaixasModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)fecharExportCaixas()">
+  <div class="modal-box" style="max-width:640px;width:100%;max-height:90vh;display:flex;flex-direction:column;">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px;">
+      <i id="exportCaixasIcone" class="fa-solid fa-file-excel" style="color:#16a34a;"></i>
+      <h3 id="exportCaixasTitulo" style="margin:0;font-size:16px;font-weight:800;">Exportar por Caixa</h3>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin:0 0 12px;line-height:1.6;">
+      Selecione uma ou mais caixas. Os itens são consultados ao vivo por <code>caixaId</code> — caixas fechadas também podem ser exportadas.
+    </p>
+
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+      <div style="position:relative;flex:1;min-width:180px;">
+        <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--muted);pointer-events:none;"></i>
+        <input id="exportCaixasBusca" type="text" placeholder="Buscar por código ou nome..." oninput="renderExportCaixasLista()" class="input" style="padding:7px 10px 7px 30px;font-size:12.5px;width:100%;">
+      </div>
+      <button onclick="exportCaixasMarcarTodas(true)" class="btn-ghost" style="padding:6px 11px;font-size:11.5px;">Marcar todas</button>
+      <button onclick="exportCaixasMarcarTodas(false)" class="btn-ghost" style="padding:6px 11px;font-size:11.5px;">Desmarcar</button>
+    </div>
+
+    <div id="exportCaixasLista" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px;padding-right:4px;min-height:120px;"></div>
+
+    <div id="exportCaixasResumo" style="font-size:11.5px;color:var(--muted);margin-top:10px;"></div>
+
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button onclick="confirmarExportCaixas()" class="btn-primary flex-1 justify-center" style="padding:10px;">
+        <i class="fa-solid fa-download"></i> <span id="exportCaixasBtnTexto">Exportar</span>
+      </button>
+      <button onclick="fecharExportCaixas()" class="btn-ghost" style="padding:10px 16px;">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL "FORNECEDOR POR MARCA" (Lotes das Lojas e Leitor de Arquivo/IA)
+     Modal ÚNICO reutilizado pela aprovação em massa de lotes e pelo cadastro
+     via Leitor de Arquivo/IA — assim os dois fluxos seguem exatamente as mesmas
+     regras. Exige fornecedor cadastrado válido para cada marca antes de permitir
+     o cadastro e mostra o resumo de possíveis duplicados. Nenhum item entra na
+     base sem fornecedorId + cnpj sincronizados.
+═══════════════════════════════════════════════════════ -->
+<div id="fornPorMarcaModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)fecharFornPorMarca()">
+  <div class="modal-box" style="max-width:600px;width:100%;max-height:90vh;display:flex;flex-direction:column;">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px;">
+      <i id="fornPorMarcaIcone" class="fa-solid fa-clipboard-check" style="color:#b45309;"></i>
+      <h3 id="fornPorMarcaTitulo" style="margin:0;font-size:16px;font-weight:800;">Aprovar todos os itens do lote</h3>
+    </div>
+    <p id="fornPorMarcaSubtitulo" style="font-size:12px;color:var(--muted);margin:0 0 14px;line-height:1.6;">
+      Informe um fornecedor cadastrado para cada marca. Nenhum item entra na base sem fornecedor vinculado.
+    </p>
+
+    <div style="overflow-y:auto;flex:1;padding-right:4px;">
+      <label class="section-label" style="margin-bottom:6px;">Fornecedor por marca</label>
+      <div id="fornPorMarcaLista" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+      <div id="fornPorMarcaDupBox" style="display:none;margin-top:14px;">
+        <label class="section-label" style="margin-bottom:6px;">Possíveis duplicados encontrados</label>
+        <div id="fornPorMarcaDupLista" style="display:flex;flex-direction:column;gap:7px;"></div>
+      </div>
+    </div>
+
+    <div id="fornPorMarcaAviso" style="margin-top:12px;font-size:11.5px;color:#b45309;display:none;">
+      <i class="fa-solid fa-triangle-exclamation"></i> <span id="fornPorMarcaAvisoTexto"></span>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button id="fornPorMarcaConfirmBtn" onclick="fpmConfirmar()" class="btn-primary flex-1 justify-center" style="padding:10px;">
+        <i class="fa-solid fa-check"></i> <span id="fornPorMarcaConfirmTexto">Aprovar itens</span>
+      </button>
+      <button onclick="fecharFornPorMarca()" class="btn-ghost" style="padding:10px 16px;">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
      MODAL "CNPJs VINCULADOS" (aba Marcas — apenas apresentação)
      Usado quando uma marca tem mais de um CNPJ, para não sobrecarregar a linha/card
      da tabela. Não altera nenhuma lógica de cadastro/edição/vínculo de CNPJs.
@@ -4369,7 +4487,11 @@ window.onload = async () => {
   render();
 };
 
-function today() { return new Date().toISOString().slice(0,10); }
+// NOTA: today() é declarada uma única vez (mais abaixo, na seção de período),
+// usando componentes de data LOCAL. A versão antiga baseada em toISOString()
+// ficava aqui e era sobrescrita por hoisting — foi removida para evitar que
+// uma edição futura reative silenciosamente a gravação de datas em UTC,
+// o que deslocaria em um dia os lançamentos feitos à noite.
 
 function populateLojaSelects() {
   ["loja","editLoja"].forEach(id => {
@@ -5219,7 +5341,26 @@ function removerItemAI(idx) {
 
 function confirmarUmAI(idx) {
   if(!window._aiItens?.[idx]) return;
-  cadastrarAIItem(window._aiItens[idx]);
+  // Cadastro individual segue exatamente as mesmas regras do cadastro em massa.
+  const alvo = window._aiItens[idx];
+  abrirFornPorMarca({
+    titulo: "Cadastrar item do Leitor de Arquivo",
+    subtitulo: "Informe o fornecedor cadastrado desta marca. O item não entra na base sem fornecedor vinculado.",
+    icone: "fa-file-arrow-up",
+    textoBotao: "Cadastrar",
+    itens: [alvo],
+    candidato: (it) => _aiItemParaDefeito(it),
+    onConfirm: (grupos, duplicados) => {
+      const forn = fornecedores.find(f => Number(f.id) === Number(grupos[0].fornecedorId));
+      cadastrarAIItem(alvo, forn, duplicados.some(d => d.item === alvo));
+      fecharFornPorMarca();
+      _finalizarConfirmarUmAI(window._aiItens.indexOf(alvo));
+    }
+  });
+}
+
+function _finalizarConfirmarUmAI(idx) {
+  if(idx < 0) return;
   window._aiItens.splice(idx, 1);
   window._aiItens.forEach((item, i) => item._idx = i);
   const restante = window._aiItens.length;
@@ -5252,18 +5393,40 @@ function resetDropZone() {
 
 function confirmarTodosAI() {
   if(!window._aiItens?.length) return;
-  window._aiItens.forEach(item => cadastrarAIItem(item));
-  const total = window._aiItens.length;
-  window._aiItens = [];
-  document.getElementById("aiResult").style.display = "none";
-  document.getElementById("aiStatus").innerHTML = `<div style="display:flex;align-items:center;gap:7px;color:var(--success);font-size:13px;font-weight:600;padding:8px 0;"><i class="fa-solid fa-circle-check"></i> ${total} itens cadastrados com sucesso!</div>`;
-  resetDropZone();
-  showToast(`${total} itens cadastrados com sucesso!`);
+  // Mesmas regras da aprovação de lote: fornecedor cadastrado obrigatório por
+  // marca, verificação de duplicidade e registro no histórico. O fluxo de
+  // revisão dos dados extraídos continua igual — isto é apenas a etapa final.
+  abrirFornPorMarca({
+    titulo: "Cadastrar itens do Leitor de Arquivo",
+    subtitulo: "Informe um fornecedor cadastrado para cada marca extraída. Nenhum item entra na base sem fornecedor vinculado.",
+    icone: "fa-file-arrow-up",
+    textoBotao: "Cadastrar",
+    itens: window._aiItens,
+    candidato: (it) => _aiItemParaDefeito(it),
+    onConfirm: (grupos, duplicados) => {
+      let total = 0;
+      grupos.forEach(g => {
+        const forn = fornecedores.find(f => Number(f.id) === Number(g.fornecedorId));
+        g.itens.forEach(item => {
+          cadastrarAIItem(item, forn, duplicados.some(d => d.item === item));
+          total++;
+        });
+      });
+      window._aiItens = [];
+      fecharFornPorMarca();
+      document.getElementById("aiResult").style.display = "none";
+      document.getElementById("aiStatus").innerHTML = `<div style="display:flex;align-items:center;gap:7px;color:var(--success);font-size:13px;font-weight:600;padding:8px 0;"><i class="fa-solid fa-circle-check"></i> ${total} itens cadastrados com sucesso!</div>`;
+      resetDropZone();
+      showToast(`${total} itens cadastrados com sucesso!`);
+    }
+  });
 }
 
-function cadastrarAIItem(item) {
+// Monta o objeto de defeito a partir de um item extraído pela IA, SEM gravar.
+// Usado tanto para a verificação de duplicidade quanto para o cadastro efetivo.
+function _aiItemParaDefeito(item) {
   const hoje = today();
-  defeitos.unshift({
+  return {
     id: Date.now() + Math.random(),
     loja: item.loja || document.getElementById("loja").value || "Loja 1",
     marca: (item.marca || "").trim().toUpperCase(),
@@ -5280,7 +5443,24 @@ function cadastrarAIItem(item) {
     cnpj: item.cnpj || "",
     xml: item.xml || "",
     status: "pendente"
-  });
+  };
+}
+
+// Cadastra um item extraído pela IA já com o fornecedor vinculado (id + cnpj
+// sincronizados) e o histórico de criação registrando a origem "Leitor de Arquivo".
+function cadastrarAIItem(item, forn, duplicadoConfirmado) {
+  const novo = _aiItemParaDefeito(item);
+  if(forn) aplicarFornecedorEmDefeito(novo, forn);
+  registrarHistoricoItem(novo, 'criacao', 'Item cadastrado (origem: Leitor de Arquivo).');
+  if(forn) {
+    registrarHistoricoItem(novo, 'fornecedor_vinculado',
+      `Fornecedor "${fornecedorTextoIdentificacao(forn)}"${forn.cnpj ? ` (CNPJ ${forn.cnpj})` : ''} vinculado no cadastro pelo Leitor de Arquivo.`);
+  }
+  if(duplicadoConfirmado) {
+    registrarHistoricoItem(novo, 'duplicado_confirmado',
+      'Aviso de possível duplicado confirmado pelo usuário no Leitor de Arquivo.');
+  }
+  defeitos.unshift(novo);
   saveData(); render();
 }
 
@@ -6164,6 +6344,20 @@ function defeitoStatusLabel(status) {
   }
 }
 
+// ── Classe CSS do status nos relatórios PDF. Cada status tem estilo próprio;
+// status desconhecido/legado recebe apresentação neutra em vez de ser
+// exibido como "Pendente", o que distorcia os relatórios. ──
+function defeitoStatusClassePdf(status) {
+  switch(String(status || "").toLowerCase()) {
+    case "resolvido":    return "td-status-res";
+    case "pendente":     return "td-status-pen";
+    case "analise":      return "td-status-ana";
+    case "sem_solucao":  return "td-status-sem";
+    case "":             return "td-status-pen";
+    default:             return "td-status-out";
+  }
+}
+
 function sumQtdItens(lista) {
   return (lista || []).reduce((total, item) => total + getQtdItem(item), 0);
 }
@@ -6775,6 +6969,7 @@ function renderTable() {
           <td style="font-family:'Space Mono',monospace;font-size:11px;font-weight:700;">${i.custoUnitario ? "R$ " + (Number(i.custoUnitario) * getQtdItem(i)).toFixed(2).replace(".",",") : "-"}</td>
           <td style="color:var(--muted);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${(i.defeito||'').replace(/"/g,'&quot;')}">${i.defeito}${i.obs ? ` <i class="fa-solid fa-note-sticky" title="${i.obs.replace(/"/g,'&quot;')}" style="color:var(--accent);font-size:10px;margin-left:4px;cursor:help;"></i>` : ''}</td>
           <td style="font-size:11px;color:var(--muted);max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${(i.notaOrigem||'').replace(/"/g,'&quot;')}">${i.notaOrigem || "-"}</td>
+          <td style="font-size:11px;max-width:150px;">${caixaBadgeDoItem(i)}</td>
           <td style="font-size:11px;">${nfeObj
             ? `<div onclick="openNfeDetail('${nfeObj.id}')" title="NF-e de devolução ${nfeObj.numeroNfe}" style="display:inline-flex;align-items:center;gap:3px;background:rgba(37,99,235,.10);border:1px solid rgba(37,99,235,.2);border-radius: 0;padding:2px 7px;font-size:9px;font-weight:800;letter-spacing:.5px;color:#2563eb;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='rgba(37,99,235,.2)'" onmouseout="this.style.background='rgba(37,99,235,.10)'"><i class="fa-solid fa-file-invoice" style="font-size:8px;"></i> ${nfeObj.numeroNfe}</div>`
             : `<div style="display:inline-flex;flex-direction:column;align-items:flex-start;gap:3px;"><span style="color:var(--muted);">${i.dataEmissaoNfe ? formatDate(i.dataEmissaoNfe) : "—"}</span>${vencido ? `<span class="badge-vencido" style="margin-left:0;" title="${diasVencido} dia${diasVencido!==1?'s':''} vencido${diasVencido!==1?'s':''}"><i class="fa-solid fa-hourglass-end" style="font-size:8px;"></i> ${diasVencido}d vencido</span>` : ''}${isSemSol && i.destino ? `<span class="badge-sem-solucao" style="margin-left:0;"><i class="fa-solid fa-${i.destino==='doacao'?'hand-holding-heart':'tag'}" style="font-size:8px;"></i> ${i.destino==='doacao'?'Doação':'Saldão'}</span>` : ''}</div>`
@@ -6787,15 +6982,15 @@ function renderTable() {
     tableBody.innerHTML = rows.join("");
 
     // Rodapé com totais dos itens filtrados
-    const totalQtd   = filtrados.reduce((s,i) => s + i.quantidade, 0);
+    const totalQtd   = filtrados.reduce((s,i) => s + getQtdItem(i), 0);
     const totalCusto = filtrados.reduce((s,i) => s + (i.custoUnitario ? Number(i.custoUnitario) * getQtdItem(i) : 0), 0);
     tableFooter.innerHTML = `
       <tr>
-        <td colspan="7" style="font-size:11px;color:var(--muted);">${filtrados.length} registro(s) filtrado(s)</td>
-        <td style="font-weight:800;color:var(--accent2);">${totalQtd}</td>
+        <td colspan="8" style="font-size:11px;color:var(--muted);">${filtrados.length} registro(s) filtrado(s)</td>
+        <td style="font-weight:800;color:var(--accent2);" title="Total de pares (soma das quantidades)">${totalQtd}</td>
         <td></td>
         <td style="font-family:'Space Mono',monospace;font-size:12px;color:var(--accent2);">R$ ${totalCusto.toFixed(2).replace(".",",")}</td>
-        <td colspan="3"></td>
+        <td colspan="5"></td>
       </tr>`;
   }
 
@@ -6841,6 +7036,7 @@ function renderTable() {
           <div style="font-size:12px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px;margin-top:4px;">
             <i class="fa-solid fa-screwdriver-wrench" style="margin-right:5px;color:var(--accent);"></i>${i.defeito || "-"}
           </div>
+          ${(() => { const cb = caixaBadgeDoItem(i, { compacto: true }); return cb ? `<div style="margin-top:7px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;"><span style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);">Caixa</span>${cb}</div>` : ''; })()}
           ${i.obs ? `<div style="font-size:11px;color:var(--muted);margin-top:6px;padding:6px 10px;background:var(--surface2);border-radius: 0;border-left:2px solid var(--accent);"><i class="fa-solid fa-note-sticky" style="color:var(--accent);margin-right:5px;font-size:10px;"></i>${i.obs}</div>` : ''}
         </div>`;
     }).join("");
@@ -7419,20 +7615,248 @@ function _finalizarAprovarItemLote(novo, it, itemId, alertaConfirmado) {
   showToast("Item aprovado e adicionado aos defeitos!", "success");
 }
 
-async function aprovarLoteTodo(loteId) {
+// ══════════════════════════════════════════════════════════════════
+//  COMPONENTE "FORNECEDOR POR MARCA"
+//  Modal único reutilizado pela aprovação em massa de Lotes das Lojas e pelo
+//  cadastro via Leitor de Arquivo/IA. Garante que ambos os fluxos apliquem as
+//  MESMAS regras: fornecedor cadastrado obrigatório por marca, fornecedorId e
+//  cnpj sincronizados, verificação de duplicidade e registro no histórico.
+//  Cancelar nunca grava nada — o lote/extração permanece intacto.
+// ══════════════════════════════════════════════════════════════════
+let _fpmState = null;
+
+// config: { titulo, subtitulo, icone, textoBotao, itens:[...],
+//           candidato(item) -> objeto no formato de defeito p/ detectar duplicado,
+//           onConfirm(grupos, duplicados) }
+function abrirFornPorMarca(config) {
+  const grupos = [];
+  const idxPorChave = {};
+  (config.itens || []).forEach(item => {
+    const marca = (item.marca || "").trim().toUpperCase();
+    const chave = marca || "__SEM_MARCA__";
+    if(idxPorChave[chave] === undefined) {
+      idxPorChave[chave] = grupos.length;
+      grupos.push({ marca, chave, itens: [], fornecedorId: "" });
+    }
+    grupos[idxPorChave[chave]].itens.push(item);
+  });
+  if(!grupos.length) { showToast("Nenhum item para processar.", "info"); return; }
+
+  // Pré-seleciona quando a marca tem exatamente UM fornecedor ativo cadastrado.
+  // Em caso ambíguo (0 ou 2+) nunca adivinha — o usuário escolhe.
+  grupos.forEach(g => {
+    if(!g.marca) return;
+    const cand = fornecedores.filter(f => f.ativo !== false && (f.marca||"").trim().toUpperCase() === g.marca);
+    if(cand.length === 1) g.fornecedorId = cand[0].id;
+  });
+
+  _fpmState = { config, grupos };
+  document.getElementById("fornPorMarcaTitulo").textContent = config.titulo || "Fornecedor por marca";
+  document.getElementById("fornPorMarcaSubtitulo").textContent = config.subtitulo ||
+    "Informe um fornecedor cadastrado para cada marca. Nenhum item entra na base sem fornecedor vinculado.";
+  const ic = document.getElementById("fornPorMarcaIcone");
+  if(ic) ic.className = "fa-solid " + (config.icone || "fa-clipboard-check");
+  renderFornPorMarca();
+  document.getElementById("fornPorMarcaModal").style.display = "flex";
+}
+
+function fecharFornPorMarca() {
+  _fpmState = null;
+  document.getElementById("fornPorMarcaModal").style.display = "none";
+}
+
+function renderFornPorMarca() {
+  const st = _fpmState;
+  if(!st) return;
+  const esc = (t) => String(t == null ? "" : t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+  document.getElementById("fornPorMarcaLista").innerHTML = st.grupos.map((g, i) => {
+    const f = g.fornecedorId ? fornecedores.find(x => Number(x.id) === Number(g.fornecedorId)) : null;
+    const n = g.itens.length;
+    return `<div style="border:1px solid var(--border);background:var(--surface2);padding:10px 12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;">
+        <div style="font-weight:800;font-size:12.5px;">${g.marca ? esc(g.marca) : '<span style="color:#b45309;">(sem marca informada)</span>'}</div>
+        <span style="font-size:10px;color:var(--muted);font-weight:700;">${n} item${n!==1?'s':''}</span>
+      </div>
+      ${f ? `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(22,163,74,.07);border:1px solid rgba(22,163,74,.22);padding:6px 9px;">
+          <div style="font-size:11.5px;line-height:1.45;">
+            <div style="font-weight:700;color:#16a34a;"><i class="fa-solid fa-circle-check" style="font-size:10px;"></i> ${esc(fornecedorTextoIdentificacao(f))}</div>
+            ${f.cnpj ? `<div style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;">${esc(f.cnpj)}</div>` : '<div style="font-size:10px;color:#b45309;">sem CNPJ cadastrado</div>'}
+          </div>
+          <button onclick="fpmLimpar(${i})" class="btn-ghost" style="padding:4px 9px;font-size:10.5px;">Trocar</button>
+        </div>
+      ` : `
+        <div style="position:relative;">
+          <input id="fpmInput_${i}" type="text" class="input w-full" style="padding:8px 11px;font-size:12.5px;"
+                 placeholder="Buscar por marca, razão social ou CNPJ..."
+                 oninput="fpmBuscar(${i}, this.value)" autocomplete="off">
+          <div id="fpmSugg_${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--accent-border);border-radius: 0;z-index:300;max-height:180px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:3px;"></div>
+        </div>
+        <button onclick="fpmCadastrarNovo(${i})" style="margin-top:6px;font-size:10.5px;color:#0369a1;background:none;border:none;cursor:pointer;padding:0;font-weight:700;">
+          <i class="fa-solid fa-plus" style="font-size:9px;"></i> Cadastrar novo fornecedor
+        </button>
+      `}
+    </div>`;
+  }).join("");
+
+  // Verificação de duplicidade em TODOS os itens.
+  const dups = [];
+  st.grupos.forEach(g => g.itens.forEach(item => {
+    let candidato;
+    try { candidato = st.config.candidato ? st.config.candidato(item) : item; } catch(e) { candidato = item; }
+    const m = detectarPossivelDuplicado(candidato, null);
+    if(m.length) dups.push({ item, matches: m });
+  }));
+  st.duplicados = dups;
+
+  const dupBox = document.getElementById("fornPorMarcaDupBox");
+  const dupLista = document.getElementById("fornPorMarcaDupLista");
+  if(dups.length) {
+    dupBox.style.display = "";
+    dupLista.innerHTML = dups.map(({ item, matches }) => `
+      <div style="border:1px solid rgba(180,83,9,.25);background:rgba(180,83,9,.06);padding:8px 10px;font-size:11.5px;line-height:1.5;">
+        <div style="font-weight:700;">${esc(item.marca||'(sem marca)')} · ${esc(item.referencia||'—')} ${(item.numeracao || item.tamanho) ? 'nº ' + esc(item.numeracao || item.tamanho) : ''}</div>
+        <div style="color:var(--muted);font-size:10.5px;margin-top:2px;">
+          ${matches.length} registro(s) parecido(s) já na base — ex.: ${esc(matches[0].item.marca)} ${esc(matches[0].item.referencia)}${matches[0].arquivado ? ' (arquivado)' : ''}
+        </div>
+      </div>`).join("");
+  } else {
+    dupBox.style.display = "none";
+    dupLista.innerHTML = "";
+  }
+
+  const faltando = st.grupos.filter(g => !g.fornecedorId).length;
+  const total = st.grupos.reduce((s2,g) => s2 + g.itens.length, 0);
+  const btn = document.getElementById("fornPorMarcaConfirmBtn");
+  const aviso = document.getElementById("fornPorMarcaAviso");
+  document.getElementById("fornPorMarcaConfirmTexto").textContent =
+    faltando ? "Selecione o fornecedor de cada marca" : `${st.config.textoBotao || "Cadastrar"} ${total} item${total!==1?'s':''}`;
+  btn.disabled = faltando > 0;
+  btn.style.opacity = faltando ? ".5" : "";
+  btn.style.cursor = faltando ? "not-allowed" : "";
+  if(faltando) {
+    aviso.style.display = "";
+    document.getElementById("fornPorMarcaAvisoTexto").textContent =
+      `${faltando} marca(s) ainda sem fornecedor. Nenhum item será cadastrado até que todas tenham um fornecedor.`;
+  } else if(dups.length) {
+    aviso.style.display = "";
+    document.getElementById("fornPorMarcaAvisoTexto").textContent =
+      `${dups.length} item(ns) parecem já existir na base. Confira o resumo acima antes de confirmar.`;
+  } else {
+    aviso.style.display = "none";
+  }
+}
+
+function fpmBuscar(idx, valor) {
+  const box = document.getElementById("fpmSugg_" + idx);
+  if(!box) return;
+  const matches = buscarFornecedoresUnificado(valor);   // já exclui inativos
+  if(!matches.length) { box.style.display = "none"; box.innerHTML = ""; return; }
+  const esc = (t) => String(t == null ? "" : t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  box.style.display = "block";
+  box.innerHTML = matches.map(f => `
+    <div class="autocomplete-item" onmousedown="fpmSelecionar(${idx}, ${f.id})">
+      <div style="font-weight:700;font-size:12.5px;">${esc(f.marca || fornecedorTextoIdentificacao(f))}</div>
+      <div style="font-size:10.5px;color:var(--muted);">${esc(f.razaoSocial||'')}${f.cnpj ? ' · ' + esc(f.cnpj) : ''}</div>
+    </div>`).join("");
+}
+
+function fpmSelecionar(idx, fornId) {
+  if(!_fpmState || !_fpmState.grupos[idx]) return;
+  _fpmState.grupos[idx].fornecedorId = fornId;
+  renderFornPorMarca();
+}
+
+function fpmLimpar(idx) {
+  if(!_fpmState || !_fpmState.grupos[idx]) return;
+  _fpmState.grupos[idx].fornecedorId = "";
+  renderFornPorMarca();
+}
+
+// Abre o cadastro de fornecedor já com a marca preenchida; ao salvar, o novo
+// fornecedor volta atribuído àquele grupo (ver salvarFornecedor).
+let _fpmReturnIdx = null;
+function fpmCadastrarNovo(idx) {
+  const st = _fpmState;
+  if(!st || !st.grupos[idx]) return;
+  const termo = (document.getElementById("fpmInput_" + idx)?.value || "").trim();
+  const cnpjDigits = termo.replace(/\D/g, "");
+  const pareceCnpj = cnpjDigits.length === 14;
+  _fpmReturnIdx = idx;
+  document.getElementById("fornPorMarcaModal").style.display = "none";
+  abrirModalFornecedor(null, {
+    marca: pareceCnpj ? (st.grupos[idx].marca || "") : (termo || st.grupos[idx].marca || ""),
+    cnpj:  pareceCnpj ? termo : ""
+  });
+}
+
+function fpmConfirmar() {
+  const st = _fpmState;
+  if(!st) return;
+  if(st.grupos.some(g => !g.fornecedorId)) {
+    showToast("Selecione um fornecedor para cada marca antes de continuar.", "error");
+    return;
+  }
+  const grupos = st.grupos;
+  const duplicados = st.duplicados || [];
+  const onConfirm = st.config.onConfirm;
+  const executar = () => { if(onConfirm) onConfirm(grupos, duplicados); };
+
+  if(duplicados.length) {
+    openConfirm(
+      `${duplicados.length} item(ns) parecem já existir na base. Continuar mesmo assim?`,
+      "warn",
+      executar,
+      "A confirmação fica registrada no histórico de cada item."
+    );
+  } else {
+    executar();
+  }
+}
+
+// ── "Aprovar todos" de um lote: usa o componente acima, com as mesmas regras
+// da revisão individual (fornecedor obrigatório + duplicidade + histórico). ──
+function aprovarLoteTodo(loteId) {
   const lote = _lotesCache.find(l => l.id === loteId);
   if(!lote) return;
   const itens = (lote._itens||[]).filter(it => !it._aprovado);
   if(!itens.length) { showToast("Nenhum item novo para aprovar.", "info"); return; }
-  openConfirm(`Aprovar todos os ${itens.length} itens deste lote?`, "warn", async () => {
-    itens.forEach(it => { defeitos.unshift(_itemLoteParaDefeito(it, lote.loja, lote.numero)); it._aprovado = true; });
-    saveData(); renderLight();
-    try { await window.firebaseLotes.aprovarLote(loteId); } catch(e){ console.error(e); }
-    if(typeof autoSave!=="undefined" && autoSave.markDirty) autoSave.markDirty();
-    fecharLoteRevisao();
-    renderLotesPage();
-    showToast(`${itens.length} itens adicionados à base!`, "success");
-  }, "Os itens entrarão como defeitos pendentes, com as fotos anexadas.");
+
+  abrirFornPorMarca({
+    titulo: "Aprovar todos os itens do lote",
+    subtitulo: "Informe um fornecedor cadastrado para cada marca do lote. Nenhum item entra na base sem fornecedor vinculado.",
+    icone: "fa-clipboard-check",
+    textoBotao: "Aprovar",
+    itens,
+    candidato: (it) => _itemLoteParaDefeito(it, lote.loja, null),
+    onConfirm: async (grupos, duplicados) => {
+      let total = 0;
+      grupos.forEach(g => {
+        const forn = fornecedores.find(f => Number(f.id) === Number(g.fornecedorId));
+        g.itens.forEach(it => {
+          const novo = _itemLoteParaDefeito(it, lote.loja, lote.numero);
+          aplicarFornecedorEmDefeito(novo, forn);
+          registrarHistoricoItem(novo, 'fornecedor_vinculado',
+            `Fornecedor "${fornecedorTextoIdentificacao(forn)}"${forn.cnpj ? ` (CNPJ ${forn.cnpj})` : ''} vinculado na aprovação em massa do lote${lote.numero ? ' ' + lote.numero : ''}.`);
+          if(duplicados.some(d => d.item === it)) {
+            registrarHistoricoItem(novo, 'duplicado_confirmado',
+              'Aviso de possível duplicado confirmado na aprovação em massa do lote.');
+          }
+          defeitos.unshift(novo);
+          it._aprovado = true;
+          total++;
+        });
+      });
+      saveData(); renderLight();
+      try { await window.firebaseLotes.aprovarLote(loteId); } catch(e) { console.error(e); }
+      if(typeof autoSave !== "undefined" && autoSave.markDirty) autoSave.markDirty();
+      fecharFornPorMarca();
+      fecharLoteRevisao();
+      renderLotesPage();
+      showToast(`${total} itens adicionados à base!`, "success");
+    }
+  });
 }
 
 function closeRowMenus() {
@@ -9343,7 +9767,7 @@ function gerarPDF(itensForcados) {
   const tituloRelatorio = isVencidoPdf ? "NF-e Vencidas" : "Relatório de Defeitos";
 
   const totalRegistros = marcasFinais.reduce((s,m)=>s+agrupado[m].length,0);
-  const totalPares     = marcasFinais.reduce((s,m)=>s+agrupado[m].reduce((a,i)=>a+i.quantidade,0),0);
+  const totalPares     = marcasFinais.reduce((s,m)=>s+agrupado[m].reduce((a,i)=>a+getQtdItem(i),0),0);
   const totalValor     = marcasFinais.reduce((s,m)=>s+agrupado[m].reduce((a,i)=>a+(i.custoUnitario?Number(i.custoUnitario)*getQtdItem(i):0),0),0);
 
   const totalResolvidos = marcasFinais.reduce((s,m)=>s+agrupado[m].filter(i=>i.status==="resolvido").length,0);
@@ -9432,6 +9856,12 @@ function gerarPDF(itensForcados) {
     .td-total { font-weight: 700; color: #111827; }
     .td-status-res { font-size: 9px; font-weight: 700; color: #16a34a; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 0; padding: 1px 6px; display: inline-block; }
     .td-status-pen { font-size: 9px; font-weight: 700; color: #b45309; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 0; padding: 1px 6px; display: inline-block; }
+    /* Estilos próprios para os demais status — antes "analise" e "sem_solucao"
+       eram exibidos como Pendente, distorcendo o relatório. */
+    .td-status-ana { font-size: 9px; font-weight: 700; color: #7c3aed; background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 0; padding: 1px 6px; display: inline-block; }
+    .td-status-sem { font-size: 9px; font-weight: 700; color: #0f766e; background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 0; padding: 1px 6px; display: inline-block; }
+    /* Neutro para status desconhecido/legado — nunca vira Pendente. */
+    .td-status-out { font-size: 9px; font-weight: 700; color: #4b5563; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0; padding: 1px 6px; display: inline-block; }
 
     /* ── SUBTOTAL ── */
     .subtotal-row td {
@@ -9495,12 +9925,12 @@ function gerarPDF(itensForcados) {
       return lojas.map(loja => {
         const marcasDaLoja = Object.keys(porLoja[loja]).sort();
         const todosItensLoja = marcasDaLoja.flatMap(m => porLoja[loja][m]);
-        const totalQtdLoja = todosItensLoja.reduce((s,i) => s+i.quantidade, 0);
+        const totalQtdLoja = todosItensLoja.reduce((s,i) => s+getQtdItem(i), 0);
         const totalValLoja = todosItensLoja.reduce((s,i) => s+(i.custoUnitario?Number(i.custoUnitario)*getQtdItem(i):0), 0);
 
         const marcasHtml = marcasDaLoja.map(m => {
           const itens = porLoja[loja][m];
-          const totalQtd = itens.reduce((s,i) => s+i.quantidade, 0);
+          const totalQtd = itens.reduce((s,i) => s+getQtdItem(i), 0);
           const totalVal = itens.reduce((s,i) => s+(i.custoUnitario?Number(i.custoUnitario)*getQtdItem(i):0), 0);
           const prontas  = totalQtd >= 5;
           const temStatus = itens.some(i => i.status === "resolvido");
@@ -9532,10 +9962,10 @@ function gerarPDF(itensForcados) {
                   <td class="td-defeito">${i.defeito || "-"}</td>
                   <td class="td-nota">${i.notaOrigem || "-"}</td>
                   ${isVencidoPdf ? `<td class="td-nota" style="white-space:nowrap;">${i.dataEmissaoNfe ? formatDate(i.dataEmissaoNfe) : "-"}<br><span style="font-size:9px;font-weight:700;color:#7c3aed;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);border-radius: 0;padding:1px 5px;display:inline-block;margin-top:2px;">Vencida</span></td>` : ""}
-                  <td class="td-qtd" style="text-align:center;">${i.quantidade}</td>
+                  <td class="td-qtd" style="text-align:center;">${getQtdItem(i)}</td>
                   <td class="td-custo">${i.custoUnitario ? "R$ "+Number(i.custoUnitario).toFixed(2).replace(".",",") : "-"}</td>
                   <td class="td-total">${i.custoUnitario ? "R$ "+(Number(i.custoUnitario)*getQtdItem(i)).toFixed(2).replace(".",",") : "-"}</td>
-                  ${temStatus ? `<td><span class="${i.status==="resolvido"?"td-status-res":"td-status-pen"}">${i.status==="resolvido"?"Resolvido":"Pendente"}</span></td>` : ""}
+                  ${temStatus ? `<td><span class="${defeitoStatusClassePdf(i.status)}">${defeitoStatusLabel(i.status)}</span></td>` : ""}
                 </tr>`).join("")}
               </tbody>
               <tfoot><tr class="subtotal-row">
@@ -9560,7 +9990,7 @@ function gerarPDF(itensForcados) {
         const primeiroMarcaHtml = (() => {
           const m = primeiroMarca;
           const itens = porLoja[loja][m];
-          const totalQtd = itens.reduce((s,i) => s+i.quantidade, 0);
+          const totalQtd = itens.reduce((s,i) => s+getQtdItem(i), 0);
           const totalVal = itens.reduce((s,i) => s+(i.custoUnitario?Number(i.custoUnitario)*getQtdItem(i):0), 0);
           const prontas  = totalQtd >= 5;
           const temStatus = itens.some(i => i.status === "resolvido");
@@ -9587,10 +10017,10 @@ function gerarPDF(itensForcados) {
                   <td class="td-defeito">${i.defeito || "-"}</td>
                   <td class="td-nota">${i.notaOrigem || "-"}</td>
                   ${isVencidoPdf ? `<td class="td-nota" style="white-space:nowrap;">${i.dataEmissaoNfe ? formatDate(i.dataEmissaoNfe) : "-"}<br><span style="font-size:9px;font-weight:700;color:#7c3aed;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);border-radius: 0;padding:1px 5px;display:inline-block;margin-top:2px;">Vencida</span></td>` : ""}
-                  <td class="td-qtd" style="text-align:center;">${i.quantidade}</td>
+                  <td class="td-qtd" style="text-align:center;">${getQtdItem(i)}</td>
                   <td class="td-custo">${i.custoUnitario ? "R$ "+Number(i.custoUnitario).toFixed(2).replace(".",",") : "-"}</td>
                   <td class="td-total">${i.custoUnitario ? "R$ "+(Number(i.custoUnitario)*getQtdItem(i)).toFixed(2).replace(".",",") : "-"}</td>
-                  ${temStatus ? `<td><span class="${i.status==="resolvido"?"td-status-res":"td-status-pen"}">${i.status==="resolvido"?"Resolvido":"Pendente"}</span></td>` : ""}
+                  ${temStatus ? `<td><span class="${defeitoStatusClassePdf(i.status)}">${defeitoStatusLabel(i.status)}</span></td>` : ""}
                 </tr>`).join("")}
               </tbody>
               <tfoot><tr class="subtotal-row">
@@ -9605,7 +10035,7 @@ function gerarPDF(itensForcados) {
 
         const restanteHtml = restanteMarcas.map(m => {
           const itens = porLoja[loja][m];
-          const totalQtd = itens.reduce((s,i) => s+i.quantidade, 0);
+          const totalQtd = itens.reduce((s,i) => s+getQtdItem(i), 0);
           const totalVal = itens.reduce((s,i) => s+(i.custoUnitario?Number(i.custoUnitario)*getQtdItem(i):0), 0);
           const prontas  = totalQtd >= 5;
           const temStatus = itens.some(i => i.status === "resolvido");
@@ -9632,10 +10062,10 @@ function gerarPDF(itensForcados) {
                   <td class="td-defeito">${i.defeito || "-"}</td>
                   <td class="td-nota">${i.notaOrigem || "-"}</td>
                   ${isVencidoPdf ? `<td class="td-nota" style="white-space:nowrap;">${i.dataEmissaoNfe ? formatDate(i.dataEmissaoNfe) : "-"}<br><span style="font-size:9px;font-weight:700;color:#7c3aed;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);border-radius: 0;padding:1px 5px;display:inline-block;margin-top:2px;">Vencida</span></td>` : ""}
-                  <td class="td-qtd" style="text-align:center;">${i.quantidade}</td>
+                  <td class="td-qtd" style="text-align:center;">${getQtdItem(i)}</td>
                   <td class="td-custo">${i.custoUnitario ? "R$ "+Number(i.custoUnitario).toFixed(2).replace(".",",") : "-"}</td>
                   <td class="td-total">${i.custoUnitario ? "R$ "+(Number(i.custoUnitario)*getQtdItem(i)).toFixed(2).replace(".",",") : "-"}</td>
-                  ${temStatus ? `<td><span class="${i.status==="resolvido"?"td-status-res":"td-status-pen"}">${i.status==="resolvido"?"Resolvido":"Pendente"}</span></td>` : ""}
+                  ${temStatus ? `<td><span class="${defeitoStatusClassePdf(i.status)}">${defeitoStatusLabel(i.status)}</span></td>` : ""}
                 </tr>`).join("")}
               </tbody>
               <tfoot><tr class="subtotal-row">
@@ -9778,57 +10208,45 @@ function exportFiltrados() {
   const ch = document.getElementById("exportChevron");
   if(ch) ch.style.transform = "";
 
-  // Usa exatamente os mesmos filtros da tabela
-  const gs   = (globalSearch.value || "").toLowerCase().trim();
-  const fData = filterData.value;
-  const fLoja = filterLoja.value;
-  const fMarca = filterMarca.value;
-  const fCod  = (filterCodigo.value || "").toLowerCase().trim();
-  const fRef  = filterReferencia.value;
-  const fNum  = filterNumeracao.value;
-  const fStat = filterStatus.value;
-
-  const filtrados = defeitos.filter(i => {
-    if(fStat === "pendente"  && i.status === "resolvido") return false;
-    if(fStat === "resolvido" && i.status !== "resolvido") return false;
-    if(fData  && i.data !== fData) return false;
-    if(fLoja  && i.loja !== fLoja) return false;
-    if(fMarca && i.marca !== fMarca) return false;
-    if(fRef   && i.referencia !== fRef) return false;
-    if(fNum   && String(i.numeracao) !== fNum) return false;
-    if(fCod   && !(i.codigoBarras || "").toLowerCase().includes(fCod)) return false;
-    if(gs) {
-      const haystack = [i.marca, i.referencia, i.defeito, i.loja, i.codigoBarras, i.notaOrigem, i.cor, i.numeracao]
-        .map(v => String(v || "").toLowerCase()).join(" ");
-      if(!haystack.includes(gs)) return false;
-    }
-    return true;
-  });
+  // Reutiliza EXATAMENTE a mesma seleção da Lista de Defeitos (getFilteredAndSorted),
+  // sem limitar à página atual. Assim a exportação respeita automaticamente todos os
+  // filtros da tabela — pesquisa geral, período, loja, marca, código, referência,
+  // numeração, status, vencidos, NF-e vinculada, tipo/status de resolução, datas de
+  // coleta, filtro de fornecedor e ativos/arquivados/todos — sem reimplementar regra.
+  const filtrados = getFilteredAndSorted();
 
   if(!filtrados.length) {
     showToast("Nenhum item para exportar com os filtros atuais.", "error");
     return;
   }
 
-  const ws = XLSX.utils.json_to_sheet(filtrados.map(i => ({
-    Data:             formatDate(i.data),
-    Loja:             i.loja,
-    Marca:            i.marca,
-    Codigo_Barras:    i.codigoBarras,
-    Referencia:       i.referencia,
-    Cor:              i.cor || "",
-    Numeracao:        i.numeracao,
-    Quantidade:       i.quantidade,
-    Custo_Unitario:   i.custoUnitario || "",
-    Total:            i.custoUnitario ? (Number(i.custoUnitario) * getQtdItem(i)).toFixed(2) : "",
-    Defeito:          i.defeito,
-    Nota_Origem:      i.notaOrigem || "",
-    Data_NFe:         i.dataEmissaoNfe ? formatDate(i.dataEmissaoNfe) : "",
-    CNPJ_Fornecedor:  i.cnpj || "",
-    Chave_XML:        i.xml || "",
-    Observacoes:      i.obs || "",
-    Status:           defeitoStatusLabel(i.status)
-  })));
+  const ws = XLSX.utils.json_to_sheet(filtrados.map(i => {
+    const cx = i.caixaId ? getCaixaById(i.caixaId) : null;
+    const nfeVinc = i.nfeId ? nfes.find(n => Number(n.id) === Number(i.nfeId)) : null;
+    return {
+      Data:             formatDate(i.data),
+      Loja:             i.loja,
+      Marca:            i.marca,
+      Codigo_Barras:    i.codigoBarras,
+      Referencia:       i.referencia,
+      Cor:              i.cor || "",
+      Numeracao:        i.numeracao,
+      Quantidade:       getQtdItem(i),
+      Custo_Unitario:   i.custoUnitario === "" || i.custoUnitario == null ? "" : Number(i.custoUnitario),
+      Total:            i.custoUnitario === "" || i.custoUnitario == null ? "" : Number((Number(i.custoUnitario) * getQtdItem(i)).toFixed(2)),
+      Defeito:          i.defeito,
+      Nota_Origem:      i.notaOrigem || "",
+      Data_NFe:         i.dataEmissaoNfe ? formatDate(i.dataEmissaoNfe) : "",
+      Fornecedor:       fornecedorLabelDoDefeito(i),
+      CNPJ_Fornecedor:  i.cnpj || "",
+      NFe_Devolucao:    nfeVinc ? (nfeVinc.numero || "") : "",
+      Caixa:            cx ? (cx.codigo + (cx.nome ? " — " + cx.nome : "")) : "",
+      Chave_XML:        i.xml || "",
+      Observacoes:      i.obs || "",
+      Status:           defeitoStatusLabel(i.status),
+      Arquivado:        i.arquivado ? "Sim" : "Não"
+    };
+  }));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Filtrados");
   XLSX.writeFile(wb, `defeitos_filtrados_${today()}.xlsx`);
@@ -10673,9 +11091,11 @@ function bulkResolver() {
       selectedIds.forEach(id => {
         const item = defeitos.find(i => i.id === id);
         if(item && item.status !== 'resolvido') {
+          const _deR = defeitoStatusLabel(item.status);
           item.status = 'resolvido';
           item.dataResolucao = new Date().toISOString();
-          registrarHistoricoItem(item, 'status', 'Status alterado para Resolvido (ação em lote).');
+          registrarHistoricoItem(item, 'status', 'Status alterado para Resolvido (ação em lote).',
+            [{ campo: 'status', de: _deR, para: 'Resolvido' }]);
         }
       });
       saveData(); renderLight(); clearSelection();
@@ -10687,16 +11107,23 @@ function bulkResolver() {
 
 function bulkAnalise() {
   if(!selectedIds.size) return;
+  let _alterados = 0;
   selectedIds.forEach(id => {
     const item = defeitos.find(i => i.id === id);
-    if(item) {
+    // Só registra quando o status realmente muda — evita evento duplicado no
+    // histórico ao reaplicar o mesmo status em massa.
+    if(item && item.status !== 'analise') {
+      const de = defeitoStatusLabel(item.status);
       item.status = 'analise';
-      registrarHistoricoItem(item, 'status', 'Status alterado para Em análise (ação em lote).');
+      delete item.dataResolucao; // saiu de "resolvido": a data de resolução deixa de valer
+      registrarHistoricoItem(item, 'status', 'Status alterado para Em análise (ação em lote).',
+        [{ campo: 'status', de, para: 'Em Análise' }]);
       _autoRestaurarSeArquivado(item, 'status alterado para Em análise (ação em lote)');
+      _alterados++;
     }
   });
   saveData(); renderLight(); clearSelection();
-  showToast(`${selectedIds.size} item(s) marcados como "Em análise"!`, 'info');
+  showToast(_alterados ? `${_alterados} item(s) marcados como "Em análise"!` : 'Nenhum item precisou ser alterado.', 'info');
 }
 
 function bulkExcluir() {
@@ -10717,8 +11144,12 @@ function bulkExcluir() {
 function marcarAnalise(id) {
   const item = defeitos.find(i => i.id === id);
   if(!item) return;
+  if(item.status === 'analise') { showToast('Item já está "Em análise".', 'info'); return; }
+  const _de = defeitoStatusLabel(item.status);
   item.status = 'analise';
-  registrarHistoricoItem(item, 'status', 'Status alterado para Em análise.');
+  delete item.dataResolucao;
+  registrarHistoricoItem(item, 'status', 'Status alterado para Em análise.',
+    [{ campo: 'status', de: _de, para: 'Em Análise' }]);
   _autoRestaurarSeArquivado(item, 'status alterado para Em análise');
   saveData(); renderLight();
   showToast('Item marcado como "Em análise"!', 'info');
@@ -10746,8 +11177,12 @@ function voltarPendente(id) {
 function marcarSemSolucao(id) {
   const item = defeitos.find(i => i.id === id);
   if(!item) return;
+  if(item.status === 'sem_solucao') { showToast('Item já está em "Sem Solução".', 'info'); return; }
+  const _deSS = defeitoStatusLabel(item.status);
   item.status = 'sem_solucao';
-  registrarHistoricoItem(item, 'status', 'Status alterado para Sem Solução.');
+  delete item.dataResolucao;
+  registrarHistoricoItem(item, 'status', 'Status alterado para Sem Solução.',
+    [{ campo: 'status', de: _deSS, para: 'Sem Solução' }]);
   _autoRestaurarSeArquivado(item, 'status alterado para Sem Solução');
   saveData(); renderLight();
   showToast('Item marcado como "Sem Solução".', 'info');
@@ -11925,6 +12360,12 @@ async function saveNfe() {
   const nfeFornecedorCnpj = document.getElementById('nfeFornecedorCnpj')?.value || '';
   const nfeFornecedorMarca = document.getElementById('nfeFornecedorMarca')?.value || document.getElementById('nfeFornecedor').value.trim();
 
+  // Lista de produtos ANTES da edição — base para o diff de vínculo/desvínculo
+  // registrado no histórico de cada item (item 8). Em NF-e nova, começa vazia.
+  const _produtosAntes = editId
+    ? [...((nfes.find(n => n.id === editId)?.produtosRelacionados) || [])].map(Number)
+    : [];
+
   if(editId) {
     // Edição
     const idx = nfes.findIndex(n => n.id === editId);
@@ -11993,6 +12434,25 @@ async function saveNfe() {
     const d = defeitos.find(d => d.id === Number(pid));
     if(d) d.nfeId = nfeIdFinal;
   });
+
+  // ── Histórico: compara a lista anterior com a nova e registra APENAS o que
+  // mudou. Itens que já estavam vinculados e continuam não geram evento novo. ──
+  {
+    const antes  = new Set(_produtosAntes.map(Number));
+    const agoraS = new Set(produtosRelacionados.map(Number));
+    const rotuloNfe = nfeFinal?.numeroNfe || nfeIdFinal;
+
+    agoraS.forEach(pid => {
+      if(antes.has(pid)) return;                       // já estava vinculado: sem evento
+      const d = defeitos.find(x => Number(x.id) === Number(pid));
+      if(d) registrarHistoricoItem(d, 'nfe', `Vinculado à NF-e de devolução ${rotuloNfe}.`);
+    });
+    antes.forEach(pid => {
+      if(agoraS.has(pid)) return;                      // continua vinculado: sem evento
+      const d = defeitos.find(x => Number(x.id) === Number(pid));
+      if(d) registrarHistoricoItem(d, 'nfe', `Desvinculado da NF-e de devolução ${rotuloNfe}.`);
+    });
+  }
 
   // Se status for devolvido, resolve automaticamente todos os defeitos vinculados.
   // Uma vez resolvido via NF-e concluída, o item permanece resolvido permanentemente.
@@ -13057,6 +13517,7 @@ function renderMarcasTab() {
         resolvidoRegistros: 0, resolvidoPares: 0,
         semSolucaoRegistros: 0, semSolucaoPares: 0,
         vencidoRegistros: 0, vencidoPares: 0,
+        outrosRegistros: 0, outrosPares: 0,
       };
     }
     const qtd = Number(d.quantidade) || 0;
@@ -13071,17 +13532,22 @@ function renderMarcasTab() {
     else if(st === 'analise')    { mm.analiseRegistros++;     mm.analisePares     += qtd; }
     else if(st === 'resolvido')  { mm.resolvidoRegistros++;   mm.resolvidoPares   += qtd; }
     else if(st === 'sem_solucao'){ mm.semSolucaoRegistros++;  mm.semSolucaoPares  += qtd; }
-    else                          { mm.analiseRegistros++;     mm.analisePares     += qtd; } // status desconhecido: trata como análise, mas de forma explícita
+    // Status desconhecido/legado vai para um contador PRÓPRIO. Antes caía em
+    // "Em análise", inflando artificialmente aquele número na aba Marcas.
+    else                          { mm.outrosRegistros++;      mm.outrosPares      += qtd; }
 
     // "Vencido" é uma condição calculada (não um status salvo) — contabilizado à parte,
     // sem remover o item das contagens de status acima.
     if(_marcaItemVencido(d)) { mm.vencidoRegistros++; mm.vencidoPares += qtd; }
   });
 
-  // Subtotal "em aberto" = pendente + análise (não inclui resolvidos nem sem solução)
+  // Subtotal "em aberto" = pendente + análise + outros (não inclui resolvidos nem
+  // sem solução). "Outros" entra aqui porque um status desconhecido continua sendo
+  // um item não encerrado — e assim o total em aberto não muda em relação ao
+  // comportamento anterior, apenas deixa de ser contado como "Em análise".
   Object.values(marcaMap).forEach(mm => {
-    mm.abertoRegistros = mm.pendenteRegistros + mm.analiseRegistros;
-    mm.abertoPares     = mm.pendentePares + mm.analisePares;
+    mm.abertoRegistros = mm.pendenteRegistros + mm.analiseRegistros + mm.outrosRegistros;
+    mm.abertoPares     = mm.pendentePares + mm.analisePares + mm.outrosPares;
   });
 
   const marcas = Object.values(marcaMap).sort((a,b) => b.pares - a.pares);
@@ -13160,6 +13626,7 @@ function renderMarcasTab() {
       m.resolvidoRegistros   > 0 ? `<span class="badge badge-success" style="font-size:10px;" title="${m.resolvidoPares} par(es)">${m.resolvidoRegistros} resolv.</span>` : '',
       m.semSolucaoRegistros  > 0 ? `<span class="badge" style="font-size:10px;background:rgba(15,118,110,.12);color:#0f766e;border:1px solid rgba(15,118,110,.25);" title="${m.semSolucaoPares} par(es)">${m.semSolucaoRegistros} sem sol.</span>` : '',
       m.vencidoRegistros     > 0 ? `<span class="badge badge-danger" style="font-size:10px;" title="${m.vencidoPares} par(es)">${m.vencidoRegistros} venc.</span>`     : '',
+      m.outrosRegistros      > 0 ? `<span class="badge" style="font-size:10px;background:rgba(75,85,99,.12);color:#4b5563;border:1px solid rgba(75,85,99,.25);" title="${m.outrosPares} par(es) com status desconhecido/legado">${m.outrosRegistros} outros</span>` : '',
     ].filter(Boolean).join(' ') || '<span style="color:var(--muted);font-size:11px;">—</span>';
 
     const valorFmt = m.valor > 0
@@ -13282,6 +13749,86 @@ function defeitoPertenceAoFornecedor(d, f) {
   const cnpjItem = normalizarCNPJ(d.cnpj);
   const cnpjForn = normalizarCNPJ(f.cnpj);
   return !!(cnpjItem && cnpjForn && cnpjItem === cnpjForn);
+}
+
+// ── Resolve o fornecedor de um defeito usando a MESMA regra de vínculo
+// (fornecedorId → fallback CNPJ exato). Retorna o objeto do fornecedor ou null.
+// Centralizado aqui para ser reutilizado por exportações, histórico e caixas,
+// evitando que cada tela reimplemente a regra de forma divergente. ──
+function fornecedorDoDefeito(d) {
+  if(!d) return null;
+  if(d.fornecedorId) {
+    const porId = fornecedores.find(f => Number(f.id) === Number(d.fornecedorId));
+    if(porId) return porId;
+  }
+  const cnpjItem = normalizarCNPJ(d.cnpj);
+  if(!cnpjItem) return null;
+  return fornecedores.find(f => normalizarCNPJ(f.cnpj) === cnpjItem) || null;
+}
+
+// ── Rótulo textual do fornecedor de um defeito, com fallback para o CNPJ
+// legado quando o item não tem fornecedor cadastrado vinculado. ──
+function fornecedorLabelDoDefeito(d) {
+  const f = fornecedorDoDefeito(d);
+  if(f) return (f.razaoSocial || "").trim() || (f.marca || "").trim() || (f.cnpj || "");
+  return d && d.cnpj ? d.cnpj : "";
+}
+
+// ── Identificação textual padrão de um fornecedor, usada nos campos de texto
+// da NF-e e nas descrições de histórico. Uma fonte única evita que cada tela
+// monte o nome de um jeito diferente. ──
+function fornecedorTextoIdentificacao(f) {
+  if(!f) return "";
+  return (f.razaoSocial || "").trim() || (f.marca || "").trim() || (f.cnpj || "").trim() || "";
+}
+
+// ── Aplica um fornecedor a um DEFEITO sincronizando SEMPRE id + cnpj.
+// Retorna a lista de campos realmente alterados (para o histórico registrar
+// somente o que mudou). Nunca apaga o CNPJ legado quando o fornecedor de
+// destino não tem CNPJ cadastrado — o dado antigo é preservado. ──
+function aplicarFornecedorEmDefeito(d, forn) {
+  if(!d || !forn) return [];
+  const mudancas = [];
+  const novoId = forn.id;
+  const novoCnpj = (forn.cnpj || "").trim();
+
+  if(Number(d.fornecedorId || 0) !== Number(novoId)) {
+    mudancas.push({ campo: "fornecedorId", de: d.fornecedorId ?? "", para: novoId });
+    d.fornecedorId = novoId;
+  }
+  if(novoCnpj && normalizarCNPJ(d.cnpj) !== normalizarCNPJ(novoCnpj)) {
+    mudancas.push({ campo: "cnpj", de: d.cnpj || "", para: novoCnpj });
+    d.cnpj = novoCnpj;
+  }
+  return mudancas;
+}
+
+// ── Aplica um fornecedor a uma NF-e sincronizando todos os campos de
+// identificação, para nunca restar ID novo com CNPJ/marca antigos. ──
+function aplicarFornecedorEmNfe(n, forn) {
+  if(!n || !forn) return [];
+  const mudancas = [];
+  const novoCnpj  = (forn.cnpj || "").trim();
+  const novaMarca = (forn.marca || "").trim();
+  const novoTexto = fornecedorTextoIdentificacao(forn);
+
+  if(Number(n.fornecedorId || 0) !== Number(forn.id)) {
+    mudancas.push({ campo: "fornecedorId", de: n.fornecedorId ?? "", para: forn.id });
+    n.fornecedorId = forn.id;
+  }
+  if(novoCnpj && normalizarCNPJ(n.fornecedorCnpj) !== normalizarCNPJ(novoCnpj)) {
+    mudancas.push({ campo: "fornecedorCnpj", de: n.fornecedorCnpj || "", para: novoCnpj });
+    n.fornecedorCnpj = novoCnpj;
+  }
+  if(novaMarca && String(n.fornecedorMarca || "").trim() !== novaMarca) {
+    mudancas.push({ campo: "fornecedorMarca", de: n.fornecedorMarca || "", para: novaMarca });
+    n.fornecedorMarca = novaMarca;
+  }
+  if(novoTexto && String(n.fornecedor || "").trim() !== novoTexto) {
+    mudancas.push({ campo: "fornecedor", de: n.fornecedor || "", para: novoTexto });
+    n.fornecedor = novoTexto;
+  }
+  return mudancas;
 }
 
 function getDefeitosFornecedor(f) {
@@ -13635,6 +14182,16 @@ function salvarFornecedor() {
     _fornecedorReturnContext = null;
     selecionarFornecedor(obj.id, ctx.suggId, ctx.hiddenId, ctx.inputId, ctx.cnpjHiddenId);
   }
+
+  // Cadastro aberto a partir do modal "Fornecedor por marca" (lotes ou Leitor IA):
+  // volta para lá com o fornecedor recém-criado já atribuído àquela marca.
+  if(criandoNovo && _fpmReturnIdx !== null && _fpmState) {
+    const idx = _fpmReturnIdx;
+    _fpmReturnIdx = null;
+    if(_fpmState.grupos[idx]) _fpmState.grupos[idx].fornecedorId = obj.id;
+    renderFornPorMarca();
+    document.getElementById("fornPorMarcaModal").style.display = "flex";
+  }
 }
 
 // ── Editar fornecedor ──
@@ -13749,13 +14306,30 @@ function transferirVinculosFornecedor(origemId, destinoId) {
   const origem  = fornecedores.find(x => Number(x.id) === Number(origemId));
   const destino = fornecedores.find(x => Number(x.id) === Number(destinoId));
   if(!origem || !destino) return { defeitos: 0, nfes: 0 };
+  // Ambas as listas são calculadas ANTES de qualquer mutação, senão a mudança de
+  // fornecedorId nos defeitos alteraria o resultado de getNfesFornecedor no meio.
   const defVinc  = getDefeitosFornecedor(origem);
   const nfesVinc = getNfesFornecedor(origem, defVinc);
+
+  const origemTexto = fornecedorTextoIdentificacao(origem);
+  const destinoTexto = fornecedorTextoIdentificacao(destino);
+
   defVinc.forEach(d => {
-    d.fornecedorId = destino.id;
-    registrarHistoricoItem(d, 'transferencia_fornecedor', `Vínculo de fornecedor transferido de "${origem.marca||''}" para "${destino.marca||''}".`);
+    // Guarda os valores anteriores antes de sincronizar, para o histórico.
+    const cnpjAntes = d.cnpj || "";
+    const alteracoes = aplicarFornecedorEmDefeito(d, destino);
+    registrarHistoricoItem(
+      d,
+      'transferencia_fornecedor',
+      `Vínculo de fornecedor transferido de "${origemTexto}"${cnpjAntes ? ` (CNPJ ${cnpjAntes})` : ''} para "${destinoTexto}"${destino.cnpj ? ` (CNPJ ${destino.cnpj})` : ''}.`,
+      alteracoes.length ? alteracoes : null
+    );
   });
-  nfesVinc.forEach(n => { n.fornecedorId = destino.id; });
+
+  // NF-es recebem TODOS os campos de identificação sincronizados — nunca fica
+  // ID do fornecedor novo convivendo com CNPJ/marca do fornecedor antigo.
+  nfesVinc.forEach(n => { aplicarFornecedorEmNfe(n, destino); });
+
   saveData();
   return { defeitos: defVinc.length, nfes: nfesVinc.length };
 }
@@ -13852,12 +14426,10 @@ function verFornecedor(id) {
       </div>
     </div>
 
-    ${f.procedimento_devolucao ? `<div style="padding:10px 12px;background:rgba(3,105,161,.06);border:1px solid rgba(3,105,161,.18);border-radius: 0;">
-      <div style="font-size:9.5px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#0369a1;margin-bottom:8px;display:flex;align-items:center;gap:5px;">
-        <i class="fa-solid fa-truck-fast"></i>Procedimento de Devolução (cadastro antigo deste fornecedor)
-      </div>
-      <div style="font-size:12.5px;color:var(--text);line-height:1.7;white-space:pre-line;">${f.procedimento_devolucao}</div>
-    </div>` : ""}
+    ${/* O campo legado f.procedimento_devolucao continua preservado no objeto do
+         fornecedor para compatibilidade e para a migração idempotente, mas NÃO é
+         mais exibido nem editado aqui: a informação vive em
+         marcasInfo[MARCA].procedimentoDevolucao e é acessada pelo atalho abaixo. */""}
     <div onclick="document.getElementById('fornViewModal').style.display='none';abrirInfoMarca('${(f.marca||'').replace(/'/g,"\\'")}')" style="padding:10px 12px;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.18);border-radius: 0;cursor:pointer;display:flex;align-items:center;gap:8px;" onmouseover="this.style.borderColor='rgba(124,58,237,.35)'" onmouseout="this.style.borderColor='rgba(124,58,237,.18)'">
       <i class="fa-solid fa-tag" style="color:#7c3aed;"></i>
       <div style="font-size:12px;color:var(--text);"><strong>Procedimento de devolução atual</strong> fica na ficha da marca ${(f.marca||"").replace(/</g,"&lt;")} — clique para ver/editar.</div>
@@ -14081,17 +14653,16 @@ function showBulkFornSuggestions(value) {
   const box = document.getElementById("bulkFornSuggestions");
   const q   = value.trim().toLowerCase();
   if (!q || !fornecedores.length) { box.style.display = "none"; return; }
-  const matches = fornecedores.filter(f =>
-    (f.marca||"").toLowerCase().includes(q) ||
-    (f.razaoSocial||"").toLowerCase().includes(q) ||
-    (f.cnpj||"").includes(q)
-  ).slice(0, 8);
+  // Reutiliza a busca unificada: pesquisa por marca, razão social e CNPJ (com ou
+  // sem máscara) e já exclui fornecedores INATIVOS de novos vínculos.
+  const matches = buscarFornecedoresUnificado(value);
   if (!matches.length) { box.style.display = "none"; return; }
+  const esc = (t) => String(t == null ? "" : t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   box.style.display = "block";
   box.innerHTML = matches.map(f => `
-    <div class="autocomplete-item" onmousedown="selecionarBulkForn(${f.id},'${f.marca.replace(/'/g,"\'")}')">
-      <div style="font-weight:700;font-size:13px;">${f.marca}</div>
-      ${f.razaoSocial ? `<div style="font-size:11px;color:var(--muted);">${f.razaoSocial}${f.cnpj?" · "+f.cnpj:""}</div>` : ""}
+    <div class="autocomplete-item" onmousedown="selecionarBulkForn(${f.id},'${String(f.marca||"").replace(/'/g,"\\'")}')">
+      <div style="font-weight:700;font-size:13px;">${esc(f.marca)}</div>
+      ${f.razaoSocial ? `<div style="font-size:11px;color:var(--muted);">${esc(f.razaoSocial)}${f.cnpj?" · "+esc(f.cnpj):""}</div>` : ""}
     </div>`).join("");
 }
 
@@ -14135,19 +14706,55 @@ function aplicarBulkEditar() {
   selectedIds.forEach(id => {
     const item = defeitos.find(i => i.id === id);
     if (!item) return;
-    if (loja)   item.loja = loja;
+
+    // Acumula APENAS os campos realmente modificados neste item, para o histórico
+    // não registrar alteração que não houve (ex.: reaplicar a mesma loja).
+    const alteracoes = [];
+
+    if (loja && item.loja !== loja) {
+      alteracoes.push({ campo: "loja", de: item.loja || "", para: loja });
+      item.loja = loja;
+    }
+
     if (forn) {
-      item.fornecedorId = Number(fornId);
-      item.marca        = forn.marca || "";
+      // Sincroniza id + cnpj pela regra central — nunca deixa CNPJ antigo no item.
+      alteracoes.push(...aplicarFornecedorEmDefeito(item, forn));
+      const novaMarca = (forn.marca || "").trim();
+      if (novaMarca && String(item.marca || "").trim() !== novaMarca) {
+        alteracoes.push({ campo: "marca", de: item.marca || "", para: novaMarca });
+        item.marca = novaMarca;
+      }
     }
-    if (status) {
+
+    let statusMudou = false;
+    if (status && item.status !== status) {
+      alteracoes.push({ campo: "status", de: defeitoStatusLabel(item.status), para: defeitoStatusLabel(status) });
       item.status = status;
+      statusMudou = true;
+      // dataResolucao acompanha o status: definida ao resolver, removida ao sair de resolvido.
       if (status === "resolvido") item.dataResolucao = new Date().toISOString();
+      else delete item.dataResolucao;
     }
+
+    if (!alteracoes.length) return; // nada mudou neste item: sem evento, sem contagem
+
+    registrarHistoricoItem(
+      item,
+      forn && !statusMudou ? 'edicao_massa_fornecedor' : 'edicao_massa',
+      `Edição em massa: ${alteracoes.map(a => a.campo).join(', ')}.`,
+      alteracoes
+    );
+
+    // Item arquivado que recebe status diferente de "resolvido" volta para a lista ativa.
+    if (statusMudou && status !== "resolvido") {
+      _autoRestaurarSeArquivado(item, `status alterado para ${defeitoStatusLabel(status)} em edição em massa.`);
+    }
+
     alterados++;
   });
 
   saveData(); renderLight(); clearSelection(); fecharBulkEditar();
+  if (!alterados) { showToast("Nenhum item precisou ser alterado (valores já iguais).", "info"); return; }
   showToast(`${alterados} item${alterados>1?"s":""} atualizado${alterados>1?"s":""}!`, "success");
 }
 
@@ -14278,6 +14885,33 @@ function importarXmlNfe(input) {
 
 let _caixaAtualId = null; // caixa aberta na visão de detalhe
 
+// ── Identificação visual da caixa de um item, usada na Lista de Defeitos
+// (tabela no desktop e card no celular). Sempre consulta a caixa ao vivo por
+// caixaId via getCaixaById — nunca duplica dados da caixa dentro do defeito. ──
+function caixaBadgeDoItem(item, opts) {
+  const compacto = !!(opts && opts.compacto);
+  if(!item || !item.caixaId) return compacto ? '' : '<span style="color:var(--muted);">—</span>';
+  const c = getCaixaById(item.caixaId);
+  if(!c) {
+    // caixaId aponta para caixa inexistente: avisa de forma discreta e mantém
+    // a detecção na Central de Inconsistências (categoria "Vínculo órfão de caixa").
+    return `<span title="A caixa vinculada a este item não existe mais" style="display:inline-flex;align-items:center;gap:3px;background:rgba(220,38,38,.10);border:1px solid rgba(220,38,38,.22);border-radius: 0;padding:2px 7px;font-size:9px;font-weight:800;letter-spacing:.4px;color:#dc2626;white-space:nowrap;"><i class="fa-solid fa-triangle-exclamation" style="font-size:8px;"></i> Caixa não encontrada</span>`;
+  }
+  const fechada = c.status === 'fechada';
+  const nome = (c.nome || '').trim();
+  const titulo = `Caixa ${c.codigo}${nome ? ' — ' + nome : ''} (${fechada ? 'fechada' : 'aberta'}) — clique para abrir`;
+  return `<span onclick="event.stopPropagation();irParaCaixa(${c.id})" title="${titulo.replace(/"/g,'&quot;')}" style="display:inline-flex;align-items:center;gap:4px;background:rgba(180,83,9,.10);border:1px solid rgba(180,83,9,.22);border-radius: 0;padding:2px 7px;font-size:9px;font-weight:800;letter-spacing:.4px;color:#b45309;cursor:pointer;white-space:nowrap;max-width:100%;" onmouseover="this.style.background='rgba(180,83,9,.20)'" onmouseout="this.style.background='rgba(180,83,9,.10)'"><i class="fa-solid fa-box" style="font-size:8px;"></i>${c.codigo}${nome ? `<span style="font-weight:600;opacity:.85;overflow:hidden;text-overflow:ellipsis;">· ${String(nome).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>` : ''}<i class="fa-solid ${fechada ? 'fa-lock' : 'fa-lock-open'}" style="font-size:7px;opacity:.65;" title="${fechada ? 'fechada' : 'aberta'}"></i></span>`;
+}
+
+// ── Navega para a aba Caixas e abre direto o detalhe da caixa informada. ──
+function irParaCaixa(caixaId) {
+  navTo('caixas');
+  setTimeout(() => {
+    if(getCaixaById(caixaId)) abrirCaixaDetalhe(caixaId);
+    else showToast('Caixa não encontrada.', 'error');
+  }, 150);
+}
+
 function getCaixaById(id) {
   return caixas.find(c => Number(c.id) === Number(id)) || null;
 }
@@ -14348,7 +14982,13 @@ function confirmarExcluirCaixa(id) {
 
 function excluirCaixa(id) {
   const idNum = Number(id);
-  defeitos.forEach(d => { if(Number(d.caixaId) === idNum) d.caixaId = ""; });
+  const cx = getCaixaById(idNum);
+  defeitos.forEach(d => {
+    if(Number(d.caixaId) === idNum) {
+      d.caixaId = "";
+      registrarHistoricoItem(d, 'caixa', `Desvinculado da caixa ${cx ? cx.codigo : idNum} (caixa excluída).`);
+    }
+  });
   caixas = caixas.filter(c => Number(c.id) !== idNum);
   saveData();
   showToast("Caixa excluída. Os defeitos vinculados foram preservados.", "info");
@@ -14423,13 +15063,16 @@ function abrirCaixaDetalhe(id) {
   const detView  = document.getElementById("caixaDetalheView");
   if(listView) listView.style.display = "none";
   if(detView)  detView.style.display  = "block";
-  const search = document.getElementById("caixaItemSearchInput");
-  if(search) search.value = "";
+  // Trocar de caixa (ou reabrir) sempre começa com os filtros internos limpos.
+  ["caixaFiltroLoja","caixaFiltroMarca","caixaFiltroCodigo","caixaFiltroReferencia","caixaItemSearchInput"]
+    .forEach(fid => { const el = document.getElementById(fid); if(el) el.value = ""; });
   renderCaixaDetalhe(id);
 }
 
 function fecharCaixaDetalhe() {
   _caixaAtualId = null;
+  ["caixaFiltroLoja","caixaFiltroMarca","caixaFiltroCodigo","caixaFiltroReferencia","caixaItemSearchInput"]
+    .forEach(fid => { const el = document.getElementById(fid); if(el) el.value = ""; });
   const listView = document.getElementById("caixasListView");
   const detView  = document.getElementById("caixaDetalheView");
   if(detView)  detView.style.display  = "none";
@@ -14460,6 +15103,45 @@ function renderCaixaDetalhe(id) {
   renderCaixaDetalheItens();
 }
 
+// ── Popula os seletores dos filtros internos usando APENAS os itens da caixa
+// aberta, preservando a seleção atual do usuário. ──
+function _popularFiltrosCaixa(itensDaCaixa) {
+  const selLoja  = document.getElementById("caixaFiltroLoja");
+  const selMarca = document.getElementById("caixaFiltroMarca");
+  const dlRef    = document.getElementById("caixaFiltroRefLista");
+  const esc = (t) => String(t == null ? "" : t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+  if(selLoja) {
+    const lojas = [...new Set(itensDaCaixa.map(d => (d.loja||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt'));
+    const atual = selLoja.value;
+    const novo = `<option value="">Todas</option>` + lojas.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join("");
+    if(selLoja.innerHTML !== novo) {
+      selLoja.innerHTML = novo;
+      selLoja.value = lojas.some(l => l === atual) ? atual : "";
+    }
+  }
+  if(selMarca) {
+    const marcas = [...new Set(itensDaCaixa.map(d => (d.marca||"").trim().toUpperCase()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt'));
+    const atual = selMarca.value;
+    const novo = `<option value="">Todas</option>` + marcas.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join("");
+    if(selMarca.innerHTML !== novo) {
+      selMarca.innerHTML = novo;
+      selMarca.value = marcas.some(m => m === atual) ? atual : "";
+    }
+  }
+  if(dlRef) {
+    const refs = [...new Set(itensDaCaixa.map(d => (d.referencia||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt'));
+    dlRef.innerHTML = refs.map(r => `<option value="${esc(r)}"></option>`).join("");
+  }
+}
+
+// ── Limpa apenas os filtros INTERNOS da caixa (nunca os filtros globais). ──
+function limparFiltrosCaixa() {
+  ["caixaFiltroLoja","caixaFiltroMarca","caixaFiltroCodigo","caixaFiltroReferencia","caixaItemSearchInput"]
+    .forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; });
+  renderCaixaDetalheItens();
+}
+
 function renderCaixaDetalheItens() {
   const id = _caixaAtualId;
   if(!id) return;
@@ -14467,17 +15149,46 @@ function renderCaixaDetalheItens() {
   if(!c) return;
   const fechada = c.status === "fechada";
   const termo = (document.getElementById("caixaItemSearchInput")?.value || "").trim().toLowerCase();
-  let itens = getItensDaCaixa(id);
-  if(termo) {
-    itens = itens.filter(d => [d.marca, d.referencia, d.codigoBarras, d.loja, d.numeracao, d.defeito]
-      .some(v => String(v || "").toLowerCase().includes(termo)));
-  }
+  const todosDaCaixa = getItensDaCaixa(id);
+
+  // As opções dos filtros vêm SOMENTE dos itens desta caixa.
+  _popularFiltrosCaixa(todosDaCaixa);
+
+  const fLoja   = (document.getElementById("caixaFiltroLoja")?.value || "");
+  const fMarca  = (document.getElementById("caixaFiltroMarca")?.value || "");
+  const fCod    = (document.getElementById("caixaFiltroCodigo")?.value || "").trim().toLowerCase();
+  const fRef    = (document.getElementById("caixaFiltroReferencia")?.value || "").trim().toLowerCase();
+
+  // Todos os filtros funcionam em conjunto, e a pesquisa geral combina com eles.
+  let itens = todosDaCaixa.filter(d => {
+    if(fLoja  && normalizeLoja(d.loja) !== normalizeLoja(fLoja)) return false;
+    if(fMarca && String(d.marca || "").trim().toUpperCase() !== fMarca) return false;
+    if(fCod   && !String(d.codigoBarras || "").toLowerCase().includes(fCod)) return false;
+    if(fRef   && !String(d.referencia || "").toLowerCase().includes(fRef)) return false;
+    if(termo) {
+      const hay = [d.marca, d.referencia, d.codigoBarras, d.loja, d.numeracao, d.defeito]
+        .map(v => String(v || "").toLowerCase()).join(" ");
+      if(!hay.includes(termo)) return false;
+    }
+    return true;
+  });
   itens = [...itens].sort((a,b) => (b.data || "").localeCompare(a.data || ""));
+
+  // Resumo: diferencia claramente o total GERAL da caixa do resultado FILTRADO.
+  const temFiltro = !!(termo || fLoja || fMarca || fCod || fRef);
+  const resumoEl = document.getElementById("caixaResultadoResumo");
+  if(resumoEl) {
+    const paresFiltrados = itens.reduce((s2,d) => s2 + getQtdItem(d), 0);
+    const paresTotais    = todosDaCaixa.reduce((s2,d) => s2 + getQtdItem(d), 0);
+    resumoEl.innerHTML = temFiltro
+      ? `<i class="fa-solid fa-filter" style="color:#b45309;"></i> <strong>${itens.length}</strong> registro(s) · <strong>${paresFiltrados}</strong> par(es) no resultado filtrado — de <strong>${todosDaCaixa.length}</strong> registro(s) / <strong>${paresTotais}</strong> par(es) no total da caixa.`
+      : `<strong>${todosDaCaixa.length}</strong> registro(s) · <strong>${paresTotais}</strong> par(es) no total da caixa.`;
+  }
 
   const tbody = document.getElementById("caixaDetItensBody");
   if(!tbody) return;
   if(!itens.length) {
-    tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;padding:28px;color:var(--muted);font-size:13px;">${termo ? "Nenhum item encontrado para esta busca." : "Nenhum item nesta caixa ainda."}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;padding:28px;color:var(--muted);font-size:13px;">${temFiltro ? "Nenhum item encontrado para estes filtros." : "Nenhum item nesta caixa ainda."}</td></tr>`;
     return;
   }
 
@@ -14523,6 +15234,311 @@ function removerItemDaCaixa(defeitoId) {
     if(_caixaAtualId) renderCaixaDetalhe(_caixaAtualId);
     showToast("Item removido da caixa (o defeito continua no sistema).", "info");
   }, "O registro do defeito NÃO será excluído.");
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  EXPORTAÇÃO POR CAIXA (Excel e PDF)
+//  Estado próprio e isolado — não compartilha nada com as exportações por
+//  marca nem com o PDF por Seleção. Os itens são sempre consultados ao vivo
+//  por caixaId (getItensDaCaixa); a caixa nunca guarda cópia dos itens.
+// ══════════════════════════════════════════════════════════════════
+let _exportCaixasSel  = new Set();
+let _exportCaixasModo = 'excel';
+
+function abrirExportCaixas(modo) {
+  _exportCaixasModo = modo === 'pdf' ? 'pdf' : 'excel';
+  _exportCaixasSel = new Set();
+  toggleExportDropdown();
+
+  if(!caixas.length) { showToast('Nenhuma caixa cadastrada para exportar.', 'info'); return; }
+
+  const ic = document.getElementById('exportCaixasIcone');
+  if(ic) {
+    ic.className = 'fa-solid ' + (_exportCaixasModo === 'pdf' ? 'fa-file-pdf' : 'fa-file-excel');
+    ic.style.color = _exportCaixasModo === 'pdf' ? '#b45309' : '#16a34a';
+  }
+  document.getElementById('exportCaixasTitulo').textContent =
+    _exportCaixasModo === 'pdf' ? 'Relatório PDF por Caixa' : 'Excel por Caixa';
+  document.getElementById('exportCaixasBtnTexto').textContent =
+    _exportCaixasModo === 'pdf' ? 'Gerar PDF' : 'Gerar Excel';
+  const busca = document.getElementById('exportCaixasBusca');
+  if(busca) busca.value = '';
+
+  renderExportCaixasLista();
+  document.getElementById('exportCaixasModal').style.display = 'flex';
+}
+
+function fecharExportCaixas() {
+  document.getElementById('exportCaixasModal').style.display = 'none';
+}
+
+// Estatísticas ao vivo de uma caixa (registros, pares e valor).
+function _statsCaixa(caixaId) {
+  const itens = getItensDaCaixa(caixaId);
+  const pares = itens.reduce((s, d) => s + getQtdItem(d), 0);
+  const valor = itens.reduce((s, d) => s + ((Number(d.custoUnitario) || 0) * getQtdItem(d)), 0);
+  return { itens, registros: itens.length, pares, valor };
+}
+
+function renderExportCaixasLista() {
+  const box = document.getElementById('exportCaixasLista');
+  if(!box) return;
+  const esc = (t) => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const q = (document.getElementById('exportCaixasBusca')?.value || '').trim().toLowerCase();
+
+  const lista = caixas.filter(c =>
+    !q || String(c.codigo||'').toLowerCase().includes(q) || String(c.nome||'').toLowerCase().includes(q)
+  );
+
+  if(!lista.length) {
+    box.innerHTML = `<div style="text-align:center;padding:24px;color:var(--muted);font-size:12.5px;">Nenhuma caixa encontrada para "${esc(q)}".</div>`;
+  } else {
+    box.innerHTML = lista.map(c => {
+      const st = _statsCaixa(c.id);
+      const marcada = _exportCaixasSel.has(Number(c.id));
+      const fechada = c.status === 'fechada';
+      return `<label style="display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid ${marcada ? 'rgba(180,83,9,.45)' : 'var(--border)'};background:${marcada ? 'rgba(180,83,9,.07)' : 'var(--surface2)'};cursor:pointer;">
+        <input type="checkbox" ${marcada ? 'checked' : ''} onchange="exportCaixasToggle(${c.id})" style="width:15px;height:15px;accent-color:#b45309;cursor:pointer;flex-shrink:0;">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+            <span style="font-family:'Space Mono',monospace;font-weight:800;font-size:12.5px;color:#b45309;">${esc(c.codigo)}</span>
+            ${c.nome ? `<span style="font-size:12px;font-weight:600;">${esc(c.nome)}</span>` : ''}
+            <span style="font-size:9px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:1px 7px;border:1px solid ${fechada ? 'rgba(75,85,99,.3)' : 'rgba(22,163,74,.3)'};color:${fechada ? '#4b5563' : '#16a34a'};background:${fechada ? 'rgba(75,85,99,.08)' : 'rgba(22,163,74,.08)'};">${fechada ? 'Fechada' : 'Aberta'}</span>
+          </div>
+          <div style="font-size:10.5px;color:var(--muted);margin-top:3px;">
+            ${st.registros} registro(s) · ${st.pares} par(es) · ${st.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+          </div>
+        </div>
+      </label>`;
+    }).join('');
+  }
+
+  const totalSel = _exportCaixasSel.size;
+  const resumo = document.getElementById('exportCaixasResumo');
+  if(resumo) {
+    if(!totalSel) {
+      resumo.innerHTML = '<i class="fa-solid fa-circle-info"></i> Nenhuma caixa selecionada.';
+    } else {
+      let reg = 0, par = 0, val = 0;
+      _exportCaixasSel.forEach(id => { const st = _statsCaixa(id); reg += st.registros; par += st.pares; val += st.valor; });
+      resumo.innerHTML = `<strong>${totalSel}</strong> caixa(s) selecionada(s) · <strong>${reg}</strong> registro(s) · <strong>${par}</strong> par(es) · <strong>${val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</strong>`;
+    }
+  }
+}
+
+function exportCaixasToggle(id) {
+  const n = Number(id);
+  if(_exportCaixasSel.has(n)) _exportCaixasSel.delete(n); else _exportCaixasSel.add(n);
+  renderExportCaixasLista();
+}
+
+function exportCaixasMarcarTodas(marcar) {
+  const q = (document.getElementById('exportCaixasBusca')?.value || '').trim().toLowerCase();
+  const visiveis = caixas.filter(c =>
+    !q || String(c.codigo||'').toLowerCase().includes(q) || String(c.nome||'').toLowerCase().includes(q)
+  );
+  visiveis.forEach(c => { if(marcar) _exportCaixasSel.add(Number(c.id)); else _exportCaixasSel.delete(Number(c.id)); });
+  renderExportCaixasLista();
+}
+
+function confirmarExportCaixas() {
+  if(!_exportCaixasSel.size) { showToast('Selecione ao menos uma caixa para exportar.', 'error'); return; }
+  const selecionadas = caixas.filter(c => _exportCaixasSel.has(Number(c.id)));
+  fecharExportCaixas();
+  if(_exportCaixasModo === 'pdf') gerarPdfCaixas(selecionadas);
+  else gerarExcelCaixas(selecionadas);
+}
+
+// ── Nome de aba de planilha: máximo 31 caracteres, sem caracteres proibidos
+// pelo Excel, e único dentro do arquivo. ──
+function _nomeAbaUnico(base, usados) {
+  let limpo = String(base || 'Caixa').replace(/[\\\/\?\*\[\]:]/g, '-').trim().slice(0, 31) || 'Caixa';
+  if(!usados.has(limpo)) { usados.add(limpo); return limpo; }
+  let i = 2;
+  while(true) {
+    const sufixo = ' (' + i + ')';
+    const cand = limpo.slice(0, 31 - sufixo.length) + sufixo;
+    if(!usados.has(cand)) { usados.add(cand); return cand; }
+    i++;
+  }
+}
+
+function gerarExcelCaixas(selecionadas) {
+  const wb = XLSX.utils.book_new();
+  const usados = new Set();
+  let totalLinhas = 0;
+
+  selecionadas.forEach(c => {
+    const st = _statsCaixa(c.id);
+    const linhas = st.itens.map(d => {
+      const nfeVinc = d.nfeId ? nfes.find(n => String(n.id) === String(d.nfeId)) : null;
+      return {
+        Caixa_Codigo:     c.codigo || '',
+        Caixa_Nome:       c.nome || '',
+        Caixa_Status:     c.status === 'fechada' ? 'Fechada' : 'Aberta',
+        Caixa_Criada_Em:  c.createdAt ? formatDate(String(c.createdAt).slice(0,10)) : '',
+        Caixa_Atualizada: c.updatedAt ? formatDate(String(c.updatedAt).slice(0,10)) : '',
+        Caixa_Descricao:  c.descricao || '',
+        Data:             d.data ? formatDate(d.data) : '',
+        Loja:             d.loja || '',
+        Marca:            d.marca || '',
+        Codigo_Barras:    d.codigoBarras || '',
+        Referencia:       d.referencia || '',
+        Cor:              d.cor || '',
+        Numeracao:        d.numeracao || '',
+        Quantidade:       getQtdItem(d),
+        Custo_Unitario:   (d.custoUnitario === '' || d.custoUnitario == null) ? '' : Number(d.custoUnitario),
+        Valor_Total:      (d.custoUnitario === '' || d.custoUnitario == null) ? '' : Number((Number(d.custoUnitario) * getQtdItem(d)).toFixed(2)),
+        Defeito:          d.defeito || '',
+        Nota_Origem:      d.notaOrigem || '',
+        NFe_Devolucao:    nfeVinc ? (nfeVinc.numeroNfe || '') : '',
+        Fornecedor:       fornecedorLabelDoDefeito(d),
+        CNPJ:             d.cnpj || '',
+        Status_Item:      defeitoStatusLabel(d.status),
+        Arquivado:        d.arquivado ? 'Sim' : 'Não',
+        Observacoes:      d.obs || ''
+      };
+    });
+
+    // Caixa vazia gera aba identificada, sem erro.
+    const dados = linhas.length ? linhas : [{
+      Caixa_Codigo: c.codigo || '', Caixa_Nome: c.nome || '',
+      Caixa_Status: c.status === 'fechada' ? 'Fechada' : 'Aberta',
+      Data: '(caixa vazia — nenhum item vinculado)'
+    }];
+
+    const ws = XLSX.utils.json_to_sheet(dados);
+    // Totais por caixa ao final da aba.
+    XLSX.utils.sheet_add_aoa(ws, [
+      [],
+      ['TOTAIS DA CAIXA', c.codigo || ''],
+      ['Registros', st.registros],
+      ['Total de pares', st.pares],
+      ['Valor total', Number(st.valor.toFixed(2))]
+    ], { origin: -1 });
+
+    XLSX.utils.book_append_sheet(wb, ws, _nomeAbaUnico(c.codigo || c.nome || 'Caixa', usados));
+    totalLinhas += st.registros;
+  });
+
+  const sufixo = selecionadas.length === 1 ? (selecionadas[0].codigo || 'caixa') : `${selecionadas.length}_caixas`;
+  XLSX.writeFile(wb, `caixas_${sufixo}_${today()}.xlsx`);
+  showToast(`${selecionadas.length} caixa(s) exportada(s) · ${totalLinhas} registro(s).`, 'success');
+}
+
+function gerarPdfCaixas(selecionadas) {
+  const esc = (t) => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const dataHoje = new Date().toLocaleDateString('pt-BR');
+
+  let totalRegistros = 0, totalPares = 0, totalValor = 0;
+  const secoes = selecionadas.map((c, idx) => {
+    const st = _statsCaixa(c.id);
+    totalRegistros += st.registros; totalPares += st.pares; totalValor += st.valor;
+
+    const linhas = st.itens.length ? st.itens.map(d => {
+      const nfeVinc = d.nfeId ? nfes.find(n => String(n.id) === String(d.nfeId)) : null;
+      const tot = (Number(d.custoUnitario) || 0) * getQtdItem(d);
+      return `<tr>
+        <td>${d.data ? formatDate(d.data) : '—'}</td>
+        <td>${esc(d.loja) || '—'}</td>
+        <td style="font-weight:700;">${esc(d.marca) || '—'}</td>
+        <td style="font-family:monospace;font-size:9px;">${esc(d.codigoBarras) || '—'}</td>
+        <td>${esc(d.referencia) || '—'}</td>
+        <td>${esc(d.cor) || '—'}</td>
+        <td style="text-align:center;">${esc(d.numeracao) || '—'}</td>
+        <td class="td-qtd" style="text-align:center;">${getQtdItem(d)}</td>
+        <td style="text-align:right;">${d.custoUnitario ? 'R$ ' + Number(d.custoUnitario).toFixed(2).replace('.', ',') : '—'}</td>
+        <td style="text-align:right;font-weight:700;">${tot ? 'R$ ' + tot.toFixed(2).replace('.', ',') : '—'}</td>
+        <td>${esc(d.defeito) || '—'}</td>
+        <td>${nfeVinc ? esc(nfeVinc.numeroNfe || 'vinculada') : '—'}</td>
+        <td>${esc(fornecedorLabelDoDefeito(d)) || '—'}</td>
+        <td><span class="${defeitoStatusClassePdf(d.status)}">${defeitoStatusLabel(d.status)}</span></td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="14" style="text-align:center;padding:16px;color:#6b7280;font-style:italic;">Caixa vazia — nenhum item vinculado.</td></tr>`;
+
+    return `
+    <div class="caixa-secao" style="${idx > 0 ? 'page-break-before:always;' : ''}">
+      <div class="caixa-header">
+        <div class="caixa-header-top">
+          <span class="caixa-codigo">${esc(c.codigo)}</span>
+          ${c.nome ? `<span class="caixa-nome">${esc(c.nome)}</span>` : ''}
+          <span class="caixa-status ${c.status === 'fechada' ? 'st-fechada' : 'st-aberta'}">${c.status === 'fechada' ? 'Fechada' : 'Aberta'}</span>
+        </div>
+        ${c.descricao ? `<div class="caixa-desc">${esc(c.descricao)}</div>` : ''}
+        <div class="caixa-meta">
+          ${c.createdAt ? `Criada em ${new Date(c.createdAt).toLocaleDateString('pt-BR')} · ` : ''}
+          <strong>${st.registros}</strong> registro(s) · <strong>${st.pares}</strong> par(es) ·
+          <strong>R$ ${st.valor.toFixed(2).replace('.', ',')}</strong>
+        </div>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Data</th><th>Loja</th><th>Marca</th><th>Código</th><th>Referência</th><th>Cor</th><th>Num.</th>
+          <th style="text-align:center;">Qtd</th><th style="text-align:right;">Custo</th><th style="text-align:right;">Total</th>
+          <th>Defeito</th><th>NF-e</th><th>Fornecedor</th><th>Status</th>
+        </tr></thead>
+        <tbody>${linhas}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  <title>Relatório por Caixa — Shoemix</title>
+  <style>
+    @page { size: A4 landscape; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body { font-family: 'DM Sans', Arial, sans-serif; color: #1f2937; margin: 0; padding: 0; font-size: 11px; }
+    .doc-header { border-bottom: 2px solid #b45309; padding-bottom: 10px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-end; }
+    .doc-title { font-size: 18px; font-weight: 800; letter-spacing: -0.4px; }
+    .doc-sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
+    .doc-tot { font-size: 11px; color: #6b7280; text-align: right; }
+    .doc-tot strong { color: #b45309; font-size: 13px; }
+    .caixa-secao { margin-bottom: 22px; }
+    .caixa-header { background: #fff7ed; border: 1px solid #fed7aa; padding: 9px 12px; margin-bottom: 0; }
+    .caixa-header-top { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+    .caixa-codigo { font-family: 'Courier New', monospace; font-weight: 800; font-size: 15px; color: #b45309; }
+    .caixa-nome { font-size: 13px; font-weight: 700; }
+    .caixa-status { font-size: 9px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; padding: 1px 7px; }
+    .st-aberta { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .st-fechada { background: #f9fafb; color: #4b5563; border: 1px solid #e5e7eb; }
+    .caixa-desc { font-size: 10.5px; color: #4b5563; margin-top: 5px; white-space: pre-line; }
+    .caixa-meta { font-size: 10.5px; color: #6b7280; margin-top: 5px; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { background: #fff; border-bottom: 1.5px solid #d1d5db; font-size: 9px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: #6b7280; padding: 6px 5px; text-align: left; }
+    tbody td { border-bottom: 1px solid #f3f4f6; padding: 5px; font-size: 10px; vertical-align: top; }
+    tbody tr:nth-child(even) { background: #fafafa; }
+    .td-qtd { font-weight: 700; color: #b45309; }
+    .td-status-res { font-size: 9px; font-weight: 700; color: #16a34a; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 1px 6px; display: inline-block; }
+    .td-status-pen { font-size: 9px; font-weight: 700; color: #b45309; background: #fffbeb; border: 1px solid #fcd34d; padding: 1px 6px; display: inline-block; }
+    .td-status-ana { font-size: 9px; font-weight: 700; color: #7c3aed; background: #f5f3ff; border: 1px solid #ddd6fe; padding: 1px 6px; display: inline-block; }
+    .td-status-sem { font-size: 9px; font-weight: 700; color: #0f766e; background: #f0fdfa; border: 1px solid #99f6e4; padding: 1px 6px; display: inline-block; }
+    .td-status-out { font-size: 9px; font-weight: 700; color: #4b5563; background: #f9fafb; border: 1px solid #e5e7eb; padding: 1px 6px; display: inline-block; }
+    .footer { margin-top: 18px; padding-top: 8px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; font-size: 9.5px; color: #9ca3af; }
+  </style></head><body>
+    <div class="doc-header">
+      <div>
+        <div class="doc-title">Relatório por Caixa</div>
+        <div class="doc-sub">Shoemix · Controle de Defeitos — ${selecionadas.length} caixa(s)</div>
+      </div>
+      <div class="doc-tot">
+        <strong>${totalRegistros}</strong> registro(s) · <strong>${totalPares}</strong> par(es)<br>
+        <strong>R$ ${totalValor.toFixed(2).replace('.', ',')}</strong>
+      </div>
+    </div>
+    ${secoes}
+    <div class="footer">
+      <span>Shoemix · Controle de Defeitos</span>
+      <span>${dataHoje}</span>
+    </div>
+    <script>window.onload=()=>{window.print();}<\/script>
+  </body></html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url, '_blank');
+  if(!win) showToast('Permita popups para gerar o PDF.', 'error');
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  showToast(`Relatório de ${selecionadas.length} caixa(s) aberto! Use Ctrl+P para salvar como PDF.`, 'info', 5000);
 }
 
 // ── Atalho: localizar um item específico na tabela de defeitos (a partir da caixa) ──
@@ -14659,8 +15675,10 @@ function calcularInconsistencias() {
     fornecedoresDuplicados: [],
     marcasDuplicadas: [],
     quantidadeInvalida: [],
+    semCusto: [],
     custoInvalido: [],
     nfeQuebrada: [],
+    nfeProdutoInexistente: [],
     caixaOrfa: [],
     caixasDuplicadas: [],
   };
@@ -14688,10 +15706,14 @@ function calcularInconsistencias() {
       result.quantidadeInvalida.push(d);
     }
 
-    // 7) Sem custo ou com custo inválido (negativo/NaN quando preenchido)
-    if(d.custoUnitario !== '' && d.custoUnitario !== undefined && d.custoUnitario !== null) {
+    // 7) Custo: separa "não informado" de "informado porém inválido".
+    //    Sem custo  -> vazio, null ou undefined.
+    //    Inválido   -> não numérico, negativo ou zero (zero não é custo real).
+    if(d.custoUnitario === '' || d.custoUnitario === undefined || d.custoUnitario === null) {
+      result.semCusto.push(d);
+    } else {
       const custo = Number(d.custoUnitario);
-      if(!Number.isFinite(custo) || custo < 0) result.custoInvalido.push(d);
+      if(!Number.isFinite(custo) || custo <= 0) result.custoInvalido.push(d);
     }
 
     // 8) Vínculo quebrado com NF-e (nfeId aponta para NF-e inexistente)
@@ -14703,6 +15725,14 @@ function calcularInconsistencias() {
     if(d.caixaId && !getCaixaById(d.caixaId)) {
       result.caixaOrfa.push(d);
     }
+  });
+
+  // 8b) Direção inversa: NF-e cujo produtosRelacionados aponta para defeito que
+  //     não existe mais. A verificação anterior só olhava defeito -> NF-e.
+  nfes.forEach(n => {
+    const quebrados = (n.produtosRelacionados || [])
+      .filter(pid => !defeitos.some(d => Number(d.id) === Number(pid)));
+    if(quebrados.length) result.nfeProdutoInexistente.push({ nfe: n, ids: quebrados });
   });
 
   // 4) Fornecedores possivelmente duplicados pelo mesmo CNPJ normalizado
@@ -14765,8 +15795,10 @@ function renderInconsistencias() {
     { key:'fornecedorIdInvalido', icon:'fa-link-slash', cor:'#dc2626', titulo:'Fornecedor vinculado inexistente', desc:'O fornecedorId do item não corresponde a nenhum fornecedor cadastrado.' },
     { key:'cnpjDivergente', icon:'fa-id-card', cor:'#ea580c', titulo:'CNPJ divergente do fornecedor', desc:'O CNPJ salvo no item é diferente do CNPJ do fornecedor vinculado.' },
     { key:'quantidadeInvalida', icon:'fa-hashtag', cor:'#ea580c', titulo:'Quantidade inválida', desc:'Quantidade vazia, zerada, negativa ou não numérica.' },
-    { key:'custoInvalido', icon:'fa-sack-dollar', cor:'#ca8a04', titulo:'Custo inválido', desc:'Custo unitário preenchido, porém negativo ou não numérico.' },
-    { key:'nfeQuebrada', icon:'fa-file-circle-xmark', cor:'#dc2626', titulo:'Vínculo quebrado com NF-e', desc:'nfeId aponta para uma NF-e que não existe mais.' },
+    { key:'semCusto', icon:'fa-circle-question', cor:'#6b7280', titulo:'Sem custo informado', desc:'Custo unitário em branco — o item não entra nos totais financeiros.' },
+    { key:'custoInvalido', icon:'fa-sack-dollar', cor:'#ca8a04', titulo:'Custo inválido', desc:'Custo unitário preenchido, porém zero, negativo ou não numérico.' },
+    { key:'nfeQuebrada', icon:'fa-file-circle-xmark', cor:'#dc2626', titulo:'Vínculo quebrado com NF-e', desc:'nfeId do defeito aponta para uma NF-e que não existe mais.' },
+    { key:'nfeProdutoInexistente', icon:'fa-file-circle-exclamation', cor:'#dc2626', titulo:'NF-e com produto inexistente', desc:'produtosRelacionados da NF-e aponta para defeito que não existe mais.', grupo:true },
     { key:'caixaOrfa', icon:'fa-box-open', cor:'#b45309', titulo:'Vínculo órfão de caixa', desc:'caixaId aponta para uma caixa que não existe mais.' },
     { key:'fornecedoresDuplicados', icon:'fa-copy', cor:'#0369a1', titulo:'Fornecedores possivelmente duplicados', desc:'Mesmo CNPJ normalizado cadastrado em mais de um fornecedor.', grupo:true },
     { key:'marcasDuplicadas', icon:'fa-tag', cor:'#7c3aed', titulo:'Marcas possivelmente duplicadas', desc:'Grafias diferentes (espaços, acentos, maiúsculas) que podem ser a mesma marca.', grupo:true },
@@ -14841,6 +15873,20 @@ function _renderInconsistLista(key, lista) {
       </div>
     `)).join('');
   }
+  if(key === 'nfeProdutoInexistente') {
+    return lista.map(g => linha(`
+      <div style="font-size:11.5px;flex:1;min-width:220px;">
+        <strong>NF-e ${esc(g.nfe.numeroNfe || g.nfe.id)}</strong>${g.nfe.fornecedor ? ' · ' + esc(g.nfe.fornecedor) : ''}${g.nfe.data ? ' · ' + formatDate(g.nfe.data) : ''}
+        <div style="font-size:10.5px;color:var(--muted);margin-top:2px;">
+          ${g.ids.length} produto(s) inexistente(s): <span style="font-family:'Space Mono',monospace;">${g.ids.map(esc).join(', ')}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button onclick="openNfeDetail('${String(g.nfe.id).replace(/'/g,"\\'")}')" class="btn-ghost" style="font-size:10px;padding:4px 8px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir NF-e</button>
+        <button onclick="inconsistLimparProdutosNfe('${String(g.nfe.id).replace(/'/g,"\\'")}')" class="btn-danger" style="font-size:10px;padding:4px 8px;">Remover vínculos inválidos</button>
+      </div>
+    `)).join('');
+  }
   if(key === 'marcasDuplicadas') {
     return lista.map(g => linha(`
       <div style="font-size:11.5px;flex:1;min-width:180px;"><strong>Possível grupo:</strong> ${g.variantes.map(esc).join(' · ')}</div>
@@ -14869,7 +15915,7 @@ function _renderInconsistLista(key, lista) {
     if(key === 'cnpjDivergente') {
       acoes += `<button onclick="inconsistSincronizarCnpj(${d.id},${entry.fornecedor.id})" class="btn-primary" style="font-size:10px;padding:4px 8px;background:#ea580c;border-color:#ea580c;">Sincronizar CNPJ</button>`;
     }
-    if(key === 'quantidadeInvalida' || key === 'custoInvalido') {
+    if(key === 'quantidadeInvalida' || key === 'custoInvalido' || key === 'semCusto') {
       acoes += `<button onclick="inconsistAbrirItem(${d.id})" class="btn-primary" style="font-size:10px;padding:4px 8px;background:#ca8a04;border-color:#ca8a04;">Corrigir</button>`;
     }
     if(key === 'nfeQuebrada') {
@@ -14892,6 +15938,10 @@ function _renderInconsistAcaoMassa(key, lista) {
   }
   if(key === 'caixaOrfa') {
     return `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);"><button onclick="inconsistRemoverTodosVinculosCaixa()" class="btn-danger" style="font-size:11px;padding:6px 12px;"><i class="fa-solid fa-broom"></i> Remover todos os ${lista.length} vínculos órfãos de caixa</button></div>`;
+  }
+  if(key === 'nfeProdutoInexistente') {
+    const totalIds = lista.reduce((s2,g) => s2 + g.ids.length, 0);
+    return `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);"><button onclick="inconsistLimparTodosProdutosNfe()" class="btn-danger" style="font-size:11px;padding:6px 12px;"><i class="fa-solid fa-broom"></i> Remover os ${totalIds} vínculo(s) inválido(s) em ${lista.length} NF-e(s)</button></div>`;
   }
   return '';
 }
@@ -14954,6 +16004,49 @@ function inconsistRemoverTodosVinculosNfe() {
     saveData(); renderLight(); renderInconsistencias();
     showToast(`${lista.length} vínculo(s) removido(s).`, 'success');
   }, 'Nenhum defeito é excluído — apenas os vínculos inválidos com NF-es inexistentes.');
+}
+
+// ── Remove de UMA NF-e apenas os IDs de produto que não existem mais.
+// Nunca exclui a NF-e nem qualquer defeito — só limpa a referência inválida. ──
+function inconsistLimparProdutosNfe(nfeId) {
+  const n = nfes.find(x => String(x.id) === String(nfeId));
+  if(!n) return;
+  const quebrados = (n.produtosRelacionados || []).filter(pid => !defeitos.some(d => Number(d.id) === Number(pid)));
+  if(!quebrados.length) return;
+  openConfirm(
+    `Remover ${quebrados.length} vínculo(s) inválido(s) da NF-e ${n.numeroNfe || n.id}?`,
+    'warn',
+    () => {
+      n.produtosRelacionados = (n.produtosRelacionados || [])
+        .filter(pid => defeitos.some(d => Number(d.id) === Number(pid)));
+      saveData(); renderLight();
+      if(document.getElementById('nfeList')) renderNfeTable();
+      renderInconsistencias();
+      showToast(`${quebrados.length} vínculo(s) inválido(s) removido(s).`, 'success');
+    },
+    'A NF-e e os defeitos existentes são preservados — apenas as referências a produtos inexistentes são removidas.'
+  );
+}
+
+function inconsistLimparTodosProdutosNfe() {
+  const lista = calcularInconsistencias().nfeProdutoInexistente;
+  if(!lista.length) return;
+  const totalIds = lista.reduce((s,g) => s + g.ids.length, 0);
+  openConfirm(
+    `Remover ${totalIds} vínculo(s) inválido(s) em ${lista.length} NF-e(s)?`,
+    'danger',
+    () => {
+      lista.forEach(({ nfe }) => {
+        nfe.produtosRelacionados = (nfe.produtosRelacionados || [])
+          .filter(pid => defeitos.some(d => Number(d.id) === Number(pid)));
+      });
+      saveData(); renderLight();
+      if(document.getElementById('nfeList')) renderNfeTable();
+      renderInconsistencias();
+      showToast(`${totalIds} vínculo(s) inválido(s) removido(s).`, 'success');
+    },
+    'Nenhuma NF-e e nenhum defeito são excluídos — apenas as referências a produtos inexistentes.'
+  );
 }
 
 function inconsistRemoverVinculoCaixa(defeitoId) {
