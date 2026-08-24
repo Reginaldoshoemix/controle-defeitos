@@ -1612,6 +1612,10 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
       <span class="sidebar-text">Caixas</span>
       <span id="sidebarCaixasBadge" style="display:none;margin-left:auto;background:linear-gradient(135deg,#b45309,#d97706);color:#fff;font-size:9px;font-weight:800;border-radius: 0;padding:2px 6px;letter-spacing:.5px;"></span>
     </div>
+    <div id="nav-graficos" class="nav-item" onclick="navTo('graficos')" data-tip="Gráficos">
+      <div class="nav-icon"><i class="fa-solid fa-chart-column"></i></div>
+      <span class="sidebar-text">Gráficos</span>
+    </div>
     <div id="nav-inconsistencias" class="nav-item" onclick="navTo('inconsistencias')" data-tip="Inconsistências">
       <div class="nav-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
       <span class="sidebar-text">Inconsistências</span>
@@ -3149,6 +3153,8 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
               <div id="caixaDetMeta" style="font-size:11px;color:var(--muted);margin-top:6px;"></div>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn-ghost" style="border-color:rgba(22,163,74,.35);color:#16a34a;" onclick="exportarCaixaAtualExcel()" title="Exportar os itens desta caixa em Excel"><i class="fa-solid fa-file-excel"></i> Exportar Excel</button>
+              <button class="btn-ghost" style="border-color:rgba(220,38,38,.35);color:var(--accent);" onclick="exportarCaixaAtualPdf()" title="Exportar os itens desta caixa em PDF"><i class="fa-solid fa-file-pdf"></i> Exportar PDF</button>
               <button class="btn-ghost" onclick="abrirModalCaixa(_caixaAtualId)"><i class="fa-solid fa-pen"></i> Editar</button>
               <button id="caixaDetToggleBtn" class="btn-ghost" onclick="toggleCaixaStatus(_caixaAtualId)"></button>
               <button class="btn-ghost" style="color:var(--accent2);" onclick="confirmarExcluirCaixa(_caixaAtualId)"><i class="fa-solid fa-trash"></i> Excluir</button>
@@ -3215,6 +3221,54 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
          Apenas localiza e ajuda a corrigir problemas de dados — nunca altera nada
          automaticamente sem confirmação explícita do usuário.
     ══════════════════════════════════════════════ -->
+    <!-- ══════════════ ABA GRÁFICOS ══════════════ -->
+    <div id="section-graficos" style="display:none;animation:fade .22s ease;">
+      <div style="margin-bottom:16px;">
+        <div class="section-label">Análise</div>
+        <h2 style="font-size:22px;font-weight:900;letter-spacing:-.5px;margin:2px 0 0;">GRÁFICOS <span style="color:var(--accent);">GERENCIAIS</span></h2>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px;">Calculados ao vivo sobre os registros do sistema, incluindo resolvidos e arquivados.</div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="card p-5" style="margin-bottom:16px;">
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;">
+          <div style="flex:1;min-width:130px;">
+            <div class="section-label" style="margin-bottom:3px;">Período — de</div>
+            <input id="grafDe" type="date" class="input w-full" style="padding:7px 10px;font-size:12.5px;" onchange="renderGraficos()">
+          </div>
+          <div style="flex:1;min-width:130px;">
+            <div class="section-label" style="margin-bottom:3px;">Período — até</div>
+            <input id="grafAte" type="date" class="input w-full" style="padding:7px 10px;font-size:12.5px;" onchange="renderGraficos()">
+          </div>
+          <div style="flex:1;min-width:110px;">
+            <div class="section-label" style="margin-bottom:3px;">Ano</div>
+            <select id="grafAno" class="input w-full" style="padding:7px 10px;font-size:12.5px;" onchange="renderGraficos()"><option value="">Todos os anos</option></select>
+          </div>
+          <div style="flex:1;min-width:130px;">
+            <div class="section-label" style="margin-bottom:3px;">Loja</div>
+            <select id="grafLoja" class="input w-full" style="padding:7px 10px;font-size:12.5px;" onchange="renderGraficos()"><option value="">Todas as lojas</option></select>
+          </div>
+          <div style="flex:1;min-width:130px;">
+            <div class="section-label" style="margin-bottom:3px;">Marca</div>
+            <select id="grafMarca" class="input w-full" style="padding:7px 10px;font-size:12.5px;" onchange="renderGraficos()"><option value="">Todas as marcas</option></select>
+          </div>
+          <div style="flex:1;min-width:150px;">
+            <div class="section-label" style="margin-bottom:3px;">Fornecedor</div>
+            <select id="grafFornecedor" class="input w-full" style="padding:7px 10px;font-size:12.5px;" onchange="renderGraficos()"><option value="">Todos os fornecedores</option></select>
+          </div>
+          <button onclick="limparFiltrosGraficos()" class="btn-ghost" style="padding:7px 13px;font-size:12px;white-space:nowrap;">
+            <i class="fa-solid fa-filter-circle-xmark"></i> Limpar filtros
+          </button>
+        </div>
+      </div>
+
+      <!-- Indicadores -->
+      <div id="grafIndicadores" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;"></div>
+
+      <!-- Gráficos -->
+      <div id="grafGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:16px;"></div>
+    </div>
+
     <div id="section-inconsistencias" style="display:none;animation:fade .22s ease;">
 
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
@@ -3901,9 +3955,14 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
           <option value="0">Inativo (não aparece nas buscas de vínculo, mas o histórico é preservado)</option>
         </select>
       </div>
-      <div style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:rgba(3,105,161,.06);border:1px solid rgba(3,105,161,.18);border-radius: 0;font-size:12px;color:var(--muted);line-height:1.5;">
-        <i class="fa-solid fa-circle-info" style="color:#0369a1;margin-top:1px;"></i>
-        <span>O <strong>Procedimento de Devolução</strong> agora fica na ficha da <strong>marca</strong> (não no fornecedor individual), já que várias fábricas/CNPJs de uma marca costumam seguir o mesmo processo. Cadastre-o em <strong>Marcas → informações da marca</strong>.</span>
+      <div>
+        <label class="section-label block mb-1"><i class="fa-solid fa-truck-fast" style="margin-right:4px;color:#0369a1;"></i>Procedimento / Passo a passo de devolução</label>
+        <textarea id="fornProcedimento" rows="5" class="input w-full" style="padding:9px 12px;resize:vertical;min-height:110px;font-family:'DM Sans',sans-serif;line-height:1.6;"
+          placeholder="Passo a passo de devolução DESTE fornecedor/CNPJ:&#10;&#10;• Transportadora utilizada&#10;• Como emitir a NF de devolução&#10;• Contato do representante&#10;• Prazo de retorno&#10;• Coleta reversa: sim/não&#10;• Outros detalhes importantes..."></textarea>
+        <div style="font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.5;">
+          <i class="fa-solid fa-circle-info" style="color:#0369a1;"></i>
+          O procedimento pertence a este fornecedor/CNPJ específico — uma mesma marca pode ter fábricas com processos diferentes.
+        </div>
       </div>
       <div>
         <label class="section-label block mb-1">Observações</label>
@@ -3967,9 +4026,19 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
     <p id="addACaixaResumo" style="font-size:12.5px;color:var(--muted);margin-bottom:14px;"></p>
     <div style="margin-bottom:12px;">
       <label class="section-label block mb-1">Caixa aberta existente</label>
-      <select id="addACaixaSelect" class="input w-full" style="padding:9px 12px;">
-        <option value="">Selecione uma caixa...</option>
-      </select>
+      <!-- Campo pesquisável no mesmo padrão do componente de Fornecedor/Fábrica.
+           O id "addACaixaSelect" foi mantido como input hidden para que toda a
+           lógica de vinculação existente (confirmarAdicaoACaixa) continue
+           funcionando sem nenhuma alteração. -->
+      <input type="hidden" id="addACaixaSelect" value="">
+      <div id="addACaixaEscolhida" style="display:none;align-items:center;justify-content:space-between;gap:8px;background:rgba(180,83,9,.08);border:1px solid rgba(180,83,9,.25);padding:8px 10px;"></div>
+      <div id="addACaixaBuscaWrap" style="position:relative;">
+        <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:11px;color:#b45309;opacity:.7;pointer-events:none;"></i>
+        <input id="addACaixaBusca" type="text" class="input w-full" style="padding:9px 12px 9px 32px;" autocomplete="off"
+               placeholder="Pesquisar caixa por código ou nome..."
+               oninput="buscarCaixasAdd(this.value)" onfocus="buscarCaixasAdd(this.value)">
+        <div id="addACaixaSugestoes" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--accent-border);border-radius: 0;z-index:400;max-height:210px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:3px;"></div>
+      </div>
     </div>
     <div style="text-align:center;font-size:11px;color:var(--muted);margin:10px 0;">— ou —</div>
     <div style="margin-bottom:16px;">
@@ -4081,6 +4150,34 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
     <div class="flex gap-2">
       <button onclick="aplicarArredondamentoCards()" class="btn-primary flex-1 justify-center" style="padding:10px;"><i class="fa-solid fa-check"></i> Aplicar este arredondamento</button>
       <button onclick="fecharPreviaArredondamento()" class="btn-ghost" style="padding:10px 16px;">Fechar sem aplicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL "VISUALIZAR DEFEITO" — somente leitura
+     Não edita nada; o botão Editar apenas fecha e chama openEdit().
+═══════════════════════════════════════════════════════ -->
+<div id="verDefeitoModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)fecharVisualizarDefeito()">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:760px;width:100%;max-height:92vh;display:flex;flex-direction:column;">
+    <div class="modal-title" style="margin-bottom:6px;">
+      <div style="width:32px;height:32px;border-radius: 0;background:rgba(15,118,110,.12);border:1px solid rgba(15,118,110,.22);display:flex;align-items:center;justify-content:center;color:#0f766e;font-size:13px;">
+        <i class="fa-solid fa-eye"></i>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+        <span>Visualizar Defeito</span>
+        <span id="verDefeitoId" style="font-family:'Space Mono',monospace;font-size:11.5px;color:var(--muted);font-weight:700;"></span>
+      </div>
+    </div>
+    <p style="font-size:11.5px;color:var(--muted);margin:0 0 12px;">Somente leitura — nenhum dado é alterado nesta tela.</p>
+
+    <div id="verDefeitoBody" style="overflow-y:auto;flex:1;padding-right:4px;"></div>
+
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button id="verDefeitoEditarBtn" class="btn-primary flex-1 justify-center" style="padding:10px;">
+        <i class="fa-solid fa-pen"></i> Editar este registro
+      </button>
+      <button onclick="fecharVisualizarDefeito()" class="btn-ghost" style="padding:10px 16px;">Fechar</button>
     </div>
   </div>
 </div>
@@ -4422,6 +4519,11 @@ async function loadFromDB() {
   }
 
   await loadCaixaSeqCounter();
+
+  // Migração idempotente do procedimento de devolução (marca → fornecedor/CNPJ).
+  // Roda depois de fornecedores e marcasInfo estarem carregados; segura para
+  // executar em toda abertura do sistema.
+  try { migrarProcedimentoParaFornecedores(); } catch(e) { console.error('Migração de procedimento:', e); }
 }
 
 // ── Contador sequencial de código de caixa (CX-0001, CX-0002, ...). Persistido no
@@ -6874,6 +6976,7 @@ function renderTable() {
                       : 'style="background:linear-gradient(90deg,rgba(220,38,38,.10) 0%,transparent 60%);box-shadow:inset 3px 0 0 #dc2626;"';
 
       // Monta os botões do action-menu conforme estado
+      const btnVisualizar = `<button class="action-btn" onclick="abrirVisualizarDefeito(${i.id})" title="Visualizar" style="color:#0f766e;"><i class="fa-solid fa-eye" style="font-size:11px;"></i></button>`;
       const btnEditar  = `<button class="action-btn ab-edit" onclick="openEdit(${i.id})" title="Editar"><i class="fa-solid fa-pen" style="font-size:11px;"></i></button>`;
       const btnDuplicar= `<button class="action-btn" onclick="duplicarDefeito(${i.id})" title="Duplicar (novo tamanho)" style="color:#7c3aed;"><i class="fa-solid fa-copy" style="font-size:11px;"></i></button>`;
       const btnResolver= `<button class="action-btn ab-resolve" onclick="resolverItem(${i.id})" title="Resolver"><i class="fa-solid fa-check" style="font-size:11px;"></i></button>`;
@@ -6901,7 +7004,7 @@ function renderTable() {
         ? `<button class="action-btn" onclick="verFornecedor(${Number(fornVinc.id)})" title="Ver fornecedor: ${(fornVinc.marca||'').replace(/"/g,'&quot;')}" style="color:#0369a1;border-left:1px solid var(--border);"><i class="fa-solid fa-building" style="font-size:11px;pointer-events:none;"></i></button>`
         : '';
 
-      let btns = btnEditar;
+      let btns = btnVisualizar + btnEditar;
       // Ações fixas conforme estado
       if(!resolvido && !analise && !isSemSol) { btns += btnResolver + btnAnalise; }
       if(analise)   { btns += btnResolver; }
@@ -7019,6 +7122,7 @@ function renderTable() {
               <div style="font-size:11px;color:var(--muted);margin-top:2px;">${formatDate(i.data)} · <span class="chip">${i.loja}</span></div>
             </div>
             <div style="display:flex;gap:5px;">
+              <button onclick="abrirVisualizarDefeito(${i.id})" class="btn-edit" title="Visualizar" style="color:#0f766e;"><i class="fa-solid fa-eye"></i></button>
               <button onclick="openEdit(${i.id})" class="btn-edit" title="Editar"><i class="fa-solid fa-pen"></i></button>
               <button onclick="duplicarDefeito(${i.id})" class="btn-edit" title="Duplicar (novo tamanho)" style="color:#7c3aed;"><i class="fa-solid fa-copy"></i></button>
               ${!resolvido ? `<button onclick="resolverItem(${i.id})" class="btn-success" title="Resolver"><i class="fa-solid fa-check"></i></button>` : ''}
@@ -7147,7 +7251,8 @@ function resolverItem(id) {
         item.status = "resolvido";
         item.dataResolucao = new Date().toISOString();
         registrarHistoricoItem(item, 'status', 'Status alterado para Resolvido.');
-        saveData(); renderLight();
+        desvincularCaixaAoResolver(item);
+        saveData(); renderLight(); renderCaixas();
         showToast("Item marcado como resolvido!", "success");
       },
       'O ideal é concluir a NF-e de devolução para resolver os itens automaticamente.'
@@ -7158,7 +7263,8 @@ function resolverItem(id) {
   item.status = "resolvido";
   item.dataResolucao = new Date().toISOString();
   registrarHistoricoItem(item, 'status', 'Status alterado para Resolvido.');
-  saveData(); renderLight();
+  desvincularCaixaAoResolver(item);
+  saveData(); renderLight(); renderCaixas();
   showToast("Item marcado como resolvido!", "success");
 }
 
@@ -7991,6 +8097,556 @@ function openEdit(id) {
 
 // ── Timeline de histórico dentro do modal de edição (seção 7) ──
 // Só é exibida ao editar um item já existente (nunca em cadastro novo/duplicação/lote).
+// ══════════════════════════════════════════════════════════════════
+//  MODAL "VISUALIZAR DEFEITO" — somente leitura
+//  Não edita nada e não reaproveita o modal de edição. O botão "Editar"
+//  apenas fecha esta visualização e chama openEdit(), a rotina já existente.
+// ══════════════════════════════════════════════════════════════════
+function abrirVisualizarDefeito(id) {
+  const d = defeitos.find(x => Number(x.id) === Number(id));
+  if(!d) { showToast('Registro não encontrado.', 'error'); return; }
+
+  const esc = (t) => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const vazio = '<span style="color:var(--muted);">—</span>';
+  const val = (v) => (v === undefined || v === null || String(v).trim() === '') ? vazio : esc(v);
+  const money = (v) => (v === undefined || v === null || v === '' || !Number.isFinite(Number(v)))
+    ? vazio : 'R$ ' + Number(v).toFixed(2).replace('.', ',');
+
+  document.getElementById('verDefeitoId').textContent = '#' + d.id;
+
+  // ── Campos, agrupados por bloco ──
+  const campo = (rot, conteudo) => `
+    <div style="min-width:0;">
+      <div style="font-size:9.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;">${esc(rot)}</div>
+      <div style="font-size:13px;line-height:1.5;word-break:break-word;">${conteudo}</div>
+    </div>`;
+
+  const bloco = (titulo, icone, cor, campos) => `
+    <div style="border:1px solid var(--border);background:var(--surface2);padding:12px 14px;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:10px;">
+        <i class="fa-solid ${icone}" style="color:${cor};font-size:11px;"></i>
+        <span style="font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:${cor};">${esc(titulo)}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:11px;">${campos}</div>
+    </div>`;
+
+  // Fornecedor pela regra única de vínculo
+  const forn = fornecedorDoDefeito(d);
+  const proc = procedimentoDevolucaoDoDefeito(d);
+
+  // Caixa atual + caixa anterior recuperada do histórico
+  const cx = d.caixaId ? getCaixaById(d.caixaId) : null;
+  let caixaHtml;
+  if(cx) {
+    caixaHtml = `<span onclick="fecharVisualizarDefeito();irParaCaixa(${cx.id})" style="display:inline-flex;align-items:center;gap:5px;background:rgba(180,83,9,.10);border:1px solid rgba(180,83,9,.25);padding:2px 8px;font-size:11.5px;font-weight:700;color:#b45309;cursor:pointer;"><i class="fa-solid fa-box" style="font-size:9px;"></i>${esc(cx.codigo)}${cx.nome ? ' · ' + esc(cx.nome) : ''}</span>`;
+  } else if(d.caixaId) {
+    caixaHtml = `<span style="color:#dc2626;font-size:12px;"><i class="fa-solid fa-triangle-exclamation" style="font-size:10px;"></i> Caixa não encontrada</span>`;
+  } else {
+    // Recupera do histórico a última caixa a que o item pertenceu.
+    const evCaixa = [...(d.historico || [])].reverse().find(h => h.tipo === 'caixa' && /(Desvinculado|Removido)/i.test(h.descricao || ''));
+    caixaHtml = evCaixa
+      ? `${vazio} <span style="font-size:11px;color:var(--muted);display:block;margin-top:3px;"><i class="fa-solid fa-clock-rotate-left" style="font-size:9px;"></i> ${esc(evCaixa.descricao)}</span>`
+      : vazio;
+  }
+
+  // NF-e vinculada
+  const nfeVinc = d.nfeId ? nfes.find(n => String(n.id) === String(d.nfeId)) : null;
+  const nfeHtml = nfeVinc
+    ? `<span onclick="fecharVisualizarDefeito();openNfeDetail('${String(nfeVinc.id).replace(/'/g,"\\'")}')" style="display:inline-flex;align-items:center;gap:5px;background:rgba(37,99,235,.10);border:1px solid rgba(37,99,235,.22);padding:2px 8px;font-size:11.5px;font-weight:700;color:#2563eb;cursor:pointer;"><i class="fa-solid fa-file-invoice" style="font-size:9px;"></i>${esc(nfeVinc.numeroNfe || 'vinculada')}</span>`
+    : (d.nfeId ? `<span style="color:#dc2626;font-size:12px;">Vínculo quebrado (NF-e inexistente)</span>` : vazio);
+
+  // Indenização: vem da NF-e de devolução vinculada (tipoResolucao)
+  let indenizHtml = vazio;
+  if(nfeVinc) {
+    const concl = nfeVinc.status === 'devolvido';
+    indenizHtml = `<span style="display:inline-block;padding:2px 8px;font-size:11px;font-weight:700;${nfeTipoResolucaoStyle(nfeVinc.tipoResolucao)}">${esc(nfeTipoResolucaoLabel(nfeVinc.tipoResolucao))}</span>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px;">NF-e ${concl ? 'concluída' : nfeStatusLabel(nfeVinc.status)}${nfeVinc.valorNota || nfeVinc.valorTotal ? ' · ' + money(nfeVinc.valorNota ?? nfeVinc.valorTotal) : ''}</div>`;
+  }
+
+  const qtd = getQtdItem(d);
+  const totalItem = (d.custoUnitario === '' || d.custoUnitario == null) ? null : Number(d.custoUnitario) * qtd;
+
+  // Campos extras do objeto que não estão nos blocos fixos (nada fica de fora)
+  const conhecidos = new Set(['id','loja','marca','codigoBarras','referencia','cor','numeracao','quantidade',
+    'custoUnitario','defeito','data','notaOrigem','dataEmissaoNfe','cnpj','xml','obs','status','fornecedorId',
+    'caixaId','nfeId','historico','arquivado','arquivadoEm','dataResolucao','fotosLoja','destino',
+    '_resolvidoPorNfe','_idx']);
+  const extras = Object.keys(d).filter(k => !conhecidos.has(k) && d[k] !== '' && d[k] != null && typeof d[k] !== 'object');
+
+  document.getElementById('verDefeitoBody').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:11px;">
+
+      ${bloco('Identificação', 'fa-fingerprint', '#0f766e', `
+        ${campo('Marca', `<strong>${val(d.marca)}</strong>`)}
+        ${campo('Referência', val(d.referencia))}
+        ${campo('Código de barras', `<span style="font-family:'Space Mono',monospace;font-size:12px;">${val(d.codigoBarras)}</span>`)}
+        ${campo('Cor', val(d.cor))}
+        ${campo('Numeração', val(d.numeracao))}
+        ${campo('Quantidade', `<strong style="color:var(--accent2);">${qtd} par(es)</strong>`)}
+        ${campo('Loja', val(d.loja))}
+      `)}
+
+      ${bloco('Fornecedor / Fábrica', 'fa-industry', '#0369a1', `
+        ${campo('Fornecedor', forn ? `<strong>${val(forn.marca)}</strong>` : (d.cnpj ? `<span style="color:var(--muted);font-size:12px;">Não cadastrado (registro legado)</span>` : vazio))}
+        ${campo('Razão social', forn ? val(forn.razaoSocial) : vazio)}
+        ${campo('CNPJ', `<span style="font-family:'Space Mono',monospace;font-size:12px;">${val(d.cnpj || (forn ? forn.cnpj : ''))}</span>`)}
+        ${forn && forn.ativo === false ? campo('Situação', '<span style="color:#b45309;font-weight:700;font-size:12px;">Fornecedor inativo</span>') : ''}
+      `)}
+
+      ${bloco('Defeito e valores', 'fa-screwdriver-wrench', 'var(--accent)', `
+        ${campo('Descrição do defeito', val(d.defeito))}
+        ${campo('Custo unitário', money(d.custoUnitario))}
+        ${campo('Valor total', totalItem == null ? vazio : `<strong>${money(totalItem)}</strong>`)}
+        ${campo('Nota de origem', val(d.notaOrigem))}
+        ${campo('Chave XML', d.xml ? `<span style="font-family:'Space Mono',monospace;font-size:10.5px;word-break:break-all;">${esc(d.xml)}</span>` : vazio)}
+      `)}
+
+      ${bloco('Situação e datas', 'fa-flag', '#7c3aed', `
+        ${campo('Status', `<span style="display:inline-block;padding:2px 8px;font-size:11px;font-weight:800;background:rgba(0,0,0,.06);">${esc(defeitoStatusLabel(d.status))}</span>${d.arquivado ? ' <span style="display:inline-block;padding:2px 7px;font-size:10px;font-weight:800;color:#b45309;background:rgba(180,83,9,.12);border:1px solid rgba(180,83,9,.25);">ARQUIVADO</span>' : ''}`)}
+        ${campo('Data do registro', d.data ? formatDate(d.data) : vazio)}
+        ${campo('Data emissão NF-e origem', d.dataEmissaoNfe ? formatDate(d.dataEmissaoNfe) : vazio)}
+        ${campo('Data de resolução', d.dataResolucao ? new Date(d.dataResolucao).toLocaleString('pt-BR') : vazio)}
+        ${d.destino ? campo('Destino (sem solução)', val(d.destino === 'doacao' ? 'Doação' : 'Saldão')) : ''}
+        ${d.arquivadoEm ? campo('Arquivado em', new Date(d.arquivadoEm).toLocaleString('pt-BR')) : ''}
+      `)}
+
+      ${bloco('Devolução e indenização', 'fa-file-invoice', '#2563eb', `
+        ${campo('NF-e de devolução', nfeHtml)}
+        ${campo('Situação da indenização', indenizHtml)}
+        ${campo('Caixa atual', caixaHtml)}
+      `)}
+
+      ${proc.texto ? `
+      <div style="border:1px solid rgba(3,105,161,.22);background:rgba(3,105,161,.05);padding:12px 14px;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+          <i class="fa-solid fa-truck-fast" style="color:#0369a1;font-size:11px;"></i>
+          <span style="font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#0369a1;">Procedimento de devolução</span>
+          <span style="font-size:9.5px;font-weight:700;color:var(--muted);margin-left:auto;">${proc.origem === 'fornecedor' ? 'do fornecedor vinculado' : 'texto herdado da marca'}</span>
+        </div>
+        <div style="font-size:12.5px;line-height:1.65;white-space:pre-line;max-height:180px;overflow-y:auto;">${esc(proc.texto)}</div>
+      </div>` : ''}
+
+      ${(d.obs || extras.length) ? bloco('Observações e outros campos', 'fa-note-sticky', '#b45309', `
+        ${campo('Observações', d.obs ? `<span style="white-space:pre-line;">${esc(d.obs)}</span>` : vazio)}
+        ${extras.map(k => campo(k, val(d[k]))).join('')}
+      `) : ''}
+
+      ${Array.isArray(d.fotosLoja) && d.fotosLoja.length ? `
+      <div style="border:1px solid var(--border);background:var(--surface2);padding:12px 14px;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+          <i class="fa-solid fa-images" style="color:#7c3aed;font-size:11px;"></i>
+          <span style="font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#7c3aed;">Fotos da loja (${d.fotosLoja.length})</span>
+        </div>
+        <button class="btn-ghost" style="padding:6px 12px;font-size:11.5px;" onclick="fecharVisualizarDefeito();verFotosLoja(${d.id})"><i class="fa-solid fa-eye"></i> Ver fotos</button>
+      </div>` : ''}
+
+      <div style="border:1px solid var(--border);background:var(--surface2);padding:12px 14px;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:10px;">
+          <i class="fa-solid fa-clock-rotate-left" style="color:#2563eb;font-size:11px;"></i>
+          <span style="font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#2563eb;">Histórico de movimentações</span>
+          <span style="font-size:9.5px;color:var(--muted);margin-left:auto;">${(d.historico||[]).length} evento(s)</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;">${_renderHistoricoVisualizar(d)}</div>
+      </div>
+
+    </div>`;
+
+  document.getElementById('verDefeitoEditarBtn').onclick = () => {
+    fecharVisualizarDefeito();
+    openEdit(d.id);           // reutiliza a rotina de edição existente
+  };
+
+  document.getElementById('verDefeitoModal').style.display = 'flex';
+}
+
+function fecharVisualizarDefeito() {
+  const m = document.getElementById('verDefeitoModal');
+  if(m) m.style.display = 'none';
+}
+
+// Timeline somente leitura, mais recente primeiro (mesma convenção da edição).
+function _renderHistoricoVisualizar(d) {
+  const esc = (t) => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const eventos = Array.isArray(d.historico) ? [...d.historico] : [];
+  if(!eventos.length) {
+    return `<div style="text-align:center;color:var(--muted);font-size:11.5px;padding:10px;">Nenhum evento registrado (itens antigos podem não ter histórico anterior às atualizações).</div>`;
+  }
+  eventos.sort((a,b) => new Date(b.dataHora) - new Date(a.dataHora));
+  return eventos.map(ev => {
+    const dt = ev.dataHora ? new Date(ev.dataHora) : null;
+    const dtLabel = dt ? dt.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
+    const alts = _historicoAlteracoesLista(ev.alteracoes);
+    const altsHtml = alts.length
+      ? '<div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;">' +
+        alts.map(c => `<div style="font-size:10.5px;color:var(--muted);"><strong style="color:var(--text);">${esc(c.campo)}:</strong> ${esc(c.de)} → <strong>${esc(c.para)}</strong></div>`).join('') + '</div>'
+      : '';
+    return `<div style="display:flex;gap:8px;padding:8px 10px;background:var(--surface);border:1px solid var(--border);">
+      <div style="width:24px;height:24px;background:rgba(59,130,246,.10);color:#2563eb;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;"><i class="fa-solid ${_HISTORICO_ICONES[ev.tipo] || 'fa-circle-info'}"></i></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;line-height:1.45;">${esc(ev.descricao)}</div>
+        ${altsHtml}
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;">${dtLabel}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  ABA GRÁFICOS
+//  Tudo é calculado AO VIVO sobre os arrays existentes (defeitos, nfes,
+//  fornecedores, caixas). Não existe base paralela, nenhum dado é gravado
+//  aqui e itens resolvidos/arquivados continuam compondo o histórico.
+//
+//  Gráficos em SVG nativo — nenhuma biblioteca nova foi adicionada. O sistema
+//  já desenha seus gráficos do dashboard em HTML/CSS puro, então manter SVG
+//  próprio preserva a identidade visual, funciona offline e não acrescenta
+//  peso nem dependência de CDN ao carregamento.
+//
+//  Cores: uma por SIGNIFICADO, reaproveitando a identidade existente —
+//  vermelho = volume de defeitos, verde = resolvidos, azul = indenizações.
+//  Cada gráfico é de série única e traz título próprio e valor rotulado em
+//  cada barra, de modo que a leitura nunca depende apenas da cor.
+// ══════════════════════════════════════════════════════════════════
+const GRAF_CORES = {
+  defeitos:    { claro: '#dc2626', escuro: '#ef4444' },
+  resolvidos:  { claro: '#16a34a', escuro: '#22c55e' },
+  indenizacao: { claro: '#2563eb', escuro: '#3b82f6' },
+};
+function _grafCor(nome) {
+  const dark = document.body.classList.contains('dark');
+  const c = GRAF_CORES[nome] || GRAF_CORES.defeitos;
+  return dark ? c.escuro : c.claro;
+}
+
+const _MESES_ABREV = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+// ── Data em que uma indenização/devolução foi efetivamente concluída.
+// A partir desta versão a conclusão grava nfe.dataConclusao; para registros
+// anteriores, cai para a data de coleta e depois para a data da NF-e. ──
+function _dataConclusaoNfe(n) {
+  if(!n) return '';
+  const bruta = n.dataConclusao || n.dataColeta || n.data || '';
+  return String(bruta).slice(0, 10);
+}
+
+// ── Valor de uma indenização. Usa o valor da própria NF-e; só quando ele não
+// foi preenchido soma o custo dos itens vinculados (nunca assume que qualquer
+// valor de defeito é uma indenização). ──
+function _valorIndenizacao(n) {
+  const v = n.valorNota != null && n.valorNota !== '' ? Number(n.valorNota)
+          : (n.valorTotal != null && n.valorTotal !== '' ? Number(n.valorTotal) : NaN);
+  if(Number.isFinite(v) && v > 0) return v;
+  const ids = (n.produtosRelacionados || []).map(Number);
+  return defeitos
+    .filter(d => ids.includes(Number(d.id)))
+    .reduce((s, d) => s + ((Number(d.custoUnitario) || 0) * getQtdItem(d)), 0);
+}
+
+// ── Estado dos filtros da aba ──
+function _grafFiltros() {
+  const g = (id) => (document.getElementById(id)?.value || '').trim();
+  return { de: g('grafDe'), ate: g('grafAte'), ano: g('grafAno'),
+           loja: g('grafLoja'), marca: g('grafMarca'), fornecedor: g('grafFornecedor') };
+}
+
+function _grafDentroPeriodo(dataIso, f) {
+  if(!dataIso) return false;
+  const d = String(dataIso).slice(0, 10);
+  if(f.ano && d.slice(0, 4) !== f.ano) return false;
+  if(f.de  && d < f.de)  return false;
+  if(f.ate && d > f.ate) return false;
+  return true;
+}
+
+// Filtros de dimensão (loja/marca/fornecedor) aplicados a um DEFEITO.
+function _grafDefeitoPassa(d, f) {
+  if(f.loja  && normalizeLoja(d.loja) !== normalizeLoja(f.loja)) return false;
+  if(f.marca && String(d.marca || '').trim().toUpperCase() !== f.marca) return false;
+  if(f.fornecedor) {
+    const fo = fornecedores.find(x => Number(x.id) === Number(f.fornecedor));
+    if(!fo || !defeitoPertenceAoFornecedor(d, fo)) return false;
+  }
+  return true;
+}
+
+// Filtros de dimensão aplicados a uma NF-e de devolução.
+function _grafNfePassa(n, f) {
+  if(f.loja && normalizeLoja(n.loja) !== normalizeLoja(f.loja)) return false;
+  if(f.marca) {
+    const m = String(n.fornecedorMarca || n.fornecedor || '').trim().toUpperCase();
+    const idsN = (n.produtosRelacionados || []).map(Number);
+    const bateItem = defeitos.some(d => idsN.includes(Number(d.id)) && String(d.marca||'').trim().toUpperCase() === f.marca);
+    if(m !== f.marca && !bateItem) return false;
+  }
+  if(f.fornecedor && Number(n.fornecedorId || 0) !== Number(f.fornecedor)) return false;
+  return true;
+}
+
+// ── Agrupa uma lista de datas ISO em meses contínuos (sem buracos). ──
+function _agruparPorMes(pares) {   // pares: [{ data:'YYYY-MM-DD', valor:Number }]
+  if(!pares.length) return [];
+  const mapa = {};
+  pares.forEach(({ data, valor }) => {
+    const ym = String(data).slice(0, 7);
+    if(!/^\d{4}-\d{2}$/.test(ym)) return;
+    mapa[ym] = (mapa[ym] || 0) + (Number(valor) || 0);
+  });
+  const chaves = Object.keys(mapa).sort();
+  if(!chaves.length) return [];
+
+  // Preenche meses intermediários sem registro, para a linha do tempo não mentir.
+  const out = [];
+  let [ay, am] = chaves[0].split('-').map(Number);
+  const [fy, fm] = chaves[chaves.length - 1].split('-').map(Number);
+  let guarda = 0;
+  while((ay < fy || (ay === fy && am <= fm)) && guarda++ < 240) {
+    const ym = `${ay}-${String(am).padStart(2, '0')}`;
+    out.push({ chave: ym, rotulo: `${_MESES_ABREV[am-1]}/${String(ay).slice(2)}`, valor: mapa[ym] || 0 });
+    am++; if(am > 12) { am = 1; ay++; }
+  }
+  return out;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  Construtores de SVG
+//  Barras com extremidade RETA, para acompanhar a identidade visual atual
+//  do sistema (cards e componentes sem arredondamento).
+// ══════════════════════════════════════════════════════════════════
+function _svgVazio(msg) {
+  return `<div style="display:flex;align-items:center;justify-content:center;height:190px;color:var(--muted);font-size:12.5px;text-align:center;padding:0 12px;">
+    <div><i class="fa-solid fa-chart-column" style="font-size:20px;opacity:.35;display:block;margin-bottom:8px;"></i>${msg}</div>
+  </div>`;
+}
+
+// Barras verticais para séries mensais.
+function _svgBarrasMes(dados, cor, fmt) {
+  if(!dados.length) return _svgVazio('Nenhum registro no período selecionado.');
+  const fmtVal = fmt || (v => String(v));
+  // Largura acompanha a quantidade de meses. Poucos meses = cabe no card sem
+  // rolagem; muitos meses = rola horizontalmente sem espremer os rótulos.
+  const W = Math.max(300, dados.length * 46);
+  const H = 210, padL = 44, padR = 14, padT = 20, padB = 34;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const bruto = Math.max(...dados.map(d => d.valor), 1);
+  // Escala "redonda": para contagens pequenas os rótulos do eixo precisam ser
+  // inteiros distintos (senão aparecem 0,1,1,1 repetidos). Escolhe um passo
+  // inteiro quando o máximo é pequeno; caso contrário divide em 4.
+  let divisoes = 4, passoEixo;
+  if(bruto <= 8) { passoEixo = 1; divisoes = Math.max(1, Math.ceil(bruto)); }
+  else { passoEixo = Math.ceil(bruto / 4); }
+  const max = passoEixo * divisoes;
+
+  const passo = plotW / dados.length;
+  const larg = Math.max(6, Math.min(34, passo - 8));   // respiro entre barras
+
+  // Grade recessiva
+  let grade = '', eixo = '';
+  for(let i = 0; i <= divisoes; i++) {
+    const y = padT + plotH - (plotH * i / divisoes);
+    const v = passoEixo * i;
+    grade += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="1" />`;
+    eixo  += `<text x="${padL - 6}" y="${(y + 3.5).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--muted)" font-family="'Space Mono',monospace">${fmtVal(v, true)}</text>`;
+  }
+
+  const barras = dados.map((d, i) => {
+    const h = d.valor > 0 ? Math.max(2, (d.valor / max) * plotH) : 0;
+    const x = padL + i * passo + (passo - larg) / 2;
+    const y = padT + plotH - h;
+    const rotuloValor = d.valor > 0
+      ? `<text x="${(x + larg/2).toFixed(1)}" y="${(y - 5).toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--text)" font-family="'Space Mono',monospace">${fmtVal(d.valor)}</text>`
+      : '';
+    return `<g class="graf-barra">
+      <rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${larg.toFixed(1)}" height="${h.toFixed(1)}" fill="${cor}"><title>${d.rotulo}: ${fmtVal(d.valor)}</title></rect>
+      ${rotuloValor}
+      <text x="${(x + larg/2).toFixed(1)}" y="${H - 12}" text-anchor="middle" font-size="9.5" fill="var(--muted)">${d.rotulo}</text>
+    </g>`;
+  }).join('');
+
+  return `<div style="overflow-x:auto;">
+    <svg viewBox="0 0 ${W} ${H}" width="100%" height="210" preserveAspectRatio="xMidYMid meet" style="display:block;${dados.length > 7 ? 'min-width:' + W + 'px;' : ''}">
+      ${grade}${eixo}${barras}
+    </svg>
+  </div>`;
+}
+
+// Barras horizontais para rankings (marca, fornecedor, loja).
+function _svgBarrasRanking(dados, cor, fmt, limite) {
+  if(!dados.length) return _svgVazio('Nenhum registro no período selecionado.');
+  const fmtVal = fmt || (v => String(v));
+  const lista = dados.slice(0, limite || 10);
+  const linhaH = 26, padT = 6, padB = 6, rotuloW = 118, valorW = 52;
+  const H = padT + padB + lista.length * linhaH;
+  const W = 420, plotW = W - rotuloW - valorW;
+  const max = Math.max(...lista.map(d => d.valor), 1);
+
+  const barras = lista.map((d, i) => {
+    const y = padT + i * linhaH;
+    const larg = d.valor > 0 ? Math.max(2, (d.valor / max) * plotW) : 0;
+    const nome = String(d.rotulo || '—');
+    const nomeCurto = nome.length > 17 ? nome.slice(0, 16) + '…' : nome;
+    return `<g class="graf-barra">
+      <text x="${rotuloW - 8}" y="${y + 15}" text-anchor="end" font-size="10.5" fill="var(--text)" font-weight="600">${nomeCurto.replace(/&/g,'&amp;').replace(/</g,'&lt;')}<title>${nome.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</title></text>
+      <rect x="${rotuloW}" y="${y + 5}" width="${plotW}" height="14" fill="var(--surface2)" />
+      <rect x="${rotuloW}" y="${y + 5}" width="${larg.toFixed(1)}" height="14" fill="${cor}"><title>${nome}: ${fmtVal(d.valor)}</title></rect>
+      <text x="${W - valorW + 8}" y="${y + 16}" font-size="10.5" font-weight="700" fill="var(--text)" font-family="'Space Mono',monospace">${fmtVal(d.valor)}</text>
+    </g>`;
+  }).join('');
+
+  return `<div style="overflow-x:auto;">
+    <svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="xMidYMin meet" style="display:block;">${barras}</svg>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  Render principal da aba
+// ══════════════════════════════════════════════════════════════════
+function renderGraficos() {
+  const sec = document.getElementById('section-graficos');
+  if(!sec) return;
+  _popularFiltrosGraficos();
+
+  const f = _grafFiltros();
+  const nInt = (v) => String(Math.round(v));
+  const nBRL = (v, eixo) => eixo
+    ? (v >= 1000 ? (v/1000).toFixed(v >= 10000 ? 0 : 1) + 'k' : Math.round(v))
+    : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+  // ── Base: defeitos que passam nos filtros de dimensão ──
+  const baseDef = defeitos.filter(d => _grafDefeitoPassa(d, f));
+
+  // 1) Defeitos por mês (data do registro)
+  const g1 = _agruparPorMes(
+    baseDef.filter(d => _grafDentroPeriodo(d.data, f)).map(d => ({ data: d.data, valor: 1 }))
+  );
+  // 2) Resolvidos por mês (data REAL de resolução)
+  const g2 = _agruparPorMes(
+    baseDef.filter(d => d.status === 'resolvido' && d.dataResolucao && _grafDentroPeriodo(String(d.dataResolucao).slice(0,10), f))
+           .map(d => ({ data: String(d.dataResolucao).slice(0,10), valor: 1 }))
+  );
+  // 3 e 4) Indenizações = NF-e de devolução concluída com tipoResolucao "indenizado"
+  const indenizacoes = nfes.filter(n =>
+    n.tipoResolucao === 'indenizado' && n.status === 'devolvido' &&
+    _grafNfePassa(n, f) && _grafDentroPeriodo(_dataConclusaoNfe(n), f)
+  );
+  const g3 = _agruparPorMes(indenizacoes.map(n => ({ data: _dataConclusaoNfe(n), valor: 1 })));
+  const g4 = _agruparPorMes(indenizacoes.map(n => ({ data: _dataConclusaoNfe(n), valor: _valorIndenizacao(n) })));
+
+  // 5, 6, 7) Rankings — sempre em PARES (soma das quantidades)
+  const noPeriodo = baseDef.filter(d => _grafDentroPeriodo(d.data, f));
+  const rank = (chaveFn) => {
+    const m = {};
+    noPeriodo.forEach(d => { const k = chaveFn(d); if(!k) return; m[k] = (m[k] || 0) + getQtdItem(d); });
+    return Object.keys(m).map(k => ({ rotulo: k, valor: m[k] })).sort((a,b) => b.valor - a.valor);
+  };
+  const g5 = rank(d => (d.marca || '').trim().toUpperCase() || null);
+  const g6 = rank(d => { const fo = fornecedorDoDefeito(d); return fo ? (fornecedorTextoIdentificacao(fo) || '(sem identificação)') : '(sem fornecedor)'; });
+  const g7 = rank(d => (d.loja || '').trim() || null);
+
+  // ── Indicadores do topo ──
+  const totalRegistros = noPeriodo.length;
+  const totalPares     = noPeriodo.reduce((s,d) => s + getQtdItem(d), 0);
+  const totalResolvidos= g2.reduce((s,m) => s + m.valor, 0);
+  const totalIndeniz   = indenizacoes.length;
+  const valorIndeniz   = indenizacoes.reduce((s,n) => s + _valorIndenizacao(n), 0);
+
+  const stat = (rot, val, sub, cor) => `
+    <div class="stat-card" style="padding:12px 14px;">
+      <div class="stat-label" style="font-size:9.5px;">${rot}</div>
+      <div class="stat-value" style="font-size:21px;color:${cor};">${val}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px;">${sub}</div>
+    </div>`;
+
+  document.getElementById('grafIndicadores').innerHTML =
+    stat('Registros', nInt(totalRegistros), `${totalPares} par(es)`, _grafCor('defeitos')) +
+    stat('Resolvidos', nInt(totalResolvidos), 'no período', _grafCor('resolvidos')) +
+    stat('Indenizações', nInt(totalIndeniz), 'NF-es concluídas', _grafCor('indenizacao')) +
+    stat('Valor indenizado', nBRL(valorIndeniz), 'somatório', _grafCor('indenizacao'));
+
+  const card = (titulo, sub, conteudo) => `
+    <div class="card p-5">
+      <div style="margin-bottom:12px;">
+        <div class="section-label">${titulo}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${sub}</div>
+      </div>
+      ${conteudo}
+    </div>`;
+
+  document.getElementById('grafGrid').innerHTML = [
+    card('Devoluções / defeitos por mês', 'Quantidade de registros pela data do defeito', _svgBarrasMes(g1, _grafCor('defeitos'), nInt)),
+    card('Itens resolvidos por mês', 'Pela data real de resolução do item', _svgBarrasMes(g2, _grafCor('resolvidos'), nInt)),
+    card('Indenizações por mês', 'NF-es de devolução concluídas com resolução “Indenizado”', _svgBarrasMes(g3, _grafCor('indenizacao'), nInt)),
+    card('Valor das indenizações por mês', 'Valor das NF-es indenizadas concluídas', _svgBarrasMes(g4, _grafCor('indenizacao'), nBRL)),
+    card('Defeitos por marca', 'Top 10 em pares, no período filtrado', _svgBarrasRanking(g5, _grafCor('defeitos'), nInt, 10)),
+    card('Defeitos por fornecedor', 'Pelo vínculo real fornecedor/CNPJ do item', _svgBarrasRanking(g6, _grafCor('defeitos'), nInt, 10)),
+    card('Defeitos por loja', 'Comparação entre as lojas cadastradas', _svgBarrasRanking(g7, _grafCor('defeitos'), nInt, 15)),
+  ].join('');
+}
+
+// ── Popula os seletores de filtro a partir dos dados reais ──
+function _popularFiltrosGraficos() {
+  const esc = (t) => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const preencher = (id, opcoes, rotuloTodos) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    const atual = el.value;
+    const html = `<option value="">${rotuloTodos}</option>` +
+      opcoes.map(o => `<option value="${esc(o.v)}">${esc(o.t)}</option>`).join('');
+    if(el.innerHTML !== html) {
+      el.innerHTML = html;
+      el.value = opcoes.some(o => String(o.v) === String(atual)) ? atual : '';
+    }
+  };
+
+  const anos = [...new Set(defeitos.map(d => String(d.data || '').slice(0,4)).filter(a => /^\d{4}$/.test(a)))].sort().reverse();
+  preencher('grafAno', anos.map(a => ({ v: a, t: a })), 'Todos os anos');
+
+  const lojas = [...new Set(defeitos.map(d => (d.loja||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt'));
+  preencher('grafLoja', lojas.map(l => ({ v: l, t: l })), 'Todas as lojas');
+
+  const marcas = [...new Set(defeitos.map(d => (d.marca||'').trim().toUpperCase()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt'));
+  preencher('grafMarca', marcas.map(m => ({ v: m, t: m })), 'Todas as marcas');
+
+  const forns = [...fornecedores].sort((a,b) => String(a.marca||'').localeCompare(String(b.marca||''),'pt'));
+  preencher('grafFornecedor', forns.map(f => ({
+    v: f.id, t: (f.marca || fornecedorTextoIdentificacao(f)) + (f.cnpj ? ' · ' + f.cnpj : '')
+  })), 'Todos os fornecedores');
+}
+
+function limparFiltrosGraficos() {
+  ['grafDe','grafAte','grafAno','grafLoja','grafMarca','grafFornecedor']
+    .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  renderGraficos();
+}
+
+// ── Normaliza o campo "alteracoes" do histórico para uma lista uniforme.
+// Aceita os DOIS formatos existentes na base:
+//   • objeto por rótulo  → { "Status": {de, para} }        (diff de edição)
+//   • array de registros → [ {campo, de, para}, ... ]      (ações em massa etc.)
+// Sem isso, o array era iterado com Object.keys e o rótulo aparecia como "0".
+function _historicoAlteracoesLista(alteracoes) {
+  if(!alteracoes || typeof alteracoes !== 'object') return [];
+  if(Array.isArray(alteracoes)) {
+    return alteracoes
+      .filter(a => a && typeof a === 'object')
+      .map(a => ({ campo: a.campo ?? '', de: a.de ?? '', para: a.para ?? '' }));
+  }
+  return Object.keys(alteracoes).map(k => ({
+    campo: k,
+    de:   alteracoes[k] && alteracoes[k].de   !== undefined ? alteracoes[k].de   : '',
+    para: alteracoes[k] && alteracoes[k].para !== undefined ? alteracoes[k].para : ''
+  }));
+}
+
+// Ícone padrão por tipo de evento do histórico (compartilhado pela timeline do
+// modal de edição e pelo modal de visualização).
+const _HISTORICO_ICONES = {
+  criacao: 'fa-plus', status: 'fa-flag', edicao: 'fa-pen', arquivado: 'fa-box-archive',
+  restaurado: 'fa-box-open', caixa: 'fa-box', nfe: 'fa-file-invoice',
+  transferencia_fornecedor: 'fa-right-left', duplicado_confirmado: 'fa-copy',
+  fornecedor_vinculado: 'fa-industry', edicao_massa: 'fa-layer-group',
+  edicao_massa_fornecedor: 'fa-industry',
+};
+
 function renderEditHistorico(item) {
   const wrap = document.getElementById('editHistoricoWrap');
   const box  = document.getElementById('editHistoricoBox');
@@ -8017,12 +8673,10 @@ function renderEditHistorico(item) {
     const dt = ev.dataHora ? new Date(ev.dataHora) : null;
     const dtLabel = dt ? dt.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
     let alteracoesHtml = '';
-    if(ev.alteracoes && typeof ev.alteracoes === 'object') {
+    const _alts = _historicoAlteracoesLista(ev.alteracoes);
+    if(_alts.length) {
       alteracoesHtml = '<div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;">' +
-        Object.keys(ev.alteracoes).map(campo => {
-          const c = ev.alteracoes[campo];
-          return `<div style="font-size:10.5px;color:var(--muted);"><strong style="color:var(--text);">${esc(campo)}:</strong> ${esc(c.de)} → <strong>${esc(c.para)}</strong></div>`;
-        }).join('') + '</div>';
+        _alts.map(c => `<div style="font-size:10.5px;color:var(--muted);"><strong style="color:var(--text);">${esc(c.campo)}:</strong> ${esc(c.de)} → <strong>${esc(c.para)}</strong></div>`).join('') + '</div>';
     }
     return `<div style="display:flex;gap:8px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius: 0;">
       <div style="width:24px;height:24px;border-radius: 0;background:rgba(59,130,246,.10);color:#2563eb;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;"><i class="fa-solid ${iconePorTipo[ev.tipo] || 'fa-circle-info'}"></i></div>
@@ -10305,6 +10959,8 @@ function navTo(section) {
   if(section !== 'caixas') { const cx = document.getElementById('section-caixas'); if(cx) cx.style.display = 'none'; }
   // Garante que a Central de Inconsistências só apareça na própria aba
   if(section !== 'inconsistencias') { const ic = document.getElementById('section-inconsistencias'); if(ic) ic.style.display = 'none'; }
+  // Garante que a aba Gráficos só apareça na própria aba
+  if(section !== 'graficos') { const gr = document.getElementById('section-graficos'); if(gr) gr.style.display = 'none'; }
 
   if(section === 'nfes') {
     mainSections.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
@@ -10389,6 +11045,16 @@ function navTo(section) {
     document.getElementById('section-caixas').style.display = 'block';
     setNavActive('caixas');
     renderCaixas();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+
+  if(section === 'graficos') {
+    mainSections.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
+    ['section-nfes','section-vencidos','section-semsolucao','section-fornecedores','section-marcas','section-lotes','section-caixas','section-inconsistencias'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
+    document.getElementById('section-graficos').style.display = 'block';
+    setNavActive('graficos');
+    renderGraficos();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
@@ -11096,9 +11762,10 @@ function bulkResolver() {
           item.dataResolucao = new Date().toISOString();
           registrarHistoricoItem(item, 'status', 'Status alterado para Resolvido (ação em lote).',
             [{ campo: 'status', de: _deR, para: 'Resolvido' }]);
+          desvincularCaixaAoResolver(item);
         }
       });
-      saveData(); renderLight(); clearSelection();
+      saveData(); renderLight(); renderCaixas(); clearSelection();
       showToast(`${selectedIds.size} item(s) marcados como resolvidos!`);
     },
     'Os itens serão marcados como resolvidos.'
@@ -12458,6 +13125,10 @@ async function saveNfe() {
   // Uma vez resolvido via NF-e concluída, o item permanece resolvido permanentemente.
   if(nfeFinal?.status === 'devolvido') {
     const agora = new Date().toISOString();
+    // Campo ADITIVO: registra quando a NF-e foi efetivamente concluída, para os
+    // gráficos de indenização terem data precisa. Registros anteriores não têm
+    // este campo e caem no fallback dataColeta → data (ver _dataConclusaoNfe).
+    if(!nfeFinal.dataConclusao) nfeFinal.dataConclusao = agora.slice(0, 10);
     produtosRelacionados.forEach(pid => {
       const d = defeitos.find(d => d.id === Number(pid));
       if(d && d.status !== 'resolvido') {
@@ -12465,6 +13136,7 @@ async function saveNfe() {
         d.dataResolucao = agora;
         d._resolvidoPorNfe = nfeIdFinal;
         registrarHistoricoItem(d, 'status', `Status alterado para Resolvido (NF-e ${nfeFinal?.numeroNfe || nfeIdFinal} concluída).`);
+        desvincularCaixaAoResolver(d);
       }
     });
   }
@@ -12661,12 +13333,14 @@ async function updateNfeStatus(nfeId, status) {
 
   if(status === 'devolvido') {
     const agora = new Date().toISOString();
+    if(!nfe.dataConclusao) nfe.dataConclusao = agora.slice(0, 10);
     vinculados.forEach(d => {
       if(d.status !== 'resolvido') {
         d.status = 'resolvido';
         d.dataResolucao = agora;
         d._resolvidoPorNfe = nfeId; // marca que foi esta NF-e que resolveu
         registrarHistoricoItem(d, 'status', `Status alterado para Resolvido (NF-e ${nfe.numeroNfe || nfeId} concluída).`);
+        desvincularCaixaAoResolver(d);
       }
     });
     showToast(`Status atualizado: ${nfeStatusLabel(status)}${vinculados.length > 0 ? ` · ${vinculados.length} defeito(s) resolvido(s)` : ''}`, 'success');
@@ -13403,9 +14077,25 @@ function abrirInfoMarca(nome) {
         <textarea id="miCnpjs" placeholder="Ex:&#10;12.345.678/0001-90&#10;98.765.432/0001-10" style="width:100%;min-height:70px;padding:10px 12px;border:1px solid var(--border);border-radius: 0;background:var(--surface2);color:var(--text);font-size:13px;font-family:'Space Mono',monospace;resize:vertical;">${(info.cnpjsFabrica||[]).join("\n")}</textarea>
       </div>
 
-      <div style="margin-bottom:13px;">
-        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:5px;"><i class="fa-solid fa-truck-fast" style="margin-right:4px;"></i>Procedimento de Devolução</label>
-        <textarea id="miProcedimento" placeholder="Descreva o procedimento completo de devolução desta marca:&#10;&#10;• Transportadora utilizada&#10;• Como emitir a NF de devolução&#10;• Contato do representante&#10;• Prazo de retorno&#10;• Coleta reversa: sim/não&#10;• Outros detalhes importantes..." style="width:100%;min-height:120px;padding:10px 12px;border:1px solid var(--border);border-radius: 0;background:var(--surface2);color:var(--text);font-size:13px;line-height:1.6;resize:vertical;">${(info.procedimentoDevolucao||"").replace(/</g,"&lt;")}</textarea>
+      ${/* O procedimento de devolução passou a pertencer ao FORNECEDOR/CNPJ e não é
+           mais editável aqui. Quando ainda existe texto herdado na marca que não
+           pôde ser migrado com segurança (marca com vários CNPJs), ele continua
+           sendo exibido em somente leitura — nenhum dado é apagado. */""}
+      <div style="margin-bottom:13px;padding:10px 12px;background:rgba(3,105,161,.06);border:1px solid rgba(3,105,161,.18);">
+        <div style="font-size:11.5px;color:var(--muted);line-height:1.55;display:flex;align-items:flex-start;gap:7px;">
+          <i class="fa-solid fa-circle-info" style="color:#0369a1;margin-top:2px;"></i>
+          <span>O <strong>procedimento de devolução</strong> agora pertence a cada <strong>fornecedor/CNPJ</strong>, já que fábricas diferentes da mesma marca podem ter processos diferentes. Cadastre-o em <strong>Fornecedores → editar fornecedor</strong>.</span>
+        </div>
+        ${(info.procedimentoDevolucao||"").trim() ? `
+        <div style="margin-top:10px;padding-top:10px;border-top:1px dashed rgba(3,105,161,.25);">
+          <div style="font-size:9.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#b45309;margin-bottom:6px;">
+            <i class="fa-solid fa-clock-rotate-left"></i> Texto herdado desta marca (somente leitura)
+          </div>
+          <div style="font-size:12px;color:var(--text);line-height:1.65;white-space:pre-line;max-height:150px;overflow-y:auto;">${(info.procedimentoDevolucao||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>
+          <div style="font-size:10.5px;color:var(--muted);margin-top:7px;line-height:1.5;">
+            Este texto foi preservado porque a marca tem mais de um fornecedor/CNPJ e não era possível determinar com segurança a qual deles pertence. Copie-o para o fornecedor correto em Fornecedores.
+          </div>
+        </div>` : ''}
       </div>
 
       <div style="margin-bottom:18px;">
@@ -13425,9 +14115,10 @@ function abrirInfoMarca(nome) {
 function salvarInfoMarca(key) {
   const prazo = document.getElementById("miPrazo").value.trim();
   const cnpjs = document.getElementById("miCnpjs").value.split("\n").map(c => c.trim()).filter(Boolean);
-  const procedimentoDevolucao = document.getElementById("miProcedimento")?.value.trim() || "";
   const obs = document.getElementById("miObs").value.trim();
-  marcasInfo[key] = { ...(marcasInfo[key]||{}), prazo: prazo, cnpjsFabrica: cnpjs, procedimentoDevolucao: procedimentoDevolucao, obs: obs };
+  // O procedimento não é mais editável pela marca: o valor existente é PRESERVADO
+  // exatamente como está (nunca apagado ao salvar as demais informações).
+  marcasInfo[key] = { ...(marcasInfo[key]||{}), prazo: prazo, cnpjsFabrica: cnpjs, obs: obs };
   saveMarcasInfo();
   if(typeof autoSave !== "undefined" && autoSave.markDirty) autoSave.markDirty();
   const m = document.getElementById("infoMarcaModal");
@@ -13441,6 +14132,75 @@ function salvarInfoMarca(key) {
 // Se houver textos diferentes entre fornecedores da mesma marca, preserva todos,
 // identificando a origem por CNPJ/razão social — nunca sobrescreve nem perde informação.
 // Marca com flag interna para não duplicar o texto em execuções futuras (idempotente).
+// ══════════════════════════════════════════════════════════════════
+//  MIGRAÇÃO: procedimento de devolução volta da MARCA para o FORNECEDOR/CNPJ
+//  Regras de segurança:
+//   • Idempotente — marca cada marca já processada com _procedimentoParaFornecedor
+//     e nunca concatena/duplica texto ao rodar de novo.
+//   • Só copia quando é INEQUÍVOCO: a marca tem exatamente UM fornecedor cadastrado.
+//   • Fornecedor que já tem procedimento próprio NUNCA é sobrescrito.
+//   • Quando a marca tem vários fornecedores/CNPJs, NADA é distribuído: o texto
+//     permanece intacto em marcasInfo e é exibido em somente leitura na ficha da
+//     marca, para correção manual. Nenhum dado é apagado em nenhum caso.
+// ══════════════════════════════════════════════════════════════════
+function migrarProcedimentoParaFornecedores() {
+  if(typeof marcasInfo !== 'object' || !marcasInfo) return;
+  let copiados = 0, ambiguos = 0, alterouForn = false, alterouMarcas = false;
+
+  Object.keys(marcasInfo).forEach(key => {
+    const info = marcasInfo[key];
+    if(!info || info._procedimentoParaFornecedor) return;   // já processada
+
+    const texto = String(info.procedimentoDevolucao || '').trim();
+    if(!texto) {
+      // Nada a migrar — apenas marca como processada para não reavaliar sempre.
+      marcasInfo[key] = { ...info, _procedimentoParaFornecedor: true };
+      alterouMarcas = true;
+      return;
+    }
+
+    const fornsDaMarca = fornecedores.filter(f => (f.marca || '').trim().toUpperCase() === key);
+
+    if(fornsDaMarca.length === 1) {
+      const f = fornsDaMarca[0];
+      if(!String(f.procedimento_devolucao || '').trim()) {
+        f.procedimento_devolucao = texto;   // cópia, nunca concatenação
+        copiados++; alterouForn = true;
+      }
+      // Texto da marca é preservado como histórico; o fornecedor passa a ser a fonte oficial.
+      marcasInfo[key] = { ...info, _procedimentoParaFornecedor: true };
+      alterouMarcas = true;
+    } else {
+      // 0 ou 2+ fornecedores: ambíguo. Não distribui nada e não marca como
+      // processada, para que a migração reavalie caso o cadastro seja ajustado.
+      ambiguos++;
+    }
+  });
+
+  if(alterouForn) saveFornecedores();
+  if(alterouMarcas) saveMarcasInfo();
+  if(copiados && typeof showToast === 'function') {
+    showToast(`Procedimento de devolução migrado para ${copiados} fornecedor(es).`, 'info', 5000);
+  }
+  return { copiados, ambiguos };
+}
+
+// ── Procedimento de devolução aplicável a um DEFEITO: usa o fornecedor
+// efetivamente vinculado (regra única fornecedorId → CNPJ). Só cai no texto
+// herdado da marca quando o fornecedor não tem procedimento próprio, e a
+// origem é sempre informada para não confundir o usuário. ──
+function procedimentoDevolucaoDoDefeito(d) {
+  const f = fornecedorDoDefeito(d);
+  const doForn = f ? String(f.procedimento_devolucao || '').trim() : '';
+  if(doForn) return { texto: doForn, origem: 'fornecedor', fornecedor: f };
+
+  const key = String((d && d.marca) || '').trim().toUpperCase();
+  const daMarca = key && marcasInfo[key] ? String(marcasInfo[key].procedimentoDevolucao || '').trim() : '';
+  if(daMarca) return { texto: daMarca, origem: 'marca', fornecedor: f };
+
+  return { texto: '', origem: null, fornecedor: f };
+}
+
 function migrarProcedimentoDevolucaoDaMarca(marcaKeyRaw) {
   const key = (marcaKeyRaw || "").trim().toUpperCase();
   if(!key) return;
@@ -14118,6 +14878,7 @@ function abrirModalFornecedor(id, prefill) {
   document.getElementById("fornWhatsapp").value         = f?.whatsapp            || "";
   document.getElementById("fornEmail").value            = f?.email               || "";
   document.getElementById("fornCidade").value           = f?.cidade              || "";
+  { const pd = document.getElementById("fornProcedimento"); if(pd) pd.value = f?.procedimento_devolucao || ""; }
   document.getElementById("fornEstado").value           = f?.estado              || "";
   document.getElementById("fornObs").value              = f?.observacoes         || "";
   document.getElementById("fornAtivoSelect").value      = (f && f.ativo === false) ? "0" : "1";
@@ -14152,9 +14913,10 @@ function salvarFornecedor() {
     email:                document.getElementById("fornEmail").value.trim(),
     cidade:               document.getElementById("fornCidade").value.trim(),
     estado:               document.getElementById("fornEstado").value.trim().toUpperCase(),
-    // Campo legado preservado apenas para compatibilidade com dados antigos — não é
-    // mais editável aqui. O procedimento de devolução agora vive em marcasInfo (seção 2.2).
-    procedimento_devolucao: id ? (fornecedores.find(x => x.id === id)?.procedimento_devolucao || "") : "",
+    // O procedimento de devolução pertence ao FORNECEDOR/CNPJ. Reutiliza o mesmo
+    // campo já existente na estrutura (procedimento_devolucao), o que mantém
+    // compatibilidade total com os dados antigos e com a migração.
+    procedimento_devolucao: (document.getElementById("fornProcedimento")?.value || "").trim(),
     observacoes:          document.getElementById("fornObs").value.trim(),
     ativo:                document.getElementById("fornAtivoSelect").value !== "0",
     dataCadastro:         id ? (fornecedores.find(x=>x.id===id)?.dataCadastro || new Date().toISOString()) : new Date().toISOString(),
@@ -14426,14 +15188,17 @@ function verFornecedor(id) {
       </div>
     </div>
 
-    ${/* O campo legado f.procedimento_devolucao continua preservado no objeto do
-         fornecedor para compatibilidade e para a migração idempotente, mas NÃO é
-         mais exibido nem editado aqui: a informação vive em
-         marcasInfo[MARCA].procedimentoDevolucao e é acessada pelo atalho abaixo. */""}
-    <div onclick="document.getElementById('fornViewModal').style.display='none';abrirInfoMarca('${(f.marca||'').replace(/'/g,"\\'")}')" style="padding:10px 12px;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.18);border-radius: 0;cursor:pointer;display:flex;align-items:center;gap:8px;" onmouseover="this.style.borderColor='rgba(124,58,237,.35)'" onmouseout="this.style.borderColor='rgba(124,58,237,.18)'">
-      <i class="fa-solid fa-tag" style="color:#7c3aed;"></i>
-      <div style="font-size:12px;color:var(--text);"><strong>Procedimento de devolução atual</strong> fica na ficha da marca ${(f.marca||"").replace(/</g,"&lt;")} — clique para ver/editar.</div>
-    </div>
+    ${/* O procedimento de devolução pertence ao FORNECEDOR/CNPJ e é exibido aqui.
+         Uma mesma marca pode ter fábricas com processos diferentes. */""}
+    ${f.procedimento_devolucao ? `<div style="padding:10px 12px;background:rgba(3,105,161,.06);border:1px solid rgba(3,105,161,.18);border-radius: 0;">
+      <div style="font-size:9.5px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#0369a1;margin-bottom:8px;display:flex;align-items:center;gap:5px;">
+        <i class="fa-solid fa-truck-fast"></i>Procedimento de Devolução
+      </div>
+      <div style="font-size:12.5px;color:var(--text);line-height:1.7;white-space:pre-line;">${String(f.procedimento_devolucao).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>
+    </div>` : `<div style="padding:10px 12px;background:var(--surface2);border:1px dashed var(--border);border-radius: 0;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;">
+      <i class="fa-solid fa-truck-fast" style="opacity:.6;"></i>
+      Nenhum procedimento de devolução cadastrado para este fornecedor. Use "Editar" para adicionar.
+    </div>`}
     ${row("fa-note-sticky","#b45309","Observações", f.observacoes)}
   `;
 
@@ -14735,6 +15500,8 @@ function aplicarBulkEditar() {
       if (status === "resolvido") item.dataResolucao = new Date().toISOString();
       else delete item.dataResolucao;
     }
+    // Resolvido por qualquer caminho: sai automaticamente da caixa ativa.
+    if (statusMudou && status === "resolvido") desvincularCaixaAoResolver(item);
 
     if (!alteracoes.length) return; // nada mudou neste item: sem evento, sem contagem
 
@@ -14901,6 +15668,29 @@ function caixaBadgeDoItem(item, opts) {
   const nome = (c.nome || '').trim();
   const titulo = `Caixa ${c.codigo}${nome ? ' — ' + nome : ''} (${fechada ? 'fechada' : 'aberta'}) — clique para abrir`;
   return `<span onclick="event.stopPropagation();irParaCaixa(${c.id})" title="${titulo.replace(/"/g,'&quot;')}" style="display:inline-flex;align-items:center;gap:4px;background:rgba(180,83,9,.10);border:1px solid rgba(180,83,9,.22);border-radius: 0;padding:2px 7px;font-size:9px;font-weight:800;letter-spacing:.4px;color:#b45309;cursor:pointer;white-space:nowrap;max-width:100%;" onmouseover="this.style.background='rgba(180,83,9,.20)'" onmouseout="this.style.background='rgba(180,83,9,.10)'"><i class="fa-solid fa-box" style="font-size:8px;"></i>${c.codigo}${nome ? `<span style="font-weight:600;opacity:.85;overflow:hidden;text-overflow:ellipsis;">· ${String(nome).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>` : ''}<i class="fa-solid ${fechada ? 'fa-lock' : 'fa-lock-open'}" style="font-size:7px;opacity:.65;" title="${fechada ? 'fechada' : 'aberta'}"></i></span>`;
+}
+
+// ── Item resolvido sai automaticamente da caixa (a caixa é rotativa: representa
+// o que ainda está em processo de devolução). O defeito NÃO é excluído e nada
+// mais nele é alterado — apenas o vínculo ativo com a caixa é removido, e o
+// código da caixa anterior fica preservado no histórico para consulta futura.
+// Roda independentemente do caminho usado para resolver o item.
+// Observação: aplica-se também a caixas fechadas. A regra de "caixa fechada não
+// aceita alteração" vale para ações manuais do usuário; esta é automática e
+// precisa ocorrer, senão itens resolvidos ficariam presos em caixas fechadas. ──
+function desvincularCaixaAoResolver(item) {
+  if(!item || !item.caixaId) return false;
+  const c = getCaixaById(item.caixaId);
+  const codigo = c ? c.codigo : String(item.caixaId);
+  const nome   = (c && c.nome) ? ' — ' + c.nome : '';
+  item.caixaId = "";
+  registrarHistoricoItem(
+    item,
+    'caixa',
+    `Desvinculado automaticamente da caixa ${codigo}${nome} após resolução do item.`,
+    [{ campo: 'caixaId', de: codigo, para: '' }]
+  );
+  return true;
 }
 
 // ── Navega para a aba Caixas e abre direto o detalhe da caixa informada. ──
@@ -15349,6 +16139,206 @@ function confirmarExportCaixas() {
   else gerarExcelCaixas(selecionadas);
 }
 
+// ══════════════════════════════════════════════════════════════════
+//  EXPORTAÇÃO INDIVIDUAL DA CAIXA ABERTA NO DETALHE
+//  Reaproveita a infraestrutura já existente: o Excel usa exatamente o mesmo
+//  gerarExcelCaixas() do menu Exportar (passando só esta caixa), e o PDF usa
+//  jsPDF + AutoTable, no mesmo padrão visual de exportNfesPdf(), em vez de
+//  depender de window.print().
+// ══════════════════════════════════════════════════════════════════
+function exportarCaixaAtualExcel() {
+  const c = getCaixaById(_caixaAtualId);
+  if(!c) { showToast('Nenhuma caixa aberta.', 'error'); return; }
+  gerarExcelCaixas([c]);   // mesma rotina do menu Exportar — sem duplicar lógica
+}
+
+function exportarCaixaAtualPdf() {
+  const c = getCaixaById(_caixaAtualId);
+  if(!c) { showToast('Nenhuma caixa aberta.', 'error'); return; }
+  gerarPdfCaixaIndividual(c);
+}
+
+// ── PDF de UMA caixa via jsPDF/AutoTable. Considera exclusivamente os itens
+// que pertencem à caixa neste momento (getItensDaCaixa por caixaId). ──
+function gerarPdfCaixaIndividual(c) {
+  if(!window.jspdf || !window.jspdf.jsPDF) {
+    showToast('Biblioteca de PDF não carregada. Verifique sua conexão e recarregue a página.', 'error', 5000);
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+
+  // Paleta alinhada à identidade do sistema (âmbar das Caixas + neutros)
+  const AMBER  = [180, 83,  9];
+  const DARK   = [17,  24,  39];
+  const MUTED  = [107, 114, 128];
+  const BORDER = [229, 231, 235];
+  const ROW_ALT= [250, 250, 250];
+  const WHITE  = [255, 255, 255];
+
+  doc.setFillColor(...WHITE);
+  doc.rect(0, 0, pageW, pageH, 'F');
+  doc.setFillColor(...AMBER);
+  doc.rect(0, 0, 4, pageH, 'F');
+
+  const st = _statsCaixa(c.id);
+
+  // ── Cabeçalho ──
+  let y = 14;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(15);
+  doc.setTextColor(...AMBER);
+  doc.text(String(c.codigo || 'Caixa'), 12, y);
+
+  if(c.nome) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(...DARK);
+    doc.text(String(c.nome), 12 + doc.getTextWidth(String(c.codigo || 'Caixa')) + 5, y);
+  }
+
+  // Selo de status à direita
+  const selo = c.status === 'fechada' ? 'FECHADA' : 'ABERTA';
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  const seloW = doc.getTextWidth(selo) + 6;
+  doc.setDrawColor(...BORDER);
+  doc.setFillColor(...(c.status === 'fechada' ? [249,250,251] : [240,253,244]));
+  doc.rect(pageW - 12 - seloW, y - 4.5, seloW, 6, 'FD');
+  doc.setTextColor(...(c.status === 'fechada' ? MUTED : [22,163,74]));
+  doc.text(selo, pageW - 12 - seloW + 3, y);
+
+  y += 6;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...MUTED);
+  doc.text('Shoemix · Controle de Defeitos — Relatório da Caixa', 12, y);
+
+  // Descrição (quebra em várias linhas se necessário)
+  if(c.descricao) {
+    y += 5;
+    doc.setFontSize(8);
+    doc.setTextColor(...DARK);
+    const linhas = doc.splitTextToSize(String(c.descricao), pageW - 24);
+    doc.text(linhas.slice(0, 3), 12, y);
+    y += (Math.min(linhas.length, 3) - 1) * 4;
+  }
+
+  // Metadados + totais
+  y += 6;
+  doc.setFontSize(8.5);
+  doc.setTextColor(...MUTED);
+  const meta = [
+    c.createdAt ? 'Criada em ' + new Date(c.createdAt).toLocaleDateString('pt-BR') : null,
+    c.updatedAt ? 'Atualizada em ' + new Date(c.updatedAt).toLocaleDateString('pt-BR') : null,
+    'Emitido em ' + new Date().toLocaleDateString('pt-BR')
+  ].filter(Boolean).join('  ·  ');
+  doc.text(meta, 12, y);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...AMBER);
+  const totaisTxt = `${st.registros} registro(s)  ·  ${st.pares} par(es)  ·  R$ ${st.valor.toFixed(2).replace('.', ',')}`;
+  doc.text(totaisTxt, pageW - 12 - doc.getTextWidth(totaisTxt), y);
+
+  y += 3;
+  doc.setDrawColor(...BORDER);
+  doc.setLineWidth(0.4);
+  doc.line(12, y, pageW - 12, y);
+
+  // ── Tabela ──
+  const head = [['Data','Loja','Marca','Código','Referência','Cor','Num.','Qtd','Custo','Total','Defeito','NF-e','Fornecedor','Status']];
+  const body = st.itens.map(d => {
+    const nfeVinc = d.nfeId ? nfes.find(n => String(n.id) === String(d.nfeId)) : null;
+    const tot = (Number(d.custoUnitario) || 0) * getQtdItem(d);
+    return [
+      d.data ? formatDate(d.data) : '—',
+      d.loja || '—',
+      d.marca || '—',
+      d.codigoBarras || '—',
+      d.referencia || '—',
+      d.cor || '—',
+      d.numeracao || '—',
+      String(getQtdItem(d)),
+      d.custoUnitario ? 'R$ ' + Number(d.custoUnitario).toFixed(2).replace('.', ',') : '—',
+      tot ? 'R$ ' + tot.toFixed(2).replace('.', ',') : '—',
+      d.defeito || '—',
+      nfeVinc ? (nfeVinc.numeroNfe || 'vinculada') : '—',
+      fornecedorLabelDoDefeito(d) || '—',
+      defeitoStatusLabel(d.status)
+    ];
+  });
+
+  if(!body.length) {
+    // Caixa vazia: relatório identificado, sem erro.
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(10);
+    doc.setTextColor(...MUTED);
+    doc.text('Caixa vazia — nenhum item vinculado no momento.', 12, y + 14);
+  } else {
+    doc.autoTable({
+      startY: y + 5,
+      head,
+      body,
+      theme: 'plain',
+      headStyles: {
+        fillColor: false, textColor: MUTED, fontStyle: 'bold', fontSize: 7,
+        cellPadding: { top: 4, bottom: 4, left: 2.5, right: 2.5 },
+        lineWidth: { bottom: 0.4 }, lineColor: BORDER, halign: 'left',
+      },
+      bodyStyles: {
+        fontSize: 7.2, cellPadding: { top: 4, bottom: 4, left: 2.5, right: 2.5 },
+        textColor: DARK, lineWidth: { bottom: 0.2 }, lineColor: BORDER, overflow: 'linebreak',
+      },
+      alternateRowStyles: { fillColor: ROW_ALT },
+      columnStyles: {
+        0:  { cellWidth: 18 },
+        1:  { cellWidth: 20 },
+        2:  { cellWidth: 24, fontStyle: 'bold' },
+        3:  { cellWidth: 24 },
+        4:  { cellWidth: 22 },
+        5:  { cellWidth: 18 },
+        6:  { cellWidth: 12, halign: 'center' },
+        7:  { cellWidth: 11, halign: 'center', fontStyle: 'bold', textColor: AMBER },
+        8:  { cellWidth: 20, halign: 'right' },
+        9:  { cellWidth: 21, halign: 'right', fontStyle: 'bold' },
+        10: { cellWidth: 32 },
+        11: { cellWidth: 18 },
+        12: { cellWidth: 30 },
+        13: { cellWidth: 20 },
+      },
+      margin: { left: 12, right: 12 },
+      didDrawPage: () => {
+        // Faixa lateral e rodapé em todas as páginas
+        doc.setFillColor(...AMBER);
+        doc.rect(0, 0, 4, pageH, 'F');
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(...MUTED);
+        doc.text('Shoemix · Controle de Defeitos', 12, pageH - 7);
+        const pag = 'Página ' + doc.internal.getCurrentPageInfo().pageNumber;
+        doc.text(pag, pageW - 12 - doc.getTextWidth(pag), pageH - 7);
+      }
+    });
+
+    // Linha de totais ao final da tabela
+    const yFim = (doc.lastAutoTable ? doc.lastAutoTable.finalY : y) + 7;
+    if(yFim < pageH - 16) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(...AMBER);
+      doc.text(`TOTAIS DA CAIXA:  ${st.registros} registro(s)  ·  ${st.pares} par(es)  ·  R$ ${st.valor.toFixed(2).replace('.', ',')}`, 12, yFim);
+    }
+  }
+
+  const nomeArq = `caixa_${String(c.codigo || 'sem_codigo').replace(/[^\w-]/g, '')}_${today()}.pdf`;
+  doc.save(nomeArq);
+  showToast(`PDF da caixa ${c.codigo} gerado · ${st.registros} registro(s).`, 'success');
+}
+
 // ── Nome de aba de planilha: máximo 31 caracteres, sem caracteres proibidos
 // pelo Excel, e único dentro do arquivo. ──
 function _nomeAbaUnico(base, usados) {
@@ -15577,21 +16567,92 @@ function adicionarItemIndividualACaixa(defeitoId) {
 }
 
 // ── "Adicionar à Caixa" — ação em massa a partir da seleção da lista de defeitos ──
+// ── Componente pesquisável de caixas do modal "Adicionar à Caixa".
+// Somente caixas ABERTAS aparecem como destino, como antes. Toda a lógica de
+// vinculação continua em confirmarAdicaoACaixa, que lê o input hidden
+// #addACaixaSelect — aqui só mudamos a forma de escolher. ──
+function buscarCaixasAdd(valor) {
+  const box = document.getElementById("addACaixaSugestoes");
+  if(!box) return;
+  const q = String(valor || "").trim().toLowerCase();
+  const esc = (t) => String(t == null ? "" : t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+  const abertas = caixas.filter(c => c.status !== "fechada");
+  const matches = (q
+    ? abertas.filter(c => String(c.codigo||"").toLowerCase().includes(q) || String(c.nome||"").toLowerCase().includes(q))
+    : abertas
+  ).slice(0, 12);
+
+  if(!matches.length) {
+    box.style.display = "block";
+    box.innerHTML = `<div style="padding:10px 12px;font-size:11.5px;color:var(--muted);">${
+      abertas.length ? 'Nenhuma caixa aberta encontrada para esta busca.' : 'Nenhuma caixa aberta. Use "Criar nova caixa" abaixo.'
+    }</div>`;
+    return;
+  }
+
+  box.style.display = "block";
+  box.innerHTML = matches.map(c => {
+    const t = getCaixaTotais(c.id);
+    return `<div class="autocomplete-item" onmousedown="selecionarCaixaAdd(${c.id})">
+      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+        <span style="font-family:'Space Mono',monospace;font-weight:800;font-size:12.5px;color:#b45309;">${esc(c.codigo)}</span>
+        ${c.nome ? `<span style="font-size:12px;font-weight:600;">${esc(c.nome)}</span>` : ''}
+      </div>
+      <div style="font-size:10.5px;color:var(--muted);margin-top:2px;">${t.registros} registro(s) · ${t.pares} par(es)</div>
+    </div>`;
+  }).join("");
+}
+
+function selecionarCaixaAdd(id) {
+  const c = getCaixaById(id);
+  if(!c) return;
+  const esc = (t) => String(t == null ? "" : t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const t = getCaixaTotais(c.id);
+
+  document.getElementById("addACaixaSelect").value = String(c.id);
+  const sug = document.getElementById("addACaixaSugestoes");
+  if(sug) { sug.style.display = "none"; sug.innerHTML = ""; }
+  const wrap = document.getElementById("addACaixaBuscaWrap");
+  if(wrap) wrap.style.display = "none";
+
+  const escolhida = document.getElementById("addACaixaEscolhida");
+  if(escolhida) {
+    escolhida.style.display = "flex";
+    escolhida.innerHTML = `
+      <div style="font-size:12px;line-height:1.45;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <i class="fa-solid fa-circle-check" style="color:#16a34a;font-size:10px;"></i>
+          <span style="font-family:'Space Mono',monospace;font-weight:800;color:#b45309;">${esc(c.codigo)}</span>
+          ${c.nome ? `<span style="font-weight:600;">${esc(c.nome)}</span>` : ''}
+        </div>
+        <div style="font-size:10.5px;color:var(--muted);margin-top:2px;">${t.registros} registro(s) · ${t.pares} par(es)</div>
+      </div>
+      <button type="button" class="btn-ghost" style="padding:4px 10px;font-size:10.5px;" onclick="limparCaixaAdd()">Trocar</button>`;
+  }
+}
+
+function limparCaixaAdd() {
+  const hid = document.getElementById("addACaixaSelect");
+  if(hid) hid.value = "";
+  const escolhida = document.getElementById("addACaixaEscolhida");
+  if(escolhida) { escolhida.style.display = "none"; escolhida.innerHTML = ""; }
+  const wrap = document.getElementById("addACaixaBuscaWrap");
+  if(wrap) wrap.style.display = "";
+  const busca = document.getElementById("addACaixaBusca");
+  if(busca) busca.value = "";
+  const sug = document.getElementById("addACaixaSugestoes");
+  if(sug) { sug.style.display = "none"; sug.innerHTML = ""; }
+}
+
 function abrirAddACaixaModal() {
   if(!selectedIds.size) { showToast("Selecione ao menos um item.", "error"); return; }
   const resumo = document.getElementById("addACaixaResumo");
   const itensSel = defeitos.filter(d => selectedIds.has(d.id));
-  const pares = itensSel.reduce((s,d) => s + (Number(d.quantidade) || 0), 0);
+  const pares = itensSel.reduce((s,d) => s + getQtdItem(d), 0);
   if(resumo) resumo.textContent = `${itensSel.length} registro(s) selecionado(s) · ${pares} par(es)`;
 
-  const sel = document.getElementById("addACaixaSelect");
-  if(sel) {
-    const abertas = caixas.filter(c => c.status !== "fechada");
-    sel.innerHTML = '<option value="">Selecione uma caixa...</option>' + abertas.map(c => {
-      const { registros, pares: p } = getCaixaTotais(c.id);
-      return `<option value="${c.id}">${c.codigo}${c.nome ? " — " + c.nome.replace(/</g,"&lt;") : ""} (${registros} reg. / ${p} par.)</option>`;
-    }).join("");
-  }
+  limparCaixaAdd();   // zera a seleção pesquisável a cada abertura
   const novoNomeEl = document.getElementById("addACaixaNovoNome");
   if(novoNomeEl) novoNomeEl.value = "";
   document.getElementById("addACaixaModal").style.display = "flex";
