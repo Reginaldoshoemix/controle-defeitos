@@ -10862,6 +10862,118 @@ function aplicarArredondamentoCards() {
   }
 })();
 
+// ══════════════════════════════════════════════════════════════════
+//  PADRÃO OFICIAL ÚNICO DE EXPORTAÇÃO EXCEL
+//  Fonte de verdade única da estrutura da planilha. Qualquer tela que exporte
+//  defeitos em .xlsx passa por aqui, de modo que Lista de Defeitos e Caixas
+//  nunca divirjam em colunas, ordem, formatação ou origem dos dados.
+//
+//  Onde cada informação é obtida (estrutura REAL do sistema, nada inventado):
+//   • Nota Fiscal de Origem  → defeito.notaOrigem      (campo "Nota de Origem")
+//   • Data da NF de Origem   → defeito.dataEmissaoNfe  (campo "Data Emissão NF-e")
+//   • CNPJ da Empresa        → defeito.cnpj (CNPJ do fornecedor/fábrica gravado
+//                              no item); se ausente, o CNPJ do fornecedor
+//                              vinculado pela regra única. Nunca CNPJ de loja.
+//   • XML                    → defeito.xml (chave de acesso de 44 dígitos do
+//                              campo "Chave XML / NF-e") — é a referência que o
+//                              sistema realmente armazena, não o XML bruto.
+//   • Custo                  → defeito.custoUnitario, que é o custo UNITÁRIO.
+//                              Vai como número puro, sem multiplicar pela
+//                              quantidade (Quantidade é coluna própria).
+//  Todos referem-se à NF de ORIGEM/entrada, nunca à NF-e de devolução.
+// ══════════════════════════════════════════════════════════════════
+const EXCEL_COLUNAS_OFICIAIS = [
+  'Loja', 'Marca', 'Código de Barras', 'Referência', 'Cor', 'Tamanho',
+  'Quantidade', 'Custo', 'Defeito', 'Nota Fiscal de Origem',
+  'Data da Nota Fiscal de Origem', 'CNPJ da Empresa', 'XML'
+];
+
+// Formato monetário aplicado à coluna Custo. O valor permanece NUMÉRICO na
+// célula (t:'n'), então soma, filtro e fórmulas do Excel continuam funcionando.
+const EXCEL_FORMATO_MOEDA = 'R$ #,##0.00';
+
+// Monta a linha oficial de um defeito. Não altera o registro em momento algum.
+function _linhaExcelDefeito(d) {
+  // CNPJ da empresa/fornecedor de origem do produto — nunca o CNPJ da loja.
+  let cnpj = (d.cnpj || '').trim();
+  if(!cnpj) {
+    const f = fornecedorDoDefeito(d);
+    cnpj = f ? (f.cnpj || '').trim() : '';
+  }
+
+  const custo = (d.custoUnitario === '' || d.custoUnitario == null || !Number.isFinite(Number(d.custoUnitario)))
+    ? '' : Number(d.custoUnitario);
+
+  return {
+    'Loja':                          d.loja || '',
+    'Marca':                         d.marca || '',
+    'Código de Barras':              d.codigoBarras || '',
+    'Referência':                    d.referencia || '',
+    'Cor':                           d.cor || '',
+    'Tamanho':                       d.numeracao || '',
+    'Quantidade':                    getQtdItem(d),
+    'Custo':                         custo,
+    'Defeito':                       d.defeito || '',
+    'Nota Fiscal de Origem':         d.notaOrigem || '',
+    'Data da Nota Fiscal de Origem': d.dataEmissaoNfe ? formatDate(d.dataEmissaoNfe) : '',
+    'CNPJ da Empresa':               cnpj ? formatarCNPJBasico(cnpj) : '',
+    'XML':                           d.xml || ''
+  };
+}
+
+// Cria a planilha (worksheet) oficial a partir de uma lista de defeitos,
+// já com a coluna Custo formatada como moeda numérica e larguras razoáveis.
+function _worksheetOficialDefeitos(registros) {
+  const linhas = (registros || []).map(_linhaExcelDefeito);
+  const ws = XLSX.utils.json_to_sheet(linhas, { header: EXCEL_COLUNAS_OFICIAIS });
+
+  // Coluna H = "Custo" (8ª da ordem oficial). Marca cada célula como número e
+  // aplica o formato monetário — a célula EXIBE R$ 129,90 e continua numérica.
+  const idxCusto = EXCEL_COLUNAS_OFICIAIS.indexOf('Custo');
+  linhas.forEach((linha, i) => {
+    if(typeof linha['Custo'] !== 'number') return;
+    const ref = XLSX.utils.encode_cell({ r: i + 1, c: idxCusto });   // +1: linha 0 é o cabeçalho
+    const cel = ws[ref];
+    if(cel) { cel.t = 'n'; cel.z = EXCEL_FORMATO_MOEDA; }
+  });
+
+  ws['!cols'] = [
+    { wch: 14 }, { wch: 18 }, { wch: 16 }, { wch: 14 }, { wch: 12 }, { wch: 9 },
+    { wch: 11 }, { wch: 12 }, { wch: 30 }, { wch: 20 }, { wch: 16 }, { wch: 20 }, { wch: 46 }
+  ];
+  return ws;
+}
+
+// Remove caracteres inválidos em nome de arquivo, preservando acentos.
+function _sanitizarNomeArquivo(nome) {
+  return String(nome || 'exportacao')
+    .replace(/[\\\/:*?"<>|]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\s/g, '_')
+    .slice(0, 90) || 'exportacao';
+}
+
+// ── ROTINA CENTRAL: recebe os registros já escolhidos por quem chamou e gera
+// o .xlsx no padrão oficial. É a única função que monta workbook de defeitos. ──
+function exportarDefeitosExcel(registros, nomeArquivo, nomeAba) {
+  if(typeof XLSX === 'undefined') {
+    showToast('Biblioteca de planilha não carregada. Verifique a conexão e recarregue a página.', 'error', 5000);
+    return false;
+  }
+  const lista = Array.isArray(registros) ? registros : [];
+  if(!lista.length) {
+    showToast('Nenhum item para exportar.', 'error');
+    return false;
+  }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, _worksheetOficialDefeitos(lista), (nomeAba || 'Defeitos').slice(0, 31));
+  const arq = _sanitizarNomeArquivo(nomeArquivo || ('defeitos_' + today()));
+  XLSX.writeFile(wb, arq.toLowerCase().endsWith('.xlsx') ? arq : arq + '.xlsx');
+  showToast(`${lista.length} item(s) exportado(s)!`, 'success');
+  return true;
+}
+
 // ───── EXPORTAR FILTRADOS ─────
 function exportFiltrados() {
   document.getElementById("exportDropdown").style.display = "none";
@@ -10869,48 +10981,17 @@ function exportFiltrados() {
   if(ch) ch.style.transform = "";
 
   // Reutiliza EXATAMENTE a mesma seleção da Lista de Defeitos (getFilteredAndSorted),
-  // sem limitar à página atual. Assim a exportação respeita automaticamente todos os
-  // filtros da tabela — pesquisa geral, período, loja, marca, código, referência,
+  // sem limitar à página atual — pesquisa, período, loja, marca, código, referência,
   // numeração, status, vencidos, NF-e vinculada, tipo/status de resolução, datas de
-  // coleta, filtro de fornecedor e ativos/arquivados/todos — sem reimplementar regra.
+  // coleta, filtro de fornecedor e ativos/arquivados/todos continuam valendo.
   const filtrados = getFilteredAndSorted();
-
   if(!filtrados.length) {
     showToast("Nenhum item para exportar com os filtros atuais.", "error");
     return;
   }
-
-  const ws = XLSX.utils.json_to_sheet(filtrados.map(i => {
-    const cx = i.caixaId ? getCaixaById(i.caixaId) : null;
-    const nfeVinc = i.nfeId ? nfes.find(n => Number(n.id) === Number(i.nfeId)) : null;
-    return {
-      Data:             formatDate(i.data),
-      Loja:             i.loja,
-      Marca:            i.marca,
-      Codigo_Barras:    i.codigoBarras,
-      Referencia:       i.referencia,
-      Cor:              i.cor || "",
-      Numeracao:        i.numeracao,
-      Quantidade:       getQtdItem(i),
-      Custo_Unitario:   i.custoUnitario === "" || i.custoUnitario == null ? "" : Number(i.custoUnitario),
-      Total:            i.custoUnitario === "" || i.custoUnitario == null ? "" : Number((Number(i.custoUnitario) * getQtdItem(i)).toFixed(2)),
-      Defeito:          i.defeito,
-      Nota_Origem:      i.notaOrigem || "",
-      Data_NFe:         i.dataEmissaoNfe ? formatDate(i.dataEmissaoNfe) : "",
-      Fornecedor:       fornecedorLabelDoDefeito(i),
-      CNPJ_Fornecedor:  i.cnpj || "",
-      NFe_Devolucao:    nfeVinc ? (nfeVinc.numero || "") : "",
-      Caixa:            cx ? (cx.codigo + (cx.nome ? " — " + cx.nome : "")) : "",
-      Chave_XML:        i.xml || "",
-      Observacoes:      i.obs || "",
-      Status:           defeitoStatusLabel(i.status),
-      Arquivado:        i.arquivado ? "Sim" : "Não"
-    };
-  }));
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Filtrados");
-  XLSX.writeFile(wb, `defeitos_filtrados_${today()}.xlsx`);
-  showToast(`${filtrados.length} item(s) exportado(s)!`, "info");
+  // A montagem da planilha é responsabilidade da rotina central — esta função
+  // apenas define QUAIS registros serão exportados.
+  exportarDefeitosExcel(filtrados, `defeitos_filtrados_${today()}`, 'Defeitos');
 }
 
 // ───── ITENS POR PÁGINA ─────
@@ -16169,7 +16250,13 @@ function confirmarExportCaixas() {
 function exportarCaixaAtualExcel() {
   const c = getCaixaById(_caixaAtualId);
   if(!c) { showToast('Nenhuma caixa aberta.', 'error'); return; }
-  gerarExcelCaixas([c]);   // mesma rotina do menu Exportar — sem duplicar lógica
+  // Única diferença em relação à Lista de Defeitos: a ORIGEM dos registros —
+  // exclusivamente os itens vinculados a esta caixa por caixaId. A planilha em
+  // si é montada pela mesma rotina central, com as mesmas 13 colunas.
+  const itens = getItensDaCaixa(c.id);
+  if(!itens.length) { showToast(`A caixa ${c.codigo} está vazia — nada a exportar.`, 'info'); return; }
+  const nome = c.nome ? `${c.codigo}_${c.nome}` : `${c.codigo}`;
+  exportarDefeitosExcel(itens, nome, c.codigo || 'Caixa');
 }
 
 function exportarCaixaAtualPdf() {
@@ -16374,51 +16461,23 @@ function _nomeAbaUnico(base, usados) {
 }
 
 function gerarExcelCaixas(selecionadas) {
+  // Exportação de VÁRIAS caixas pelo menu Exportar: mantém uma aba por caixa,
+  // porém cada aba usa EXATAMENTE as 13 colunas oficiais, montadas pela mesma
+  // rotina central (_worksheetOficialDefeitos). Nenhuma coluna extra é criada
+  // por o registro pertencer a uma caixa.
+  if(typeof XLSX === 'undefined') {
+    showToast('Biblioteca de planilha não carregada. Verifique a conexão e recarregue a página.', 'error', 5000);
+    return;
+  }
   const wb = XLSX.utils.book_new();
   const usados = new Set();
   let totalLinhas = 0;
 
   selecionadas.forEach(c => {
     const st = _statsCaixa(c.id);
-    const linhas = st.itens.map(d => {
-      const nfeVinc = d.nfeId ? nfes.find(n => String(n.id) === String(d.nfeId)) : null;
-      return {
-        Caixa_Codigo:     c.codigo || '',
-        Caixa_Nome:       c.nome || '',
-        Caixa_Status:     c.status === 'fechada' ? 'Fechada' : 'Aberta',
-        Caixa_Criada_Em:  c.createdAt ? formatDate(String(c.createdAt).slice(0,10)) : '',
-        Caixa_Atualizada: c.updatedAt ? formatDate(String(c.updatedAt).slice(0,10)) : '',
-        Caixa_Descricao:  c.descricao || '',
-        Data:             d.data ? formatDate(d.data) : '',
-        Loja:             d.loja || '',
-        Marca:            d.marca || '',
-        Codigo_Barras:    d.codigoBarras || '',
-        Referencia:       d.referencia || '',
-        Cor:              d.cor || '',
-        Numeracao:        d.numeracao || '',
-        Quantidade:       getQtdItem(d),
-        Custo_Unitario:   (d.custoUnitario === '' || d.custoUnitario == null) ? '' : Number(d.custoUnitario),
-        Valor_Total:      (d.custoUnitario === '' || d.custoUnitario == null) ? '' : Number((Number(d.custoUnitario) * getQtdItem(d)).toFixed(2)),
-        Defeito:          d.defeito || '',
-        Nota_Origem:      d.notaOrigem || '',
-        NFe_Devolucao:    nfeVinc ? (nfeVinc.numeroNfe || '') : '',
-        Fornecedor:       fornecedorLabelDoDefeito(d),
-        CNPJ:             d.cnpj || '',
-        Status_Item:      defeitoStatusLabel(d.status),
-        Arquivado:        d.arquivado ? 'Sim' : 'Não',
-        Observacoes:      d.obs || ''
-      };
-    });
+    const ws = _worksheetOficialDefeitos(st.itens);   // mesmas colunas da Lista de Defeitos
 
-    // Caixa vazia gera aba identificada, sem erro.
-    const dados = linhas.length ? linhas : [{
-      Caixa_Codigo: c.codigo || '', Caixa_Nome: c.nome || '',
-      Caixa_Status: c.status === 'fechada' ? 'Fechada' : 'Aberta',
-      Data: '(caixa vazia — nenhum item vinculado)'
-    }];
-
-    const ws = XLSX.utils.json_to_sheet(dados);
-    // Totais por caixa ao final da aba.
+    // Totais por caixa em LINHAS ao final da aba (não são colunas novas).
     XLSX.utils.sheet_add_aoa(ws, [
       [],
       ['TOTAIS DA CAIXA', c.codigo || ''],
@@ -16432,7 +16491,7 @@ function gerarExcelCaixas(selecionadas) {
   });
 
   const sufixo = selecionadas.length === 1 ? (selecionadas[0].codigo || 'caixa') : `${selecionadas.length}_caixas`;
-  XLSX.writeFile(wb, `caixas_${sufixo}_${today()}.xlsx`);
+  XLSX.writeFile(wb, _sanitizarNomeArquivo(`caixas_${sufixo}_${today()}`) + '.xlsx');
   showToast(`${selecionadas.length} caixa(s) exportada(s) · ${totalLinhas} registro(s).`, 'success');
 }
 
