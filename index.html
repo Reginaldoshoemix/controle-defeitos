@@ -4,7 +4,7 @@
 
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Controle de Defeitos - Shoemix v5.5</title>
+<title>Gestão de Defeitos | Shoemix</title>
 
 <style>
 /* ── Utilitários CSS ── */
@@ -1513,8 +1513,8 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
   <div style="display:flex;align-items:center;gap:10px;">
     <div style="width:32px;height:32px;border-radius: 0;background:linear-gradient(135deg,#ef4444 0%,#991b1b 100%);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#fff;box-shadow:0 4px 12px rgba(220,38,38,.4);">S</div>
     <div>
-      <div style="font-size:13px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;line-height:1;background:linear-gradient(135deg,var(--text) 0%,var(--muted) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">SHOEMIX</div>
-      <div style="font-size:8px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--accent);opacity:.9;">Defeitos</div>
+      <div style="font-size:13px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;line-height:1;background:linear-gradient(135deg,var(--text) 0%,var(--muted) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Gestão</div>
+      <div style="font-size:8px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--accent);opacity:.9;">De Defeitos</div>
     </div>
   </div>
 </div>
@@ -1553,8 +1553,8 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
     <!-- LOGO -->
     <div id="sidebarLogoWrap" style="padding:8px 10px;margin-bottom:24px;border-bottom:1px solid var(--border);">
       <div id="sidebarLogoText" class="sidebar-text">
-        <div style="font-size:20px;font-weight:900;letter-spacing:2px;text-transform:uppercase;line-height:1;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">SHOEMIX</div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-top:5px;opacity:.85;">Defeitos</div>
+        <div style="font-size:20px;font-weight:900;letter-spacing:2px;text-transform:uppercase;line-height:1;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Gestão</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-top:5px;opacity:.85;">De Defeitos</div>
       </div>
     </div>
 
@@ -1691,6 +1691,12 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
             <span>Fechar modal</span><span class="kbd">Esc</span>
           </div>
         </div>
+      </div>
+
+      <!-- Crédito de autoria — discreto, não clicável, some junto com o restante
+           do conteúdo textual quando a sidebar está recolhida (classe sidebar-text). -->
+      <div class="sidebar-text" style="margin-top:14px;padding:0 4px 2px;text-align:center;font-size:9.5px;line-height:1.5;color:var(--muted);opacity:.65;user-select:none;">
+        Desenvolvido por<br><span style="font-weight:700;letter-spacing:.2px;">Reginaldo do Risso Junior</span>
       </div>
 
     </div>
@@ -3104,10 +3110,10 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
           </div>
           <div class="stat-card caixa-stat-card">
             <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:14px;">
-              <div class="stat-label">Fechadas</div>
-              <div class="stat-icon"><i class="fa-solid fa-lock"></i></div>
+              <div class="stat-label">Valor Total</div>
+              <div class="stat-icon"><i class="fa-solid fa-sack-dollar"></i></div>
             </div>
-            <div id="caixaStatFechadas" class="stat-value" style="font-size:36px;font-weight:900;font-family:'Space Mono',monospace;line-height:1;">0</div>
+            <div id="caixaStatValor" class="stat-value" style="font-size:29px;font-weight:900;font-family:'Space Mono',monospace;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;" title="Valor total dos itens atualmente em caixas">R$ 0,00</div>
           </div>
           <div class="stat-card caixa-stat-card">
             <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:14px;">
@@ -15798,12 +15804,25 @@ function toggleCaixaStatus(id) {
 
 // ── Lista de caixas ──
 function renderCaixas() {
-  const totalPares = caixas.reduce((s,c) => s + getCaixaTotais(c.id).pares, 0);
+  // Um único percurso pelas caixas EXISTENTES, reutilizando getCaixaTotais — que já
+  // aplica a regra atual (custoUnitario × quantidade). Itens com caixaId órfão ficam
+  // naturalmente de fora, e como um defeito pertence a no máximo uma caixa, nenhum
+  // registro é contado duas vezes. Nada é armazenado no objeto da caixa.
+  let totalPares = 0, totalValor = 0;
+  caixas.forEach(c => { const t = getCaixaTotais(c.id); totalPares += t.pares; totalValor += t.valor; });
   const abertas = caixas.filter(c => c.status !== "fechada").length;
-  const fechadas = caixas.length - abertas;
+  // O status "fechada" continua existindo e funcionando normalmente no sistema
+  // (filtros, fechamento, reabertura, exportação); apenas deixou de ter card próprio.
   const elTotal = document.getElementById("caixaStatTotal"); if(elTotal) elTotal.textContent = caixas.length;
   const elAbertas = document.getElementById("caixaStatAbertas"); if(elAbertas) elAbertas.textContent = abertas;
-  const elFechadas = document.getElementById("caixaStatFechadas"); if(elFechadas) elFechadas.textContent = fechadas;
+  const elValor = document.getElementById("caixaStatValor");
+  if(elValor) {
+    const txt = totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    elValor.textContent = txt;
+    // Mantém o tamanho padrão dos demais cards; só reduz quando o número é longo
+    // demais para caber (casa dos milhões), evitando corte ou quebra de layout.
+    elValor.style.fontSize = txt.length > 14 ? '22px' : (txt.length > 11 ? '25px' : '29px');
+  }
   const elPares = document.getElementById("caixaStatPares"); if(elPares) elPares.textContent = totalPares;
 
   const badge = document.getElementById("sidebarCaixasBadge");
@@ -16022,6 +16041,7 @@ function removerItemDaCaixa(defeitoId) {
     saveData();
     renderCaixaDetalheItens();
     if(_caixaAtualId) renderCaixaDetalhe(_caixaAtualId);
+    renderCaixas();   // mantém os indicadores do topo (inclusive Valor Total) em dia
     showToast("Item removido da caixa (o defeito continua no sistema).", "info");
   }, "O registro do defeito NÃO será excluído.");
 }
@@ -17116,7 +17136,7 @@ function inconsistRemoverVinculoCaixa(defeitoId) {
   openConfirm('Remover este vínculo órfão de caixa?', 'warn', () => {
     d.caixaId = '';
     registrarHistoricoItem(d, 'caixa', 'Vínculo órfão de caixa removido (Central de Inconsistências).');
-    saveData(); renderLight(); renderInconsistencias();
+    saveData(); renderLight(); renderCaixas(); renderInconsistencias();
     showToast('Vínculo removido. O defeito não foi excluído.', 'info');
   }, 'O registro do defeito não será excluído — apenas o vínculo com a caixa inexistente.');
 }
@@ -17130,7 +17150,7 @@ function inconsistRemoverTodosVinculosCaixa() {
       d.caixaId = '';
       registrarHistoricoItem(d, 'caixa', 'Vínculo órfão de caixa removido (correção em massa — Central de Inconsistências).');
     });
-    saveData(); renderLight(); renderInconsistencias();
+    saveData(); renderLight(); renderCaixas(); renderInconsistencias();
     showToast(`${lista.length} vínculo(s) removido(s).`, 'success');
   }, 'Nenhum defeito é excluído — apenas os vínculos inválidos com caixas inexistentes.');
 }
