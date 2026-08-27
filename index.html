@@ -4,7 +4,7 @@
 
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Gestão de Defeitos | Shoemix</title>
+<title>Gestão de Defeitos | Reginaldo</title>
 
 <style>
 /* ── Utilitários CSS ── */
@@ -3170,6 +3170,27 @@ window.dispatchEvent(new Event("firebaseLotesReady"));
             <div><div style="font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Registros</div><div id="caixaDetRegistros" style="font-size:20px;font-weight:900;font-family:'Space Mono',monospace;color:#b45309;"></div></div>
             <div><div style="font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Total de Pares</div><div id="caixaDetPares" style="font-size:20px;font-weight:900;font-family:'Space Mono',monospace;color:#b45309;"></div></div>
             <div><div style="font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Valor Total</div><div id="caixaDetValor" style="font-size:20px;font-weight:900;font-family:'Space Mono',monospace;color:#b45309;"></div></div>
+          </div>
+        </div>
+
+        <!-- RESUMO POR MARCA — calculado ao vivo a partir dos itens que possuem
+             caixaId desta caixa. Nada é persistido; reflete automaticamente
+             qualquer mudança na composição da caixa. -->
+        <div class="card p-5" style="margin-bottom:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+            <div class="section-title" style="font-size:15px;">Resumo por marca</div>
+            <div style="font-size:10.5px;color:var(--muted);">Composição atual desta caixa</div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table id="caixaResumoMarcaTabela" style="width:100%;min-width:380px;border-collapse:collapse;">
+              <thead><tr>
+                <th style="text-align:left;">Marca</th>
+                <th style="text-align:center;">Registros</th>
+                <th style="text-align:center;">Pares</th>
+                <th style="text-align:right;">Valor Total</th>
+              </tr></thead>
+              <tbody id="caixaResumoMarcaBody"></tbody>
+            </table>
           </div>
         </div>
 
@@ -16064,7 +16085,61 @@ function renderCaixaDetalhe(id) {
   const toggleBtn = document.getElementById("caixaDetToggleBtn");
   if(toggleBtn) toggleBtn.innerHTML = fechada ? '<i class="fa-solid fa-lock-open"></i> Reabrir' : '<i class="fa-solid fa-lock"></i> Fechar';
 
+  renderCaixaResumoPorMarca(id);
   renderCaixaDetalheItens();
+}
+
+// ── Resumo por marca da caixa aberta.
+// Usa EXATAMENTE a mesma aritmética de getCaixaTotais (pares por
+// Number(quantidade)||0 e valor por custoUnitario × quantidade), de modo que a
+// soma das linhas bate sempre com Registros, Total de Pares e Valor Total do
+// cabeçalho. Não há segunda lógica monetária nem total persistido.
+function renderCaixaResumoPorMarca(id) {
+  const tbody = document.getElementById("caixaResumoMarcaBody");
+  if(!tbody) return;
+  const esc = (t) => String(t == null ? "" : t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const brl = (v) => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+
+  const itens = getItensDaCaixa(id);
+  if(!itens.length) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:18px;color:var(--muted);font-size:12.5px;">Nenhum item nesta caixa ainda.</td></tr>`;
+    return;
+  }
+
+  // Item sem marca entra como "Sem marca" para os totais fecharem exatamente.
+  const mapa = {};
+  itens.forEach(d => {
+    const nome = (d.marca || "").trim();
+    const chave = nome ? nome.toUpperCase() : "__SEM_MARCA__";
+    if(!mapa[chave]) mapa[chave] = { rotulo: nome ? nome.toUpperCase() : "Sem marca", registros: 0, pares: 0, valor: 0, semMarca: !nome };
+    const qtd = Number(d.quantidade) || 0;
+    mapa[chave].registros += 1;
+    mapa[chave].pares     += qtd;
+    mapa[chave].valor     += (Number(d.custoUnitario) || 0) * qtd;
+  });
+
+  // Ordena por mais pares; empate resolve alfabeticamente.
+  const linhas = Object.values(mapa).sort((a,b) =>
+    (b.pares - a.pares) || a.rotulo.localeCompare(b.rotulo, 'pt')
+  );
+
+  const tot = linhas.reduce((acc,l) => ({
+    registros: acc.registros + l.registros, pares: acc.pares + l.pares, valor: acc.valor + l.valor
+  }), { registros: 0, pares: 0, valor: 0 });
+
+  tbody.innerHTML = linhas.map(l => `
+    <tr>
+      <td style="font-weight:700;font-size:12.5px;${l.semMarca ? 'color:var(--muted);font-style:italic;' : ''}">${esc(l.rotulo)}</td>
+      <td style="text-align:center;font-family:'Space Mono',monospace;font-size:12px;">${l.registros}</td>
+      <td style="text-align:center;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:#b45309;">${l.pares}</td>
+      <td style="text-align:right;font-family:'Space Mono',monospace;font-size:12px;">${brl(l.valor)}</td>
+    </tr>`).join('') + `
+    <tr style="border-top:2px solid var(--border);">
+      <td style="font-weight:900;font-size:12px;letter-spacing:.5px;">TOTAL</td>
+      <td style="text-align:center;font-family:'Space Mono',monospace;font-size:12px;font-weight:900;">${tot.registros}</td>
+      <td style="text-align:center;font-family:'Space Mono',monospace;font-size:12px;font-weight:900;color:#b45309;">${tot.pares}</td>
+      <td style="text-align:right;font-family:'Space Mono',monospace;font-size:12.5px;font-weight:900;color:#b45309;">${brl(tot.valor)}</td>
+    </tr>`;
 }
 
 // ── Popula os seletores dos filtros internos usando APENAS os itens da caixa
