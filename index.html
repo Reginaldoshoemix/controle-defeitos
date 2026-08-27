@@ -13228,8 +13228,18 @@ async function saveNfe() {
     });
   }
 
+  // NF-e salva/criada como "Em trânsito": os produtos vinculados saem da caixa
+  // sem serem resolvidos. Cobre também o caso de acrescentar um produto novo a
+  // uma NF-e que JÁ estava em trânsito — não é preciso remexer no status para a
+  // regra disparar, porque ela é avaliada a cada gravação da NF-e.
+  if(nfeFinal?.status === 'em_transito') {
+    const saidas = desvincularCaixasPorNfeEmTransito(nfeFinal);
+    if(saidas) showToast(`${saidas} item(ns) retirado(s) automaticamente da caixa (NF-e em trânsito).`, 'info', 4500);
+  }
+
   await saveData();
   render();
+  _atualizarTelasCaixas();
   if(document.getElementById('nfeList')) renderNfeTable();
   document.getElementById('nfeModal').style.display = 'none';
 }
@@ -13448,7 +13458,16 @@ async function updateNfeStatus(nfeId, status) {
     showToast(`Status atualizado: ${nfeStatusLabel(status)}${reabertos > 0 ? ` · ${reabertos} defeito(s) reaberto(s)` : ''}`, reabertos > 0 ? 'info' : undefined);
   }
 
+  // NF-e Em trânsito: os produtos já saíram fisicamente e deixam a caixa, sem
+  // serem resolvidos. Voltar depois para Pendente/Cancelado NÃO restaura a caixa
+  // — o sistema não pode presumir retorno físico ao mesmo lugar.
+  if(status === 'em_transito') {
+    const saidas = desvincularCaixasPorNfeEmTransito(nfe);
+    if(saidas) showToast(`${saidas} item(ns) retirado(s) automaticamente da caixa (NF-e em trânsito).`, 'info', 4500);
+  }
+
   await saveData(); renderLight();
+  _atualizarTelasCaixas();
   if(document.getElementById('nfeList')) renderNfeTable();
   openNfeDetail(nfeId); // refresh
 }
@@ -15765,8 +15784,21 @@ function caixaBadgeDoItem(item, opts) {
 // Observação: aplica-se também a caixas fechadas. A regra de "caixa fechada não
 // aceita alteração" vale para ações manuais do usuário; esta é automática e
 // precisa ocorrer, senão itens resolvidos ficariam presos em caixas fechadas. ──
-function desvincularCaixaAoResolver(item) {
-  if(!item || !item.caixaId) return false;
+// ── ROTINA CENTRAL de saída automática da caixa.
+// Usada por TODOS os desvínculos automáticos (resolução do item e entrada da
+// NF-e em trânsito), para não duplicar lógica e manter mensagens corretas.
+//
+// Só age quando há de fato um caixaId válido a limpar — é idempotente: chamar
+// de novo num item que já saiu não gera segundo evento no histórico.
+// Altera EXCLUSIVAMENTE item.caixaId; nenhum outro campo do defeito é tocado
+// (status, quantidade, custo, marca, fornecedor, loja, NF de origem, XML,
+// nfeId e o histórico anterior permanecem intactos).
+//
+// Aplica-se também a caixas FECHADAS: a regra de "caixa fechada não aceita
+// alteração" vale para ações manuais do usuário; esta é automática e precisa
+// ocorrer, senão o item ficaria preso numa caixa fechada.
+function desvincularItemDaCaixaAutomaticamente(item, motivo) {
+  if(!item || !item.caixaId) return false;   // nada a fazer → nenhum evento
   const c = getCaixaById(item.caixaId);
   const codigo = c ? c.codigo : String(item.caixaId);
   const nome   = (c && c.nome) ? ' — ' + c.nome : '';
@@ -15774,10 +15806,52 @@ function desvincularCaixaAoResolver(item) {
   registrarHistoricoItem(
     item,
     'caixa',
-    `Desvinculado automaticamente da caixa ${codigo}${nome} após resolução do item.`,
+    `Desvinculado automaticamente da caixa ${codigo}${nome}${motivo ? ' — ' + motivo : ''}.`,
     [{ campo: 'caixaId', de: codigo, para: '' }]
   );
   return true;
+}
+
+// Item RESOLVIDO sai da caixa. Mantida com o mesmo nome e comportamento de
+// antes; passou apenas a delegar para a rotina central acima.
+function desvincularCaixaAoResolver(item) {
+  return desvincularItemDaCaixaAutomaticamente(item, 'após resolução do item');
+}
+
+// ── NF-e de devolução EM TRÂNSITO: os produtos já saíram fisicamente, então
+// deixam a caixa — mas NÃO são resolvidos. O item mantém seu status
+// operacional, continua vinculado à NF-e (nfeId e produtosRelacionados
+// intactos) e segue aguardando a conclusão da NF-e.
+//
+// Localiza os vinculados pelas DUAS fontes que o sistema já usa
+// (defeito.nfeId e nfe.produtosRelacionados), como no restante do módulo.
+// Retorna quantos itens efetivamente saíram de alguma caixa.
+function desvincularCaixasPorNfeEmTransito(nfe) {
+  if(!nfe || nfe.status !== 'em_transito') return 0;
+  const rotulo = nfe.numeroNfe || nfe.id;
+  const vinculados = defeitos.filter(d =>
+    String(d.nfeId) === String(nfe.id) ||
+    (nfe.produtosRelacionados || []).some(p => Number(p) === Number(d.id))
+  );
+  let saidas = 0;
+  vinculados.forEach(d => {
+    // Idempotente: itens que já não têm caixaId são ignorados sem gerar evento.
+    if(desvincularItemDaCaixaAutomaticamente(d, `NF-e de devolução ${rotulo} marcada como Em trânsito`)) saidas++;
+  });
+  return saidas;
+}
+
+// Atualiza as telas de caixas afetadas após uma saída automática. Os totais
+// (registros, pares, valor) são sempre derivados de caixaId — não há total
+// persistido —, então basta re-renderizar.
+function _atualizarTelasCaixas() {
+  try {
+    if(typeof renderCaixas === 'function') renderCaixas();
+    if(typeof _caixaAtualId !== 'undefined' && _caixaAtualId) {
+      if(typeof renderCaixaDetalhe === 'function') renderCaixaDetalhe(_caixaAtualId);
+      if(typeof renderCaixaDetalheItens === 'function') renderCaixaDetalheItens();
+    }
+  } catch(e) { console.error('Atualização das telas de caixas:', e); }
 }
 
 // ── Navega para a aba Caixas e abre direto o detalhe da caixa informada. ──
